@@ -3,7 +3,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 
-public class utilities {
+public class Utilities {
     public static void main(String[] args) {
         String path = "data/distances.csv"; // Replace with your CSV file path
         HashMap<String, PostAdress> postAdress =initPostAdressMap(path);
