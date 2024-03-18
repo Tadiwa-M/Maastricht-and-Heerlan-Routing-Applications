@@ -4,7 +4,7 @@ import java.io.IOException;
 
 public class utilities {
     public static void main(String[] args) {
-        String path = "data\\distances.csv"; // Replace with your CSV file path
+        String path = "data/distances.csv"; // Replace with your CSV file path
         String line = "";
         
         try {
