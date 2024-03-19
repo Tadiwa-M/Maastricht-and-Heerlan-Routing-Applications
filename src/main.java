@@ -1,15 +1,12 @@
 import java.util.HashMap;
-import java.util.Set;
 
 public class main {
     final static String path = "data/distances.csv";
-
     public static void main(String[] args) {
-        HashMap<String, PostAdress> postAdresses = Utilities.initPostAdressMap(path);
-        Set<String> keySet =postAdresses.keySet();
+        HashMap<String, PostAdress> postAdress = Utilities.initPostAdressMap(path);
+        PostAdress start = postAdress.get("6229ZA");
+        PostAdress end = postAdress.get("6229ZB");
 
-        //PostAdress.basicDistances()
+        System.out.println(PostAdress.basicDistances(start, end));
     }
-
-
 }
