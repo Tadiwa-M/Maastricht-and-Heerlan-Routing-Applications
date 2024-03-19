@@ -8,7 +8,7 @@ import java.net.URI;
 import java.net.http.HttpRequest;
 
 public class AddressFinder {
-    public PostAddress getAddressFromServer(String postalCode) {
+    public static PostAddress getAddressFromServer(String postalCode) {
         String baseUrl = "https://computerscience.dacs.unimaas.nl/";
 
         String url = baseUrl + "/get_coordinates";
