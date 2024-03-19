@@ -1,6 +1,6 @@
 import java.util.HashMap;
 
-public class main {
+public class Main {
     final static String path = "data/distances.csv";
     public static void main(String[] args) {
         HashMap<String, PostAdress> postAdress = Utilities.initPostAdressMap(path);
