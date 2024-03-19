@@ -1,3 +1,5 @@
+import java.util.Objects;
+
 public class PostAdress {
     private String postalCode;
     private double lat;
@@ -26,8 +28,10 @@ public class PostAdress {
     private static double degToRad(double deg) {
         return (deg * Math.PI / 180.0);
     }
+
     /***
      * A method for finding the birds flight distance between two points
+     * 
      * @param start
      * @param end
      * @return The kilometers between those points
@@ -47,9 +51,24 @@ public class PostAdress {
                         Math.sin(dLon / 2) * Math.sin(dLon / 2);
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-        // Calculate the distance
         double distance = EARTH_RADIUS_KM * c;
 
         return distance;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null || getClass() != obj.getClass())
+            return false;
+        PostAdress other = (PostAdress) obj;
+        return Objects.equals(postalCode, other.postalCode);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(postalCode);
+    }
+
 }
