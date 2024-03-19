@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class main {
+public class Main {
     final static String path = "data/distances.csv";
     static HashMap<String, PostAdress> postAdresses = Utilities.initPostAdressMap(path);
 
