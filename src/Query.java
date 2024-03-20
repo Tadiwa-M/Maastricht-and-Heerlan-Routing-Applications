@@ -4,6 +4,7 @@ public class Query {
     int vehicleCode;
 
     public Query(String startingPoint, String endPoint, int vehicleCode) {
+
         this.vehicleCode = vehicleCode;
     }
 }
