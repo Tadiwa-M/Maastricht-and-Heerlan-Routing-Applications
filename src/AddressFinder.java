@@ -6,8 +6,22 @@ import okhttp3.ResponseBody;
 
 import java.net.URI;
 import java.net.http.HttpRequest;
+import java.util.HashMap;
 
 public class AddressFinder {
+    public static PostAddress getAddress(String postalCode) {
+        //if the postal code is not in data file, get it from server
+        if (!DataManager.getDataManager().PostAddressesContain(postalCode)) {
+            PostAddress address = getAddressFromServer(postalCode);
+            DataManager.getDataManager().postAddresses.put(postalCode, address);
+            return address;
+        }
+        else {
+            return DataManager.getDataManager().postAddresses.get(postalCode);
+        }
+
+
+    }
     public static PostAddress getAddressFromServer(String postalCode) {
         String baseUrl = "https://computerscience.dacs.unimaas.nl/";
 

@@ -4,7 +4,8 @@ public class Query {
     int vehicleCode;
 
     public Query(String startingPoint, String endPoint, int vehicleCode) {
-
+        this.startingPoint = AddressFinder.getAddress(startingPoint);
+        this.endPoint = AddressFinder.getAddress(endPoint);
         this.vehicleCode = vehicleCode;
     }
 }
