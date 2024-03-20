@@ -7,9 +7,9 @@ import java.io.*;
 
 public class GUI extends JFrame {
 
+    public static String FromCode = "FROM";
+    public static String ToCode = "TO";
     public static int currentVehicleCode = 0;
-    public static String FromCode;
-    public static String ToCode;
 
 
     public GUI() {
@@ -63,39 +63,6 @@ public class GUI extends JFrame {
 
         add(controlPanel);
         add(imagePanel);
-
-        // Add ActionListener to postCodeFromField
-        postCodeFromField.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                FromCode = postCodeFromField.getText();
-                ToCode = postCodeToField.getText();
-                String selectedVehicle = (String) vehicleBox.getSelectedItem();
-                encodeVehicle(selectedVehicle);
-
-                try {
-                    writeDataToFile();
-                } catch (IOException ex) {
-                    throw new RuntimeException(ex);
-                }
-            }
-        });
-
-        // Add ActionListener to postCodeToField
-        postCodeToField.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                ToCode = postCodeToField.getText();
-                FromCode = postCodeFromField.getText();
-                String selectedVehicle = (String) vehicleBox.getSelectedItem();
-                encodeVehicle(selectedVehicle);
-                try {
-                    writeDataToFile();
-                } catch (IOException ex) {
-                    throw new RuntimeException(ex);
-                }
-            }
-        });
     }
 
     public static void main(String[] args) {
@@ -118,36 +85,6 @@ public class GUI extends JFrame {
                 break;
         }
     }
-
-    public static void writeDataToFile() throws IOException {
-        File file = new File("GUIData.txt");
-        FileWriter writer = new FileWriter(file);
-        writer.write(currentVehicleCode + "\n" + FromCode + "\n" + ToCode);
-        writer.flush();
-        writer.close();
-
-    }
-    public static String readGUIData(String returnType) throws IOException {
-        File file = new File("GUIData.txt");
-        BufferedReader reader = new BufferedReader(new FileReader(file));
-        currentVehicleCode = Integer.parseInt(reader.readLine());
-        FromCode = reader.readLine();
-        ToCode = reader.readLine();
-        reader.close(); // don't forget to close the reader
-        switch (returnType){
-            case "TO":
-                return ToCode;
-
-            case "FROM":
-                return FromCode;
-
-            case "VEHICLE":
-                return String.valueOf(currentVehicleCode);
-        }
-        return "ERROR";
-    }
-
-
 }
 class ImageDisplay extends JPanel {
     private Image image;
@@ -155,7 +92,7 @@ class ImageDisplay extends JPanel {
     public ImageDisplay() {
         try {
             // Load the image from resources
-            image = ImageIO.read(GUI.class.getResource("/Map.png"));
+            image = ImageIO.read(GUI.class.getResource("/img/Map.png"));
         } catch (IOException e) {
             e.printStackTrace();
             // Handle the exception gracefully (e.g., display an error message)

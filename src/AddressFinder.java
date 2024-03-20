@@ -23,7 +23,7 @@ public class AddressFinder {
 
     }
     public static PostAddress getAddressFromServer(String postalCode) {
-        String baseUrl = "https://computerscience.dacs.unimaas.nl/";
+        String baseUrl = "https://computerscience.dacs.unimaas.nl";
 
         String url = baseUrl + "/get_coordinates";
 

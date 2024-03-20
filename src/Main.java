@@ -8,6 +8,13 @@ public class Main {
     static HashMap<String, PostAddress> postAdresses = Utilities.initPostAddressMap(path);
 
     public static void main(String[] args) {
+        PostAddress start = postAdresses.get("6216EG");
+        PostAddress end = postAdresses.get("6211EF");
+        calculateDistance(start, end, 0);
+
+    }
+
+    public static void calculateDistance(PostAddress start, PostAddress end, int vehicleType) {
         Graph graph = new Graph();
         try {
             graph.loadGraphFromCSV("data/graph100.csv");
@@ -16,7 +23,7 @@ public class Main {
             PathFinder pathFinder = new PathFinder(graph);
 
             // Find and print the path from start to end
-            List<PostAddress> path = pathFinder.findPath(postAdresses.get("6211RE"), postAdresses.get("6219NW"));
+            List<PostAddress> path = pathFinder.findPath(start, end);
             if (path.isEmpty()) {
                 System.out.println("No path could be found between the specified addresses.");
             } else {
@@ -27,6 +34,5 @@ public class Main {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 }
