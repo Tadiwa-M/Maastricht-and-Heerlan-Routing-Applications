@@ -20,7 +20,7 @@ public class Graph {
     public void loadGraphFromCSV(String filename) throws IOException {
         BufferedReader reader = new BufferedReader(new FileReader(filename));
         String line;
-        HashMap<String, PostAddress> addresses = Utilities.initPostAdressMap("data/distances.csv");
+        HashMap<String, PostAddress> addresses = Utilities.initPostAddressMap("data/distances.csv");
         while ((line = reader.readLine()) != null) {
             String[] tokens = line.split(",");
             if (tokens.length > 1) {

@@ -5,7 +5,7 @@ import java.util.stream.Collectors;
 
 public class Main {
     final static String path = "data/distances.csv";
-    static HashMap<String, PostAddress> postAdresses = Utilities.initPostAdressMap(path);
+    static HashMap<String, PostAddress> postAdresses = Utilities.initPostAddressMap(path);
 
     public static void main(String[] args) {
         Graph graph = new Graph();

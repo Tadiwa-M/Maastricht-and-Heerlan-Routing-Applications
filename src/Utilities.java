@@ -6,12 +6,12 @@ import java.util.HashMap;
 public class Utilities {
     public static void main(String[] args) {
         String path = "data/distances.csv"; // Replace with your CSV file path
-        HashMap<String, PostAddress> postAdress =initPostAdressMap(path);
-        PostAddress address = postAdress.get("6229ZE");
+        HashMap<String, PostAddress> postAddress = initPostAddressMap(path);
+        PostAddress address = postAddress.get("6229ZE");
         System.out.println(address.getLat());
     }
 
-    public static HashMap<String, PostAddress> initPostAdressMap(String filePath){
+    public static HashMap<String, PostAddress> initPostAddressMap(String filePath){
         String line = "";
         HashMap<String, PostAddress> postAddresses = new HashMap<String, PostAddress>();
 
