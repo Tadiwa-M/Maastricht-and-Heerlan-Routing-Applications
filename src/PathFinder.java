@@ -9,7 +9,7 @@ public class PathFinder {
         this.graph = graph;
     }
 
-    // Method to find the closest PostAdress in the graph to a given PostAdress
+    // Method to find the closest PostAddress in the graph to a given PostAddress
     private PostAddress findClosestAddressInGraph(PostAddress target) {
         PostAddress closest = null;
         double closestDistance = Double.MAX_VALUE;

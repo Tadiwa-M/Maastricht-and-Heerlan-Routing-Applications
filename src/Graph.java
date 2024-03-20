@@ -34,6 +34,17 @@ public class Graph {
         reader.close();
     }
 
+    public void createGraph() {
+        HashMap<String, PostAddress> addresses = DataManager.getDataManager().postAddresses;
+        for (PostAddress source : addresses.values()) {
+            for (PostAddress destination : addresses.values()) {
+                if (source != destination && PostAddress.basicDistances(source, destination) < 0.7) {
+                    addEdge(source, destination);
+                }
+            }
+        }
+    }
+
     public Map<PostAddress, HashSet<PostAddress>> getAdjList() {
         return adjList;
     }

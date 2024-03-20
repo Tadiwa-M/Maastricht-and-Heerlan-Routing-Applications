@@ -16,23 +16,20 @@ public class Main {
 
     public static void calculateDistance(PostAddress start, PostAddress end, int vehicleType) {
         Graph graph = new Graph();
-        try {
-            graph.loadGraphFromCSV("data/graph100.csv");
+//            graph.loadGraphFromCSV("data/graph100.csv");
+        graph.createGraph();
 
-            // Initialize the PathFinder with the graph
-            PathFinder pathFinder = new PathFinder(graph);
+        // Initialize the PathFinder with the graph
+        PathFinder pathFinder = new PathFinder(graph);
 
-            // Find and print the path from start to end
-            List<PostAddress> path = pathFinder.findPath(start, end);
-            if (path.isEmpty()) {
-                System.out.println("No path could be found between the specified addresses.");
-            } else {
-                System.out.println("Path found: " + path.stream()
-                        .map(PostAddress::getPostalCode)
-                        .collect(Collectors.joining(" -> ")));
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+        // Find and print the path from start to end
+        List<PostAddress> path = pathFinder.findPath(start, end);
+        if (path.isEmpty()) {
+            System.out.println("No path could be found between the specified addresses.");
+        } else {
+            System.out.println("Path found: " + path.stream()
+                    .map(PostAddress::getPostalCode)
+                    .collect(Collectors.joining(" -> ")));
         }
     }
 }
