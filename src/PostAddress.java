@@ -51,9 +51,7 @@ public class PostAddress {
                         Math.sin(dLon / 2) * Math.sin(dLon / 2);
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-        double distance = EARTH_RADIUS_KM * c;
-
-        return distance;
+        return EARTH_RADIUS_KM * c;
     }
 
     @Override
