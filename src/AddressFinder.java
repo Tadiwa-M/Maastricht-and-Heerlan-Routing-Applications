@@ -40,15 +40,17 @@ public class AddressFinder {
 
         try {
             // Execute the request
-            Response response = client.newCall(request).execute();
+            ResponseBody responseBody;
+            try (Response response = client.newCall(request).execute()) {
 
-            // Check if the request was successful (HTTP status code 200)
-            if (!response.isSuccessful()) {
-                throw new RuntimeException("Failed to execute request: " + response);
+                // Check if the request was successful (HTTP status code 200)
+                if (!response.isSuccessful()) {
+                    throw new RuntimeException("Failed to execute request: " + response);
+                }
+
+                // Get the response body as a JSON string
+                responseBody = response.body();
             }
-
-            // Get the response body as a JSON string
-            ResponseBody responseBody = response.body();
             String jsonString = responseBody.string();
 
             // Parse the JSON string into a JSONObject
