@@ -1,6 +1,6 @@
 import java.util.Objects;
 
-public class PostAdress {
+public class PostAddress {
     private String postalCode;
     private double lat;
     private double lon;
@@ -18,7 +18,7 @@ public class PostAdress {
         return lon;
     }
 
-    public PostAdress(String postalCode, double lat, double lon) {
+    public PostAddress(String postalCode, double lat, double lon) {
         this.postalCode = postalCode;
         this.lat = lat;
         this.lon = lon;
@@ -36,7 +36,7 @@ public class PostAdress {
      * @param end
      * @return The kilometers between those points
      */
-    public static double basicDistances(PostAdress start, PostAdress end) {
+    public static double basicDistances(PostAddress start, PostAddress end) {
         // Convert the latitudes and longitudes from decimal degrees to radians
         double lat1Rad = degToRad(start.getLat());
         double lon1Rad = degToRad(start.getLon());
@@ -62,7 +62,7 @@ public class PostAdress {
             return true;
         if (obj == null || getClass() != obj.getClass())
             return false;
-        PostAdress other = (PostAdress) obj;
+        PostAddress other = (PostAddress) obj;
         return Objects.equals(postalCode, other.postalCode);
     }
 

@@ -10,11 +10,11 @@ public class PathFinder {
     }
 
     // Method to find the closest PostAdress in the graph to a given PostAdress
-    private PostAdress findClosestAddressInGraph(PostAdress target) {
-        PostAdress closest = null;
+    private PostAddress findClosestAddressInGraph(PostAddress target) {
+        PostAddress closest = null;
         double closestDistance = Double.MAX_VALUE;
-        for (PostAdress node : graph.getAdjList().keySet()) {
-            double distance = PostAdress.basicDistances(target, node);
+        for (PostAddress node : graph.getAdjList().keySet()) {
+            double distance = PostAddress.basicDistances(target, node);
             if (distance < closestDistance) {
                 closestDistance = distance;
                 closest = node;
@@ -23,9 +23,9 @@ public class PathFinder {
         return closest; // May return null if the graph is empty
     }
 
-    public List<PostAdress> findPath(PostAdress start, PostAdress end) {
-        PostAdress actualStart = start;
-        PostAdress actualEnd = end;
+    public List<PostAddress> findPath(PostAddress start, PostAddress end) {
+        PostAddress actualStart = start;
+        PostAddress actualEnd = end;
 
         if (!graph.getAdjList().containsKey(start)) {
             actualStart = findClosestAddressInGraph(start);
@@ -37,19 +37,19 @@ public class PathFinder {
         }
 
         // Rest of the pathfinding algorithm remains unchanged
-        Set<PostAdress> settledNodes = new HashSet<>();
-        Set<PostAdress> unsettledNodes = new HashSet<>();
-        Map<PostAdress, PostAdress> predecessors = new HashMap<>();
-        Map<PostAdress, Double> distance = new HashMap<>();
+        Set<PostAddress> settledNodes = new HashSet<>();
+        Set<PostAddress> unsettledNodes = new HashSet<>();
+        Map<PostAddress, PostAddress> predecessors = new HashMap<>();
+        Map<PostAddress, Double> distance = new HashMap<>();
 
         distance.put(actualStart, 0.0);
         unsettledNodes.add(actualStart);
 
         while (!unsettledNodes.isEmpty()) {
-            PostAdress currentNode = getLowestDistanceNode(unsettledNodes, distance);
+            PostAddress currentNode = getLowestDistanceNode(unsettledNodes, distance);
             unsettledNodes.remove(currentNode);
-            for (PostAdress neighbor : graph.getAdjList().getOrDefault(currentNode, new HashSet<>())) {
-                double edgeDistance = PostAdress.basicDistances(currentNode, neighbor);
+            for (PostAddress neighbor : graph.getAdjList().getOrDefault(currentNode, new HashSet<>())) {
+                double edgeDistance = PostAddress.basicDistances(currentNode, neighbor);
                 if (!settledNodes.contains(neighbor)) {
                     calculateMinimumDistance(neighbor, edgeDistance, currentNode, distance, predecessors);
                     unsettledNodes.add(neighbor);
@@ -61,10 +61,10 @@ public class PathFinder {
         return getPath(actualEnd, predecessors);
     }
 
-    private PostAdress getLowestDistanceNode(Set<PostAdress> unsettledNodes, Map<PostAdress, Double> distances) {
-        PostAdress lowestDistanceNode = null;
+    private PostAddress getLowestDistanceNode(Set<PostAddress> unsettledNodes, Map<PostAddress, Double> distances) {
+        PostAddress lowestDistanceNode = null;
         double lowestDistance = Double.MAX_VALUE;
-        for (PostAdress node : unsettledNodes) {
+        for (PostAddress node : unsettledNodes) {
             double nodeDistance = distances.get(node);
             if (nodeDistance < lowestDistance) {
                 lowestDistance = nodeDistance;
@@ -74,7 +74,7 @@ public class PathFinder {
         return lowestDistanceNode;
     }
 
-    private void calculateMinimumDistance(PostAdress evaluationNode, double edgeDistance, PostAdress sourceNode, Map<PostAdress, Double> distance, Map<PostAdress, PostAdress> predecessors) {
+    private void calculateMinimumDistance(PostAddress evaluationNode, double edgeDistance, PostAddress sourceNode, Map<PostAddress, Double> distance, Map<PostAddress, PostAddress> predecessors) {
         Double sourceDistance = distance.get(sourceNode);
         if (sourceDistance + edgeDistance < distance.getOrDefault(evaluationNode, Double.MAX_VALUE)) {
             distance.put(evaluationNode, sourceDistance + edgeDistance);
@@ -82,9 +82,9 @@ public class PathFinder {
         }
     }
 
-    private List<PostAdress> getPath(PostAdress target, Map<PostAdress, PostAdress> predecessors) {
-        List<PostAdress> path = new ArrayList<>();
-        PostAdress step = target; 
+    private List<PostAddress> getPath(PostAddress target, Map<PostAddress, PostAddress> predecessors) {
+        List<PostAddress> path = new ArrayList<>();
+        PostAddress step = target;
         if (predecessors.get(step) == null) {
             return path;
         }

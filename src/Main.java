@@ -5,7 +5,7 @@ import java.util.stream.Collectors;
 
 public class Main {
     final static String path = "data/distances.csv";
-    static HashMap<String, PostAdress> postAdresses = Utilities.initPostAdressMap(path);
+    static HashMap<String, PostAddress> postAdresses = Utilities.initPostAdressMap(path);
 
     public static void main(String[] args) {
         Graph graph = new Graph();
@@ -16,12 +16,12 @@ public class Main {
             PathFinder pathFinder = new PathFinder(graph);
 
             // Find and print the path from start to end
-            List<PostAdress> path = pathFinder.findPath(postAdresses.get("6211RE"), postAdresses.get("6219NW"));
+            List<PostAddress> path = pathFinder.findPath(postAdresses.get("6211RE"), postAdresses.get("6219NW"));
             if (path.isEmpty()) {
                 System.out.println("No path could be found between the specified addresses.");
             } else {
                 System.out.println("Path found: " + path.stream()
-                        .map(PostAdress::getPostalCode)
+                        .map(PostAddress::getPostalCode)
                         .collect(Collectors.joining(" -> ")));
             }
         } catch (IOException e) {

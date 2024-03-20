@@ -7,7 +7,7 @@ import java.io.*;
 
 public class GUI extends JFrame {
 
-    public static int currentVehicleCode = -1;
+    public static int currentVehicleCode = 0;
     public static String FromCode;
     public static String ToCode;
 
@@ -29,20 +29,25 @@ public class GUI extends JFrame {
         postCodeToField.setText("TO");
         postCodeFromField.setText("FROM");
 
-        String[] vehicleList = {"Walking", "Bicycle", "Car", "Bus", "Train"};
+        String[] vehicleList = {"Walk", "Bike"};
         JComboBox<String> vehicleBox = new JComboBox<>(vehicleList);
-        vehicleBox.setBounds(260, 20, 100, 35);
-        vehicleBox.addActionListener(e -> {
-            String selectedVehicle = (String) vehicleBox.getSelectedItem();
-            encodeVehicle(selectedVehicle);
-            ToCode = postCodeToField.getText();
-            FromCode = postCodeFromField.getText();
-            System.out.println("Selected vehicle: " + selectedVehicle);
+        vehicleBox.setBounds(250, 20, 100, 35);
 
-            try {
-                writeDataToFile();
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
+        //Add Go button blue button
+        JButton goButton = new JButton("Go");
+        goButton.setBounds(360, 20, 150, 35);
+        goButton.setBackground(Color.WHITE);
+        goButton.setForeground(Color.BLUE);
+        controlPanel.add(goButton);
+
+        goButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ToCode = postCodeToField.getText();
+                FromCode = postCodeFromField.getText();
+                String selectedVehicle = (String) vehicleBox.getSelectedItem();
+                encodeVehicle(selectedVehicle);
+                Query query = new Query(FromCode, ToCode, currentVehicleCode);
             }
         });
 
@@ -102,17 +107,11 @@ public class GUI extends JFrame {
 
     public static void encodeVehicle(String vehicle) {
         switch (vehicle) {
-            case "Walking":
+            case "Walk":
                 currentVehicleCode = 0;
                 break;
-            case "Bicycle":
+            case "Bike":
                 currentVehicleCode = 1;
-                break;
-            case "Car":
-                currentVehicleCode = 2;
-                break;
-            case "Bus":
-                currentVehicleCode = 3;
                 break;
             default:
                 System.out.println("ERROR");

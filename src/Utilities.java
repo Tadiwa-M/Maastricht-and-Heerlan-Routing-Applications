@@ -6,14 +6,14 @@ import java.util.HashMap;
 public class Utilities {
     public static void main(String[] args) {
         String path = "data/distances.csv"; // Replace with your CSV file path
-        HashMap<String, PostAdress> postAdress =initPostAdressMap(path);
-        PostAdress adress = postAdress.get("6229ZE");
+        HashMap<String, PostAddress> postAdress =initPostAdressMap(path);
+        PostAddress adress = postAdress.get("6229ZE");
         System.out.println(adress.getLat());
     }
 
-    public static HashMap<String, PostAdress> initPostAdressMap(String filePath){
+    public static HashMap<String, PostAddress> initPostAdressMap(String filePath){
         String line = "";
-        HashMap<String, PostAdress> postAdresses = new HashMap<String, PostAdress>();
+        HashMap<String, PostAddress> postAdresses = new HashMap<String, PostAddress>();
 
         try {
             BufferedReader br = new BufferedReader(new FileReader(filePath));
@@ -26,7 +26,7 @@ public class Utilities {
             while ((line = br.readLine()) != null) {
                 // Assuming CSV file is comma-separated
                 String[] values = line.split(","); 
-                postAdresses.put(values[0], new PostAdress(values[0], Double.parseDouble(values[1]), Double.parseDouble(values[2])));
+                postAdresses.put(values[0], new PostAddress(values[0], Double.parseDouble(values[1]), Double.parseDouble(values[2])));
             }
             
             br.close(); // Close the BufferedReader
