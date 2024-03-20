@@ -4,10 +4,6 @@ import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 
-import java.net.URI;
-import java.net.http.HttpRequest;
-import java.util.HashMap;
-
 public class AddressFinder {
     public static PostAddress getAddress(String postalCode) {
         //if the postal code is not in data file, get it from server
