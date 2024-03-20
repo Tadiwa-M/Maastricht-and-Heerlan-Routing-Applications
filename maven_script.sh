@@ -1,8 +1,18 @@
 #!/bin/bash
 
-# Refresh Maven project in IntelliJ IDEA
-echo "Refreshing Maven project..."
-mvn -U idea:idea
+# Function to check if Maven is installed
+check_maven() {
+    if ! command -v mvn &> /dev/null; then
+        echo "Maven is not installed. Installing Maven..."
+        # Install Maven
+        sudo apt update
+        sudo apt install maven -y
+        echo "Maven installed successfully."
+    fi
+}
+
+# Check if Maven is installed
+check_maven
 
 # Clean the project
 echo "Cleaning project..."
