@@ -11,7 +11,6 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class GUI extends JFrame {
 
@@ -37,7 +36,7 @@ public class GUI extends JFrame {
 
         try {
 
-            mapImage = ImageIO.read(GUI.class.getResource("Map.png"));
+            mapImage = ImageIO.read(GUI.class.getResource("img/Map.png"));
         } catch (IOException e) {
             e.printStackTrace();
         }
