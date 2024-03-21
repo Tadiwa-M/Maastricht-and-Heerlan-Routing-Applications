@@ -3,7 +3,7 @@ package Transport;
 public class Foot extends Vehicle {
     public Foot(double distance) {
         super(distance);
-        this.speed = 0.0835;
+        this.speed = 0.085;
         this.vehicleConstant = 3;
     }
     @Override
