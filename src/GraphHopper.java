@@ -1,3 +1,4 @@
+import cn.hutool.json.JSONArray;
 import okhttp3.*;
 import cn.hutool.json.JSONObject;
 import java.io.IOException;
@@ -63,8 +64,31 @@ public class GraphHopper {
 
                 //distance and time
                 JSONObject jsonResponse = new JSONObject(responseData);
-                double distance = jsonResponse.getJSONArray("paths").getJSONObject(0).getDouble("distance") / 1000;
-                double time = jsonResponse.getJSONArray("paths").getJSONObject(0).getDouble("time") / 60000;
+
+                double distance = 0;
+                double time = 0;
+
+                JSONArray pathsArray = jsonResponse.getJSONArray("paths");
+
+
+                for (int i = 0; i < pathsArray.size(); i++) {
+                    JSONObject pathObject = pathsArray.getJSONObject(i);
+
+                    // Get the "instructions" array from the pathObject
+                    JSONArray instructionsArray = pathObject.getJSONArray("instructions");
+
+                    // Iterate through each instruction in the "instructions" array
+                    for (int j = 0; j < instructionsArray.size(); j++) {
+                        JSONObject instructionObject = instructionsArray.getJSONObject(j);
+
+                        // Extract distance and time from the instructionObject and add to total
+                        distance += instructionObject.getDouble("distance");
+                        time += instructionObject.getLong("time");
+                    }
+                }
+
+                distance /= 1000;
+                time /= 60000;
 
                 System.out.println("Distance: " + distance + " kilometers");
                 System.out.println("Time: " + time + " minutes");
