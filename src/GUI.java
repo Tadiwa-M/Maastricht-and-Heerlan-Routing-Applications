@@ -112,10 +112,9 @@ public class GUI extends JFrame {
                 if (accept) {
                     ToCode = codeTo;
                     FromCode = codeFrom;
-                    String path = "data/distances.csv";
-                    HashMap<String, PostAddress> postAddress = Utilities.initPostAddressMap(path);
-                    PostAddress toAddress = postAddress.get(codeTo);
-                    PostAddress fromAddress = postAddress.get(codeFrom);
+
+                    PostAddress fromAddress = getAddressFromDataManager(codeFrom);
+                    PostAddress toAddress = getAddressFromDataManager(codeTo);
 
                     drawPoints(fromAddress, toAddress);
                     mapImageWithPoints = drawPointsOnMap(mapImage, fromPoint, toPoint);
@@ -147,10 +146,10 @@ public class GUI extends JFrame {
                 if (accept) {
                     ToCode = codeTo;
                     FromCode = codeFrom;
-                    String path = "data/distances.csv";
-                    HashMap<String, PostAddress> postAddress = Utilities.initPostAddressMap(path);
-                    PostAddress toAddress = postAddress.get(codeTo);
-                    PostAddress fromAddress = postAddress.get(codeFrom);
+
+                    PostAddress fromAddress = getAddressFromDataManager(codeFrom);
+                    PostAddress toAddress = getAddressFromDataManager(codeTo);
+
                     String selectedVehicle = (String) vehicleBox.getSelectedItem();
                     encodeVehicle(selectedVehicle);
                     runDijkstraAlgorithm(fromAddress, toAddress);
@@ -265,6 +264,15 @@ public class GUI extends JFrame {
             g.setColor(Color.BLUE);
             g.fillOval(toPoint.x - 5 + 30, toPoint.y - 5 + 180, 10, 10);
         }
+    }
+
+    public PostAddress getAddressFromDataManager(String postalCode) {
+        PostAddress address = DataManager.getDataManager().postAddresses.get(postalCode);
+        if (address == null) {
+            address = AddressFinder.getAddressFromServer(postalCode);
+            DataManager.getDataManager().postAddresses.put(postalCode, address);
+        }
+        return address;
     }
 
     public static void main(String[] args) {
