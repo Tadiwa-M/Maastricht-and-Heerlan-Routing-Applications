@@ -35,4 +35,13 @@ public class Main {
             System.out.println("Time: " + time + " Minutes");
         }
     }
+
+    public static void main(String[] args) {
+
+       PostAddress start = DataManager.getDataManager().postAddresses.get("6216EG");
+         PostAddress end = DataManager.getDataManager().postAddresses.get("6221CR");
+
+        calculateDistance(start, end, 1);
+        calculateDistance(end, start, 1);
+    }
 }

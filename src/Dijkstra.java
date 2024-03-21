@@ -45,14 +45,11 @@ public class Dijkstra {
 
                 double weight = PostAddress.basicDistances(addresses.get(u), addresses.get(v));
 
-
-                if (weight > threshold) {
-                    weight *= 2;
-                }
-
+                if (weight > threshold)
+                    weight *= 5;
 
                 // If the distance to v is shorter by going through u
-                if (dist[v] == Double.MAX_VALUE && dist[v] > dist[u] + weight) {
+                if (dist[v] > dist[u] + weight) {
                     // Update the distance of v
                     dist[v] = dist[u] + weight;
                     pq.add(new Pair(dist[v], v));

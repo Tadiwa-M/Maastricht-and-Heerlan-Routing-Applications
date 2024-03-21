@@ -156,7 +156,7 @@ public class GUI extends JFrame {
 
                     String selectedVehicle = (String) vehicleBox.getSelectedItem();
                     encodeVehicle(selectedVehicle);
-                    runDijkstraAlgorithm(fromAddress, toAddress);
+                    runPathFindingAlgorithm(fromAddress, toAddress);
                 }
 
             }
@@ -187,7 +187,7 @@ public class GUI extends JFrame {
         return imageWithPoints;
     }
 
-    private void runDijkstraAlgorithm(PostAddress from, PostAddress to) {
+    private void runPathFindingAlgorithm(PostAddress from, PostAddress to) {
 
         PostAddress startAddress = from;
         PostAddress endAddress = to;
@@ -198,18 +198,18 @@ public class GUI extends JFrame {
         double value = pathFinder.getDistance(startAddress,endAddress);
         value = Double.parseDouble(new DecimalFormat("##.##").format(value));
         visualizeShortestPath(shortestPath);
-        double speed = 0;
+        Vehicle vehicle;
         if (currentVehicleCode == 0){
-            Vehicle vehicle = new Foot(value);
-
-            speed = vehicle.calculateTime();
-        } else if (currentVehicleCode == 1) {
-            Vehicle vehicle = new Bike(value);
-            speed = vehicle.calculateTime();
+            vehicle = new Foot(value);
+        } else if (currentVehicleCode == 1)
+            vehicle = new Bike(value);
+        else {
+            System.out.println("ERROR");
+            vehicle = null;
         }
-        speed = Double.parseDouble(new DecimalFormat("##.##").format(speed));
+        double time = Double.parseDouble(new DecimalFormat("##.##").format(vehicle.calculateTime()));
 
-        JOptionPane.showMessageDialog(null, "Distance: " + value + "km\nCompleted In: " + (int) speed + " minutes");
+        JOptionPane.showMessageDialog(null, "Distance: " + value + "km\nCompleted In: " + (int) time + " minutes");
     }
 
     private void visualizeShortestPath(ArrayList<PostAddress> shortestPath) {

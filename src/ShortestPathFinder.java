@@ -1,7 +1,7 @@
 import java.util.ArrayList;
 
 public class ShortestPathFinder {
-    final double threshold = 0.4;
+    final double threshold = 0.37;
     ArrayList <PostAddress> addresses = new ArrayList<>();
     Dijkstra dijkstra;
     public ShortestPathFinder() {
