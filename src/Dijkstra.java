@@ -9,7 +9,6 @@ public class Dijkstra {
     int N;
     double[] dist;
     int[] parent;
-    boolean[] visited;
 
     public Dijkstra(ArrayList<ArrayList<Integer>> adj, ArrayList<PostAddress> addresses) {
         this.adj = adj;
@@ -17,12 +16,9 @@ public class Dijkstra {
         dist = new double[N];
         parent = new int[N];
         this.addresses = addresses;
-        visited = new boolean[N];
     }
 
     public void runAlgorithm(int src) {
-        //Priority Queue + Path printing
-
         //Initialize distance array
         for (int i = 0; i < N; i++) {
             dist[i] = Double.MAX_VALUE;
@@ -41,7 +37,6 @@ public class Dijkstra {
         while (!pq.isEmpty()) {
             // Extract the minimum distance node from the priority queue
             int u = pq.poll().second;
-            visited[u] = true;
 
             // Traverse through all the adjacent nodes of u
             for (int i = 0; i < adj.get(u).size(); i++) {
@@ -49,11 +44,15 @@ public class Dijkstra {
                 int v = adj.get(u).get(i);
 
                 double weight = PostAddress.basicDistances(addresses.get(u), addresses.get(v));
+
+
                 if (weight > threshold) {
-                    weight *= 5;
+                    weight *= 2;
                 }
+
+
                 // If the distance to v is shorter by going through u
-                if (!visited[v] && dist[v] > dist[u] + weight) {
+                if (dist[v] == Double.MAX_VALUE && dist[v] > dist[u] + weight) {
                     // Update the distance of v
                     dist[v] = dist[u] + weight;
                     pq.add(new Pair(dist[v], v));
@@ -83,7 +82,7 @@ public class Dijkstra {
         }
 
         //Reverse the path
-        ArrayList<PostAddress> reversedPath = new ArrayList<PostAddress>();
+        ArrayList<PostAddress> reversedPath = new ArrayList<>();
         for (int j = path.size() - 1; j >= 0; j--) {
             reversedPath.add(path.get(j));
         }

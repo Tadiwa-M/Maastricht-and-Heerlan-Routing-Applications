@@ -1,5 +1,4 @@
-import java.io.IOException;
-import java.util.ArrayList;
+import Transport.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -46,7 +45,21 @@ public class Main {
                     .map(PostAddress::getPostalCode)
                     .collect(Collectors.joining(" -> ")));
 
-            System.out.println("Distance: " + distance);
+            Vehicle vehicle;
+            if (vehicleType == 0)
+                vehicle = new Foot(distance);
+            else
+                vehicle = new Bike(distance);
+
+            double time = vehicle.calculateTime();
+
+            //Round to 2 decimal places
+            distance = Math.round(distance * 100.0) / 100.0;
+            System.out.println("Distance: " + distance + " Kilometers");
+
+            //Round to 2 decimal places
+            time = Math.round(time * 100.0) / 100.0;
+            System.out.println("Time: " + time + " Minutes");
         }
     }
 }
