@@ -1,3 +1,7 @@
+import Transport.Bike;
+import Transport.Foot;
+import Transport.Vehicle;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
@@ -5,6 +9,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -192,8 +197,21 @@ public class GUI extends JFrame {
         ShortestPathFinder pathFinder = new ShortestPathFinder();
 
         ArrayList<PostAddress> shortestPath = pathFinder.findPath(startAddress, endAddress);
-
+        double value = pathFinder.getDistance(startAddress,endAddress);
+        value = Double.parseDouble(new DecimalFormat("##.##").format(value));
         visualizeShortestPath(shortestPath);
+        double speed = 0;
+        if (currentVehicleCode == 0){
+            Vehicle vehicle = new Foot(value);
+
+            speed = vehicle.calculateTime();
+        } else if (currentVehicleCode == 1) {
+            Vehicle vehicle = new Bike(value);
+            speed = vehicle.calculateTime();
+        }
+        speed = Double.parseDouble(new DecimalFormat("##.##").format(speed));
+
+        JOptionPane.showMessageDialog(null, "Distance: " + value + "km\nCompleted In: " + (int) speed + " minutes");
     }
 
     private void visualizeShortestPath(ArrayList<PostAddress> shortestPath) {
