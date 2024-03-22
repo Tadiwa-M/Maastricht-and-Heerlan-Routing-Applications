@@ -39,9 +39,17 @@ public class Main {
     public static void main(String[] args) {
 
        PostAddress start = DataManager.getDataManager().postAddresses.get("6216EG");
-         PostAddress end = DataManager.getDataManager().postAddresses.get("6221CR");
+       PostAddress end = DataManager.getDataManager().postAddresses.get("6221CR");
 
         calculateDistance(start, end, 1);
-        calculateDistance(end, start, 1);
+
+        for (PostAddress address : DataManager.getDataManager().postAddresses.values()) {
+            //address valid postal code
+            if (address.getPostalCode().startsWith("621")) {
+                //print distance
+                end = AddressFinder.getAddress(address.getPostalCode());
+                calculateDistance(start, end, 0);
+            }
+        }
     }
 }

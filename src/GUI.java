@@ -97,16 +97,20 @@ public class GUI extends JFrame {
         goButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                DrawBaseImage((Graphics2D) mapImage.getGraphics(), mapImage);
                 boolean accept = true;
-                String codeTo = postCodeToField.getText().replace(" ", "");
-                String codeFrom = postCodeFromField.getText().replace(" ", "");
+                fromPoint = null;
+                toPoint = null;
+                repaint();
+                String codeTo = postCodeToField.getText().toUpperCase().replace(" ", "");
+                String codeFrom = postCodeFromField.getText().toUpperCase().replace(" ", "");
 
                 if (!acceptCode(codeTo)) {
                     JOptionPane.showMessageDialog(null, "The \"TO\" PostCode is Not in the proper format\nFormat: 1234AB or 1234 AB");
                     accept = false;
                 }
                 if (!acceptCode(codeFrom)) {
-                    JOptionPane.showMessageDialog(null, "The \"FROM\" PostCode is Not in the proper format\nFormat: 1234AB or 1234 AB");
+                    JOptionPane.showMessageDialog(null, "The \"FROM\" PostCode is not in the proper format\nFormat: 1234AB or 1234 AB");
                     accept = false;
                 }
                 if (codeTo.equals(codeFrom)) {
@@ -131,6 +135,7 @@ public class GUI extends JFrame {
         dijkstraButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                DrawBaseImage((Graphics2D) mapImage.getGraphics(), mapImage);
                 boolean accept = true;
                 String codeTo = postCodeToField.getText().replace(" ", "");
                 String codeFrom = postCodeFromField.getText().replace(" ", "");
@@ -219,17 +224,18 @@ public class GUI extends JFrame {
             toPoint = findPostCodeCoordinate(shortestPath.get(shortestPath.size() - 1).getLon(), shortestPath.get(shortestPath.size() - 1).getLat());
         }
 
-        mapImage = drawShortestPathOnMap(mapImage, shortestPath);
+        // Assuming this code is inside a paintComponent or similar method where you have access to Graphics2D object
+        Graphics2D g = (Graphics2D) mapImage.getGraphics();
+        drawShortestPathOnMap(g, mapImage, shortestPath);
 
         repaint();
     }
 
-    private BufferedImage drawShortestPathOnMap(BufferedImage mapImage, ArrayList<PostAddress> shortestPath) {
-        BufferedImage imageWithShortestPath = new BufferedImage(mapImage.getWidth(), mapImage.getHeight(), BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g = (Graphics2D) imageWithShortestPath.getGraphics();
-
+    private void drawShortestPathOnMap(Graphics2D g, BufferedImage mapImage, ArrayList<PostAddress> shortestPath) {
+        // Draw the mapImage
         g.drawImage(mapImage, 0, 0, null);
 
+        // Draw the shortest path
         g.setColor(Color.BLACK);
         g.setStroke(new BasicStroke(3));
 
@@ -238,14 +244,11 @@ public class GUI extends JFrame {
             Point endPoint = findPostCodeCoordinate(shortestPath.get(i + 1).getLon(), shortestPath.get(i + 1).getLat());
             g.drawLine(startPoint.x, startPoint.y, endPoint.x, endPoint.y);
         }
-
-        g.dispose();
-
-        return imageWithShortestPath;
     }
 
-
-
+    private void DrawBaseImage(Graphics2D g, BufferedImage mapImage) {
+        g.drawImage(mapImage, 0, 0, null);
+    }
 
     public static void encodeVehicle(String vehicle) {
         switch (vehicle) {
@@ -284,12 +287,7 @@ public class GUI extends JFrame {
     }
 
     public PostAddress getAddressFromDataManager(String postalCode) {
-        PostAddress address = DataManager.getDataManager().postAddresses.get(postalCode);
-        if (address == null) {
-            address = AddressFinder.getAddressFromServer(postalCode);
-            DataManager.getDataManager().postAddresses.put(postalCode, address);
-        }
-        return address;
+        return AddressFinder.getAddress(postalCode);
     }
 
     public static void main(String[] args) {
