@@ -2,7 +2,7 @@
 import java.util.ArrayList;
 import java.util.PriorityQueue;
 
-public class Dijkstra {
+public class Dijkstra implements IShortestPath {
     final double threshold = 0.23;
     ArrayList<ArrayList<Integer>> adj;
     ArrayList<PostAddress> addresses;

@@ -12,7 +12,8 @@ public class Query {
             throw new IllegalArgumentException("Invalid postal code");
         }
         else {
-            Main.calculateDistance(this.startingPoint, this.endPoint, this.vehicleCode);
+            ShortestPathFinder shortestPathFinder = new ShortestPathFinder();
+            shortestPathFinder.findPath(this.startingPoint, this.endPoint);
         }
     }
 }
