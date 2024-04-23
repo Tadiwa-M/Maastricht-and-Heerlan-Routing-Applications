@@ -3,7 +3,7 @@ import java.util.ArrayList;
 public class ShortestPathFinder {
     final double threshold = 0.37;
     ArrayList <PostAddress> addresses = new ArrayList<>();
-    Dijkstra dijkstra;
+    IShortestPath shortestPathAlgorithm;
     public ShortestPathFinder() {
         // Array of adj list
         ArrayList<ArrayList<Integer>> adj = new ArrayList<ArrayList<Integer>>();
@@ -21,8 +21,8 @@ public class ShortestPathFinder {
         //Create graph
         CreateGraph(addresses, adj);
 
-        //Dijkstra algorithm + Path printing
-        dijkstra = new Dijkstra(adj, addresses);
+        //Shortest Path algorithm + Path printing
+        shortestPathAlgorithm = new Dijkstra(adj, addresses);
     }
 
     public ArrayList<PostAddress> findPath(PostAddress start, PostAddress end) {
@@ -33,8 +33,8 @@ public class ShortestPathFinder {
             return new ArrayList<PostAddress>();
         }
 
-        dijkstra.runAlgorithm(indexStart);
-        return dijkstra.findPath(indexEnd);
+        shortestPathAlgorithm.runAlgorithm(indexStart);
+        return shortestPathAlgorithm.findPath(indexEnd);
     }
 
     //Get distance from start to end
@@ -46,8 +46,8 @@ public class ShortestPathFinder {
             return -1;
         }
 
-        dijkstra.runAlgorithm(indexStart);
-        return dijkstra.dist[indexEnd];
+        shortestPathAlgorithm.runAlgorithm(indexStart);
+        return shortestPathAlgorithm.getDistance(indexEnd);
     }
 
     public boolean ValidPostalCode(String postalCode) {

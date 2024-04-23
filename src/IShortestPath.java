@@ -1,6 +1,7 @@
 import java.util.ArrayList;
 
 public interface IShortestPath {
-    public void runAlgorithm(int src);
-    public ArrayList<PostAddress> findPath(int dest);
+    void runAlgorithm(int src);
+    ArrayList<PostAddress> findPath(int dest);
+    double getDistance(int indexEnd);
 }

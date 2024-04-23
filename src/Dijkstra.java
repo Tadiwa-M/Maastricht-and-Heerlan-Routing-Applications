@@ -59,6 +59,10 @@ public class Dijkstra implements IShortestPath {
         }
     }
 
+    public double getDistance(int dest) {
+        return dist[dest];
+    }
+
     void printDistances() {
         for (int i = 0; i < N; i++) {
             System.out.println("Distance from source to " + addresses.get(i).getPostalCode() + " is " + dist[i]);
