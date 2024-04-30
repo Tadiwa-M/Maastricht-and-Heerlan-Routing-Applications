@@ -16,9 +16,9 @@ public class GraphHopperUtil {
     GraphHopper graphHopper = new GraphHopper();
     GraphHopperUtil() {
         List<Profile> profileList = new ArrayList<>();
-        profileList.add(new Profile(VehicleEncodedValuesFactory.BIKE));
-        profileList.add(new Profile(VehicleEncodedValuesFactory.CAR));
-        profileList.add(new Profile(VehicleEncodedValuesFactory.FOOT));
+        profileList.add(new Profile("foot").setVehicle("foot"));
+        profileList.add(new Profile("bike").setVehicle("bike"));
+        profileList.add(new Profile("car").setVehicle("car"));
 
         graphHopper.setOSMFile(osmFile);
         graphHopper.setProfiles(profileList);
@@ -38,10 +38,18 @@ public class GraphHopperUtil {
         request.setProfile(vehicle);
         GHResponse response = graphHopper.route(request);
 
-        System.out.println(response.getBest().getTime() + " seconds" + " " + response.getBest().getDistance() + " meters");
+        // Convert time from milliseconds to minutes and seconds
+        long timeInMillis = response.getBest().getTime();
+        long minutes = (timeInMillis / 1000) / 60;
+        int seconds = (int)((timeInMillis / 1000) % 60);
+
+        System.out.println(minutes + " minutes " + seconds + " seconds " + response.getBest().getDistance() + " meters");
     }
+
     public static void main(String[] args) {
         GraphHopperUtil graphHopperUtil = new GraphHopperUtil();
         graphHopperUtil.calculateRoute("6229EN", "6229HD", "foot");
+        graphHopperUtil.calculateRoute("6229EN", "6229HD", "bike");
+        graphHopperUtil.calculateRoute("6229EN", "6229HD", "car");
     }
 }
