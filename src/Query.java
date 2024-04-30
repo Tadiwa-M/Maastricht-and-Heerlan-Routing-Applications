@@ -12,7 +12,14 @@ public class Query {
             throw new IllegalArgumentException("Invalid postal code");
         }
         else {
-            ShortestPathFinder shortestPathFinder = new ShortestPathFinder();
+            Graph graph = new GraphCreator().createGraph();
+            ShortestPathFinder shortestPathFinder = new ShortestPathFinder(graph);
+
+            //TODO wrap this in a factory
+            IShortestPath shortestPathAlgorithm = new Dijkstra(graph);
+
+            shortestPathFinder.setShortestPathAlgorithm(shortestPathAlgorithm);
+
             shortestPathFinder.findPath(this.startingPoint, this.endPoint);
         }
     }

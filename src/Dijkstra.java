@@ -10,12 +10,15 @@ public class Dijkstra implements IShortestPath {
     double[] dist;
     int[] parent;
 
-    public Dijkstra(ArrayList<ArrayList<Integer>> adj, ArrayList<PostAddress> addresses) {
-        this.adj = adj;
-        this.N = addresses.size();
+    public Dijkstra(Graph graph) {
+        // Copy from graph
+        this.N = graph.numVertices;
+        this.addresses = graph.addresses;
+        this.adj = graph.adj;
+
+        // Initialize distance and parent arrays
         dist = new double[N];
         parent = new int[N];
-        this.addresses = addresses;
     }
 
     public void runAlgorithm(int src) {
@@ -44,9 +47,6 @@ public class Dijkstra implements IShortestPath {
                 int v = adj.get(u).get(i);
 
                 double weight = PostAddress.basicDistances(addresses.get(u), addresses.get(v));
-
-                if (weight > threshold)
-                    weight *= 5;
 
                 // If the distance to v is shorter by going through u
                 if (dist[v] > dist[u] + weight) {

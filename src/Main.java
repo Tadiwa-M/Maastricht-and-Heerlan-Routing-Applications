@@ -6,7 +6,9 @@ import java.util.stream.Collectors;
 public class Main {
 
     public static void calculateDistance(PostAddress start, PostAddress end, int vehicleType) {
-        ShortestPathFinder shortestPathFinder = new ShortestPathFinder();
+        Graph graph = new GraphCreator().createGraph();
+        ShortestPathFinder shortestPathFinder = new ShortestPathFinder(graph);
+        shortestPathFinder.setShortestPathAlgorithm(new Dijkstra(graph));
 
         List<PostAddress> path = shortestPathFinder.findPath(start, end);
         double distance = shortestPathFinder.getDistance(start, end);

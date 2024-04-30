@@ -190,10 +190,13 @@ public class GUI extends JFrame {
     }
 
     private void runPathFindingAlgorithm(PostAddress from, PostAddress to) {
-        ShortestPathFinder pathFinder = new ShortestPathFinder();
+        Graph graph = new GraphCreator().createGraph();
+        ShortestPathFinder pathFinder = new ShortestPathFinder(graph);
+        pathFinder.setShortestPathAlgorithm(new Dijkstra(graph));
 
         ArrayList<PostAddress> shortestPath = pathFinder.findPath(from, to);
         double value = pathFinder.getDistance(from, to);
+
         value = Double.parseDouble(new DecimalFormat("##.##").format(value));
         visualizeShortestPath(shortestPath);
         Vehicle vehicle;
