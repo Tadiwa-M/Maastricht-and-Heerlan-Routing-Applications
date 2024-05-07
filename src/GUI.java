@@ -1,8 +1,4 @@
-
-import Transport.Bike;
-import Transport.Foot;
-import Transport.Vehicle;
-
+import Transport.*;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
@@ -18,14 +14,11 @@ public class GUI extends JFrame {
 
     public static String FromCode = "FROM";
     public static String ToCode = "TO";
-    public static int currentVehicleCode = 0;
+    public static VehicleType currentVehicle = VehicleType.FOOT;
     public static final double minLat = 50.871838;
     public static final double maxLon = 5.745668;
     public static final double minLon = 5.638466;
     public static final double maxLat = 50.812057;
-
-    public static final char shortestPathASTAR = 'A';
-    public static final char shortestPathDijkstra = 'D';
 
     private BufferedImage mapImageWithPoints;
     private BufferedImage clearMapImage;
@@ -38,7 +31,7 @@ public class GUI extends JFrame {
     public GUI() {
         setSize(700, 750);
         setResizable(false);
-        setTitle("Distance Calculator of Maastricht Postal Codes");
+        setTitle("Distance Calculator using Maastricht Postal Codes");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         try {
@@ -122,7 +115,7 @@ public class GUI extends JFrame {
         return controlPanel;
     }
 
-    private JButton createGoButton(){
+    private JButton createGoButton() {
         JButton goButton = new JButton("Go");
         goButton.setPreferredSize(new Dimension(100, 30));
         goButton.setBackground(Color.WHITE);
@@ -133,7 +126,7 @@ public class GUI extends JFrame {
         return goButton;
     }
     private JComboBox<String> createVehicleBox(){
-        String[] vehicleList = {"Walk", "Bike"};
+        String[] vehicleList = {"Walk", "Bike", "Bus"};
         JComboBox<String> vehicleBox = new JComboBox<>(vehicleList);
         vehicleBox.setPreferredSize(new Dimension(100, 30));
         gbc.gridx = 0;
@@ -142,7 +135,7 @@ public class GUI extends JFrame {
         return vehicleBox;
     }
     private JButton createDijkstraButton(){
-        JButton dijkstraButton = new JButton("Run Dijkstra");
+        JButton dijkstraButton = new JButton("Run Algorithm");
         dijkstraButton.setPreferredSize(new Dimension(150, 30));
         gbc.gridy++;
         return dijkstraButton;
@@ -233,10 +226,19 @@ public class GUI extends JFrame {
 
         visualizeShortestPath(shortestPath);
 
-        Vehicle vehicle = getVehicle(value);
-
+        Vehicle vehicle;
+        if (currentVehicle == VehicleType.FOOT){
+            vehicle = new Foot(value);
+        } else if (currentVehicle == VehicleType.BIKE)
+            vehicle = new Bike(value);
+        else {
+            System.out.println("ERROR");
+            vehicle = null;
+        }
         showDijkstraDistanceMessage(value, vehicle);
+        double time = Double.parseDouble(new DecimalFormat("##.##").format(vehicle.calculateTime()));
 
+        JOptionPane.showMessageDialog(null, "Distance: " + value + "km\nCompleted In: " + (int) time + " minutes");
     }
 
     private void showDijkstraDistanceMessage(double value, Vehicle vehicle){
@@ -251,20 +253,6 @@ public class GUI extends JFrame {
         JOptionPane.showMessageDialog(null, "The Bird's Flight Distance is: " + distance + "km");
     }
 
-    private Vehicle getVehicle(double value){
-        Vehicle vehicle;
-        if (currentVehicleCode == 0){
-            vehicle = new Foot(value);
-        } else if (currentVehicleCode == 1)
-            vehicle = new Bike(value);
-        else {
-            System.out.println("ERROR");
-            vehicle = null;
-        }
-        return vehicle;
-    }
-
-    //assigns values to the from and to point and draws the path on the map using the Dijkstra algorithm
     private void visualizeShortestPath(ArrayList<PostAddress> shortestPath) {
 
         if (shortestPath.size() >= 2) {
@@ -303,17 +291,7 @@ public class GUI extends JFrame {
     }
 
     public static void encodeVehicle(String vehicle) {
-        switch (vehicle) {
-            case "Walk":
-                currentVehicleCode = 0;
-                break;
-            case "Bike":
-                currentVehicleCode = 1;
-                break;
-            default:
-                System.out.println("ERROR");
-                break;
-        }
+        currentVehicle = VehicleType.valueOf(vehicle.toUpperCase());
     }
 
     @Override
@@ -342,13 +320,8 @@ public class GUI extends JFrame {
         return AddressFinder.getAddress(postalCode);
     }
 
-
-
     public boolean acceptCode(String code) {
-        if (code.length() != 6) {
-            return false;
-        }
-        return true;
+        return code.length() == 6;
     }
 
     public Point findPostCodeCoordinate(double lon, double lat) {
@@ -363,13 +336,8 @@ public class GUI extends JFrame {
     }
 
     public void drawPoints(PostAddress from, PostAddress to) {
-        double fromLongitude = from.getLon();
-        double fromLatitude = from.getLat();
-        double toLongitude = to.getLon();
-        double toLatitude = to.getLat();
-
-        fromPoint = findPostCodeCoordinate(fromLongitude, fromLatitude);
-        toPoint = findPostCodeCoordinate(toLongitude, toLatitude);
+        fromPoint = findPostCodeCoordinate(from.getLon(), from.getLat());
+        toPoint = findPostCodeCoordinate(to.getLon(), to.getLat());
 
         repaint();
     }
