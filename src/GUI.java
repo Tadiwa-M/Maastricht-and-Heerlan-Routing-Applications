@@ -69,7 +69,7 @@ public class GUI extends JFrame {
         JButton goButton = createGoButton();
         controlPanel.add(goButton, gbc);
 
-        JButton algorithmButton = createDijkstraButton();
+        JButton algorithmButton = createAlgorithmButton();
         controlPanel.add(algorithmButton, gbc);
 
         mainPanel.add(controlPanel, BorderLayout.NORTH);
@@ -131,7 +131,7 @@ public class GUI extends JFrame {
         gbc.gridwidth = 4;
         return vehicleBox;
     }
-    private JButton createDijkstraButton(){
+    private JButton createAlgorithmButton(){
         JButton algorithmButton = new JButton("Run Algorithm");
         algorithmButton.setPreferredSize(new Dimension(150, 30));
         gbc.gridy++;
@@ -215,12 +215,20 @@ public class GUI extends JFrame {
         ShortestPathFinder pathFinder = new ShortestPathFinder(graph);
         pathFinder.setShortestPathAlgorithm(new Dijkstra(graph));
 
+        /*
         ArrayList<PostAddress> shortestPath = pathFinder.findPath(from, to);
         double value = pathFinder.getDistance(from, to);
+        */
 
-        value = Double.parseDouble(new DecimalFormat("##.##").format(value));
+        GraphHopperUtil graphHopperUtil = new GraphHopperUtil();
+        QueryResponse queryResponse = graphHopperUtil.calculateRoute(from.getPostalCode(), to.getPostalCode(), currentVehicle.toString().toLowerCase());
+
+        double value = queryResponse.getDistance() / 1000;
+        ArrayList<PostAddress> shortestPath = queryResponse.getPath();
 
         visualizeShortestPath(shortestPath);
+
+        value = Double.parseDouble(new DecimalFormat("##.##").format(value));
 
         Vehicle vehicle;
         if (currentVehicle == VehicleType.FOOT){

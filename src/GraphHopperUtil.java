@@ -5,8 +5,7 @@ import com.graphhopper.GHRequest;
 import com.graphhopper.GHResponse;
 import com.graphhopper.GraphHopper;
 import com.graphhopper.config.Profile;
-import com.graphhopper.routing.util.EncodingManager;
-import com.graphhopper.routing.util.VehicleEncodedValuesFactory;
+import com.graphhopper.util.PointList;
 import com.graphhopper.util.shapes.GHPoint;
 
 public class GraphHopperUtil {
@@ -27,7 +26,7 @@ public class GraphHopperUtil {
         graphHopper.importOrLoad();
     }
 
-    public void calculateRoute(String sourcePostalCode, String destinationPostalCode, String vehicle) {
+    public QueryResponse calculateRoute(String sourcePostalCode, String destinationPostalCode, String vehicle) {
         PostAddress source = AddressFinder.getAddress(sourcePostalCode);
         PostAddress destination = AddressFinder.getAddress(destinationPostalCode);
 
@@ -38,12 +37,38 @@ public class GraphHopperUtil {
         request.setProfile(vehicle);
         GHResponse response = graphHopper.route(request);
 
+        PointList points = response.getBest().getPoints();
+        ArrayList<PostAddress> path = new ArrayList<>();
+
+        for (GHPoint point: points) {
+            String postalCode = findClosestPostalCode(point.getLat(), point.getLon());
+            PostAddress address = new PostAddress(postalCode, point.getLat(), point.getLon());
+            path.add(address);
+        }
+
+        QueryResponse queryResponse = new QueryResponse(path, response.getBest().getDistance(), response.getBest().getTime());
+
         // Convert time from milliseconds to minutes and seconds
         long timeInMillis = response.getBest().getTime();
         long minutes = (timeInMillis / 1000) / 60;
         int seconds = (int)((timeInMillis / 1000) % 60);
 
         System.out.println(minutes + " minutes " + seconds + " seconds " + response.getBest().getDistance() + " meters");
+
+        return queryResponse;
+    }
+
+    private String findClosestPostalCode(double lat, double lon) {
+        double minDist = Double.MAX_VALUE;
+        String closestPostalCode = "";
+        for (PostAddress address: DataManager.getDataManager().postAddresses.values()) {
+            double dist = PostAddress.basicDistances(address, new PostAddress("", lat, lon));
+            if (dist < minDist) {
+                minDist = dist;
+                closestPostalCode = address.getPostalCode();
+            }
+        }
+        return closestPostalCode;
     }
 
     public static void main(String[] args) {
