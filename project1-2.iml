@@ -4,6 +4,9 @@
     <content url="file://$MODULE_DIR$" dumb="true">
       <sourceFolder url="file://$MODULE_DIR$" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/data" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/data/gtfs" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/data/img" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/data/locationInfo" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
     </content>
   </component>

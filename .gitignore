@@ -31,6 +31,4 @@ replay_pid*
 target
 
 # ignore gtfs
-data/gtfs/*
 !/graphFolder/
-!/data/gtfs/
