@@ -69,8 +69,8 @@ public class GUI extends JFrame {
         JButton goButton = createGoButton();
         controlPanel.add(goButton, gbc);
 
-        JButton dijkstraButton = createDijkstraButton();
-        controlPanel.add(dijkstraButton, gbc);
+        JButton algorithmButton = createDijkstraButton();
+        controlPanel.add(algorithmButton, gbc);
 
         mainPanel.add(controlPanel, BorderLayout.NORTH);
         add(mainPanel);
@@ -86,7 +86,7 @@ public class GUI extends JFrame {
             }
         });
 
-        dijkstraButton.addActionListener(new ActionListener() {
+        algorithmButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 boolean accept = buttonClickSharedOperations(postCodeFromField, postCodeToField,vehicleBox);
@@ -126,7 +126,7 @@ public class GUI extends JFrame {
         return goButton;
     }
     private JComboBox<String> createVehicleBox(){
-        String[] vehicleList = {"Walk", "Bike", "Bus"};
+        String[] vehicleList = {"Foot", "Bike", "Bus"};
         JComboBox<String> vehicleBox = new JComboBox<>(vehicleList);
         vehicleBox.setPreferredSize(new Dimension(100, 30));
         gbc.gridx = 0;
@@ -135,10 +135,10 @@ public class GUI extends JFrame {
         return vehicleBox;
     }
     private JButton createDijkstraButton(){
-        JButton dijkstraButton = new JButton("Run Algorithm");
-        dijkstraButton.setPreferredSize(new Dimension(150, 30));
+        JButton algorithmButton = new JButton("Run Algorithm");
+        algorithmButton.setPreferredSize(new Dimension(150, 30));
         gbc.gridy++;
-        return dijkstraButton;
+        return algorithmButton;
     }
 
 
@@ -161,7 +161,7 @@ public class GUI extends JFrame {
         String codeToString = postCodeToField.getText().replace(" ", "");
         String codeFromString = postCodeFromField.getText().replace(" ", "");
 
-        buttonClickConditionals(codeFromString,codeToString);
+        accept = buttonClickConditionals(codeFromString,codeToString);
 
         if (accept){
             ToCode = codeToString;
@@ -175,20 +175,19 @@ public class GUI extends JFrame {
 
     //works with the buttonClickSharedOperations() method to allow or disallow certain post codes depending on their format, returns the accept code based on the conditionals
     private boolean buttonClickConditionals(String codeFrom, String codeTo){
-        boolean accept = true;
         if (!acceptCode(codeTo)) {
             JOptionPane.showMessageDialog(null, "The \"TO\" PostCode is Not in the proper format\nFormat: 1234AB or 1234 AB");
-            accept = false;
+            return false;
         }
         if (!acceptCode(codeFrom)) {
             JOptionPane.showMessageDialog(null, "The \"FROM\" PostCode is Not in the proper format\nFormat: 1234AB or 1234 AB");
-            accept = false;
+            return false;
         }
         if (codeTo.equals(codeFrom)) {
             JOptionPane.showMessageDialog(null, "The Post Codes are the same\n No distance between them");
-            accept = false;
+            return false;
         }
-        return accept;
+        return true;
     }
 
     private BufferedImage drawPointsOnMap(BufferedImage mapImage, Point fromPoint, Point toPoint) {
@@ -235,13 +234,10 @@ public class GUI extends JFrame {
             System.out.println("ERROR");
             vehicle = null;
         }
-        showDijkstraDistanceMessage(value, vehicle);
-        double time = Double.parseDouble(new DecimalFormat("##.##").format(vehicle.calculateTime()));
-
-        JOptionPane.showMessageDialog(null, "Distance: " + value + "km\nCompleted In: " + (int) time + " minutes");
+        showAlgorithmDistanceMessage(value, vehicle);
     }
 
-    private void showDijkstraDistanceMessage(double value, Vehicle vehicle){
+    private void showAlgorithmDistanceMessage(double value, Vehicle vehicle){
         double time = Double.parseDouble(new DecimalFormat("##.##").format(vehicle.calculateTime()));
         JOptionPane.showMessageDialog(null, "Distance: " + value + "km\nCompleted In: " + (int) time + " minutes");
 
