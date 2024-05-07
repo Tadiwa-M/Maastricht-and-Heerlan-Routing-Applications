@@ -5,6 +5,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -20,10 +21,12 @@ public class GUI extends JFrame {
     public static final double maxLat = 50.812057;
 
     private BufferedImage mapImageWithPoints;
+    private BufferedImage clearMapImage;
 
     public static Point fromPoint;
     public static Point toPoint;
     private BufferedImage mapImage;
+    public static GridBagConstraints gbc;
 
     public GUI() {
         setSize(700, 750);
@@ -33,7 +36,8 @@ public class GUI extends JFrame {
 
         try {
 
-            mapImage = ImageIO.read(GUI.class.getResource("img/Map.png"));
+            mapImage = ImageIO.read(new File("data/img/Map.png"));
+            clearMapImage = ImageIO.read(new File("data/img/Map.png"));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -41,51 +45,31 @@ public class GUI extends JFrame {
         JPanel mainPanel = new JPanel(new BorderLayout());
         mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        JPanel controlPanel = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.insets = new Insets(5, 5, 5, 5);
+
+        JPanel controlPanel = createControlPanel();
 
         JLabel fromLabel = new JLabel("From: ");
         controlPanel.add(fromLabel, gbc);
 
-        JFormattedTextField postCodeFromField = new JFormattedTextField();
-        postCodeFromField.setPreferredSize(new Dimension(100, 30));
-        postCodeFromField.setText("6211AL");
-        gbc.gridx++;
+
+        JFormattedTextField postCodeFromField = createPostCodeField("6211AL");
+
         controlPanel.add(postCodeFromField, gbc);
 
         JLabel toLabel = new JLabel("To: ");
         gbc.gridx++;
         controlPanel.add(toLabel, gbc);
 
-        JFormattedTextField postCodeToField = new JFormattedTextField();
-        postCodeToField.setPreferredSize(new Dimension(100, 30));
-        postCodeToField.setText("6225AG");
-        gbc.gridx++;
+        JFormattedTextField postCodeToField = createPostCodeField("6225AG");
         controlPanel.add(postCodeToField, gbc);
 
-        String[] vehicleList = {"Foot", "Bike"};
-        JComboBox<String> vehicleBox = new JComboBox<>(vehicleList);
-        vehicleBox.setPreferredSize(new Dimension(100, 30));
-        gbc.gridx = 0;
-        gbc.gridy++;
-        gbc.gridwidth = 4;
+        JComboBox<String> vehicleBox = createVehicleBox();
         controlPanel.add(vehicleBox, gbc);
 
-        JButton goButton = new JButton("Go");
-        goButton.setPreferredSize(new Dimension(100, 30));
-        goButton.setBackground(Color.WHITE);
-        goButton.setForeground(Color.BLUE);
-        gbc.gridy++;
-        gbc.gridx = 0;
-        gbc.gridwidth = 4;
+        JButton goButton = createGoButton();
         controlPanel.add(goButton, gbc);
 
-        JButton dijkstraButton = new JButton("Run Algorithm");
-        dijkstraButton.setPreferredSize(new Dimension(150, 30));
-        gbc.gridy++;
+        JButton dijkstraButton = createDijkstraButton();
         controlPanel.add(dijkstraButton, gbc);
 
         mainPanel.add(controlPanel, BorderLayout.NORTH);
@@ -94,76 +78,117 @@ public class GUI extends JFrame {
         goButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                DrawBaseImage((Graphics2D) mapImage.getGraphics(), mapImage);
-                boolean accept = true;
-                fromPoint = null;
-                toPoint = null;
-                repaint();
-                String codeTo = postCodeToField.getText().toUpperCase().replace(" ", "");
-                String codeFrom = postCodeFromField.getText().toUpperCase().replace(" ", "");
+                boolean accept = buttonClickSharedOperations(postCodeFromField, postCodeToField,vehicleBox);
+                drawPoints(getAddressFromDataManager(FromCode), getAddressFromDataManager(ToCode));
+                mapImageWithPoints = drawPointsOnMap(mapImage, fromPoint, toPoint);
+                showStraightLineDistance();
 
-                if (!acceptCode(codeTo)) {
-                    JOptionPane.showMessageDialog(null, "The \"TO\" PostCode is Not in the proper format\nFormat: 1234AB or 1234 AB");
-                    accept = false;
-                }
-                if (!acceptCode(codeFrom)) {
-                    JOptionPane.showMessageDialog(null, "The \"FROM\" PostCode is not in the proper format\nFormat: 1234AB or 1234 AB");
-                    accept = false;
-                }
-                if (codeTo.equals(codeFrom)) {
-                    JOptionPane.showMessageDialog(null, "The Post Codes are the same\n No distance between them");
-                    accept = false;
-                }
-                if (accept) {
-                    ToCode = codeTo;
-                    FromCode = codeFrom;
-
-                    PostAddress fromAddress = getAddress(codeFrom);
-                    PostAddress toAddress = getAddress(codeTo);
-
-                    drawPoints(fromAddress, toAddress);
-                    mapImageWithPoints = drawPointsOnMap(mapImage, fromPoint, toPoint);
-                    String selectedVehicle = (String) vehicleBox.getSelectedItem();
-                    encodeVehicle(selectedVehicle);
-                }
             }
         });
 
         dijkstraButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                DrawBaseImage((Graphics2D) mapImage.getGraphics(), mapImage);
-                boolean accept = true;
-                String codeTo = postCodeToField.getText().replace(" ", "");
-                String codeFrom = postCodeFromField.getText().replace(" ", "");
-
-                if (!acceptCode(codeTo)) {
-                    JOptionPane.showMessageDialog(null, "The \"TO\" PostCode is Not in the proper format\nFormat: 1234AB or 1234 AB");
-                    accept = false;
-                }
-                if (!acceptCode(codeFrom)) {
-                    JOptionPane.showMessageDialog(null, "The \"FROM\" PostCode is Not in the proper format\nFormat: 1234AB or 1234 AB");
-                    accept = false;
-                }
-                if (codeTo.equals(codeFrom)) {
-                    JOptionPane.showMessageDialog(null, "The Post Codes are the same\n No distance between them");
-                    accept = false;
-                }
-                if (accept) {
-                    ToCode = codeTo;
-                    FromCode = codeFrom;
-
-                    PostAddress fromAddress = getAddress(codeFrom);
-                    PostAddress toAddress = getAddress(codeTo);
-
-                    String selectedVehicle = (String) vehicleBox.getSelectedItem();
-                    encodeVehicle(selectedVehicle);
-                    runPathFindingAlgorithm(fromAddress, toAddress);
-                }
+                boolean accept = buttonClickSharedOperations(postCodeFromField, postCodeToField,vehicleBox);
+                if (!accept){return;}
+                runPathFindingAlgorithm(getAddressFromDataManager(FromCode), getAddressFromDataManager(ToCode));
 
             }
         });
 
+    }
+
+    private JFormattedTextField createPostCodeField(String contents){
+        JFormattedTextField postCodeField = new JFormattedTextField();
+        postCodeField.setPreferredSize(new Dimension(100, 30));
+        postCodeField.setText(contents);
+        gbc.gridx++;
+        return postCodeField;
+    }
+
+    private JPanel createControlPanel(){
+        JPanel controlPanel = new JPanel(new GridBagLayout());
+        gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.insets = new Insets(5, 5, 5, 5);
+        return controlPanel;
+    }
+
+    private JButton createGoButton() {
+        JButton goButton = new JButton("Go");
+        goButton.setPreferredSize(new Dimension(100, 30));
+        goButton.setBackground(Color.WHITE);
+        goButton.setForeground(Color.BLUE);
+        gbc.gridy++;
+        gbc.gridx = 0;
+        gbc.gridwidth = 4;
+        return goButton;
+    }
+    private JComboBox<String> createVehicleBox(){
+        String[] vehicleList = {"Walk", "Bike", "Bus"};
+        JComboBox<String> vehicleBox = new JComboBox<>(vehicleList);
+        vehicleBox.setPreferredSize(new Dimension(100, 30));
+        gbc.gridx = 0;
+        gbc.gridy++;
+        gbc.gridwidth = 4;
+        return vehicleBox;
+    }
+    private JButton createDijkstraButton(){
+        JButton dijkstraButton = new JButton("Run Algorithm");
+        dijkstraButton.setPreferredSize(new Dimension(150, 30));
+        gbc.gridy++;
+        return dijkstraButton;
+    }
+
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            GUI frame = new GUI();
+            frame.setVisible(true);
+        });
+    }
+
+
+    //This function does some shared variable initializations, and checks whether or not the operations that follow them in the action listeners should be executed,
+    // returns the value of the accept variable which tells us if any violations happened or not
+    private boolean buttonClickSharedOperations(JFormattedTextField postCodeFromField, JFormattedTextField postCodeToField, JComboBox<String> vehicleBox){
+        DrawBaseImage((Graphics2D) mapImage.getGraphics(), mapImage);
+        boolean accept = true;
+        repaint();
+        fromPoint = null;
+        toPoint = null;
+        String codeToString = postCodeToField.getText().replace(" ", "");
+        String codeFromString = postCodeFromField.getText().replace(" ", "");
+
+        buttonClickConditionals(codeFromString,codeToString);
+
+        if (accept){
+            ToCode = codeToString;
+            FromCode = codeFromString;
+            String selectedVehicle = (String) vehicleBox.getSelectedItem();
+            assert selectedVehicle != null;
+            encodeVehicle(selectedVehicle);
+        }
+        return accept;
+    }
+
+    //works with the buttonClickSharedOperations() method to allow or disallow certain post codes depending on their format, returns the accept code based on the conditionals
+    private boolean buttonClickConditionals(String codeFrom, String codeTo){
+        boolean accept = true;
+        if (!acceptCode(codeTo)) {
+            JOptionPane.showMessageDialog(null, "The \"TO\" PostCode is Not in the proper format\nFormat: 1234AB or 1234 AB");
+            accept = false;
+        }
+        if (!acceptCode(codeFrom)) {
+            JOptionPane.showMessageDialog(null, "The \"FROM\" PostCode is Not in the proper format\nFormat: 1234AB or 1234 AB");
+            accept = false;
+        }
+        if (codeTo.equals(codeFrom)) {
+            JOptionPane.showMessageDialog(null, "The Post Codes are the same\n No distance between them");
+            accept = false;
+        }
+        return accept;
     }
 
     private BufferedImage drawPointsOnMap(BufferedImage mapImage, Point fromPoint, Point toPoint) {
@@ -198,7 +223,9 @@ public class GUI extends JFrame {
         double value = pathFinder.getDistance(from, to);
 
         value = Double.parseDouble(new DecimalFormat("##.##").format(value));
+
         visualizeShortestPath(shortestPath);
+
         Vehicle vehicle;
         if (currentVehicle == VehicleType.FOOT){
             vehicle = new Foot(value);
@@ -208,9 +235,22 @@ public class GUI extends JFrame {
             System.out.println("ERROR");
             vehicle = null;
         }
+        showDijkstraDistanceMessage(value, vehicle);
         double time = Double.parseDouble(new DecimalFormat("##.##").format(vehicle.calculateTime()));
 
         JOptionPane.showMessageDialog(null, "Distance: " + value + "km\nCompleted In: " + (int) time + " minutes");
+    }
+
+    private void showDijkstraDistanceMessage(double value, Vehicle vehicle){
+        double time = Double.parseDouble(new DecimalFormat("##.##").format(vehicle.calculateTime()));
+        JOptionPane.showMessageDialog(null, "Distance: " + value + "km\nCompleted In: " + (int) time + " minutes");
+
+    }
+    private void showStraightLineDistance(){
+        DecimalFormat df = new DecimalFormat();
+        df.setMaximumFractionDigits(2);
+        float distance = Float.parseFloat(df.format(PostAddress.basicDistances(getAddressFromDataManager(FromCode),getAddressFromDataManager(ToCode))));
+        JOptionPane.showMessageDialog(null, "The Bird's Flight Distance is: " + distance + "km");
     }
 
     private void visualizeShortestPath(ArrayList<PostAddress> shortestPath) {
@@ -227,14 +267,18 @@ public class GUI extends JFrame {
         repaint();
     }
 
+    //the drawing method of the Dijkstra/A_STAR Algorithm,
     private void drawShortestPathOnMap(Graphics2D g, BufferedImage mapImage, ArrayList<PostAddress> shortestPath) {
         // Draw the mapImage
-        g.drawImage(mapImage, 0, 0, null);
+
+        DrawBaseImage(g,mapImage);
+
 
         // Draw the shortest path
         g.setColor(Color.BLACK);
         g.setStroke(new BasicStroke(3));
 
+        //draw line between two points as long as the end has not been reacher, gives the impression of a continuous line
         for (int i = 0; i < shortestPath.size() - 1; i++) {
             Point startPoint = findPostCodeCoordinate(shortestPath.get(i).getLon(), shortestPath.get(i).getLat());
             Point endPoint = findPostCodeCoordinate(shortestPath.get(i + 1).getLon(), shortestPath.get(i + 1).getLat());
@@ -243,7 +287,7 @@ public class GUI extends JFrame {
     }
 
     private void DrawBaseImage(Graphics2D g, BufferedImage mapImage) {
-        g.drawImage(mapImage, 0, 0, null);
+        g.drawImage(clearMapImage, 0, 0, null);
     }
 
     public static void encodeVehicle(String vehicle) {
@@ -272,22 +316,12 @@ public class GUI extends JFrame {
         }
     }
 
-    public PostAddress getAddress(String postalCode) {
+    public PostAddress getAddressFromDataManager(String postalCode) {
         return AddressFinder.getAddress(postalCode);
     }
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            GUI frame = new GUI();
-            frame.setVisible(true);
-        });
-    }
-
     public boolean acceptCode(String code) {
-        if (code.length() != 6) {
-            return false;
-        }
-        return true;
+        return code.length() == 6;
     }
 
     public Point findPostCodeCoordinate(double lon, double lat) {
