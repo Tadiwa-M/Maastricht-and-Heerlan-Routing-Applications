@@ -86,14 +86,11 @@ public class GUI extends JFrame {
             }
         });
 
-        algorithmButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                boolean accept = buttonClickSharedOperations(postCodeFromField, postCodeToField,vehicleBox);
-                if (!accept){return;}
-                runPathFindingAlgorithm(getAddressFromDataManager(FromCode), getAddressFromDataManager(ToCode));
+        algorithmButton.addActionListener(e -> {
+            boolean accept = buttonClickSharedOperations(postCodeFromField, postCodeToField,vehicleBox);
+            if (!accept){return;}
+            runPathFindingAlgorithm(getAddressFromDataManager(FromCode), getAddressFromDataManager(ToCode));
 
-            }
         });
 
     }
@@ -150,10 +147,10 @@ public class GUI extends JFrame {
     }
 
 
-    //This function does some shared variable initializations, and checks whether or not the operations that follow them in the action listeners should be executed,
+    //This function does some shared variable initializations, and checks whether the operations that follow them in the action listeners should be executed,
     // returns the value of the accept variable which tells us if any violations happened or not
     private boolean buttonClickSharedOperations(JFormattedTextField postCodeFromField, JFormattedTextField postCodeToField, JComboBox<String> vehicleBox){
-        DrawBaseImage((Graphics2D) mapImage.getGraphics(), mapImage);
+        DrawBaseImage((Graphics2D) mapImage.getGraphics());
         boolean accept = true;
         repaint();
         fromPoint = null;
@@ -231,8 +228,9 @@ public class GUI extends JFrame {
         } else if (currentVehicle == VehicleType.BIKE)
             vehicle = new Bike(value);
         else {
-            System.out.println("ERROR");
-            vehicle = null;
+            //Show error message if the vehicle is not supported
+            JOptionPane.showMessageDialog(null, "The vehicle is not supported");
+            return;
         }
         showAlgorithmDistanceMessage(value, vehicle);
     }
@@ -258,23 +256,22 @@ public class GUI extends JFrame {
 
         // Assuming this code is inside a paintComponent or similar method where you have access to Graphics2D object
         Graphics2D g = (Graphics2D) mapImage.getGraphics();
-        drawShortestPathOnMap(g, mapImage, shortestPath);
+        drawShortestPathOnMap(g, shortestPath);
 
         repaint();
     }
 
     //the drawing method of the Dijkstra/A_STAR Algorithm,
-    private void drawShortestPathOnMap(Graphics2D g, BufferedImage mapImage, ArrayList<PostAddress> shortestPath) {
+    private void drawShortestPathOnMap(Graphics2D g, ArrayList<PostAddress> shortestPath) {
         // Draw the mapImage
-
-        DrawBaseImage(g,mapImage);
+        DrawBaseImage(g);
 
 
         // Draw the shortest path
         g.setColor(Color.BLACK);
         g.setStroke(new BasicStroke(3));
 
-        //draw line between two points as long as the end has not been reacher, gives the impression of a continuous line
+        //draw line between two points as long as the end has not been reached, gives the impression of a continuous line
         for (int i = 0; i < shortestPath.size() - 1; i++) {
             Point startPoint = findPostCodeCoordinate(shortestPath.get(i).getLon(), shortestPath.get(i).getLat());
             Point endPoint = findPostCodeCoordinate(shortestPath.get(i + 1).getLon(), shortestPath.get(i + 1).getLat());
@@ -282,7 +279,7 @@ public class GUI extends JFrame {
         }
     }
 
-    private void DrawBaseImage(Graphics2D g, BufferedImage mapImage) {
+    private void DrawBaseImage(Graphics2D g) {
         g.drawImage(clearMapImage, 0, 0, null);
     }
 
