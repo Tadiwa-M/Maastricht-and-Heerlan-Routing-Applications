@@ -32,3 +32,4 @@ target
 
 # ignore gtfs
 !/graphFolder/
+!/data/gtfs/*
