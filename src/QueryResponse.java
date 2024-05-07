@@ -2,8 +2,8 @@ import java.util.ArrayList;
 
 public class QueryResponse {
     private ArrayList<PostAddress> path = new ArrayList<>();
-    private double distance;
-    private long time;
+    private final double distance;
+    private final long time;
 
     public QueryResponse(ArrayList<PostAddress> path, double distance, long time) {
         this.path = path;

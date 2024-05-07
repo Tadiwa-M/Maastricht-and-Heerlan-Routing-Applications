@@ -30,9 +30,7 @@ replay_pid*
 
 target
 
-#ignore sql credentials
-sql/*
-.vscode/
-
 # ignore gtfs
 data/gtfs/*
+!/graphFolder/
+!/data/gtfs/
