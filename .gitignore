@@ -26,7 +26,6 @@ replay_pid*
 # Ignore .idea
 .idea/
 ```
-!/src/GraphHopper.java
 !/identifier.sqlite
 
 target
