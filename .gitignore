@@ -32,4 +32,11 @@ target
 
 # ignore gtfs
 !/graphFolder/
-!/data/gtfs/*
+data/gtfs/*
+
+# ignore sql 
+sql/*
+
+#ignore dbCredentials
+dbCredentials
+.vscode/*
