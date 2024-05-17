@@ -37,6 +37,6 @@ data/gtfs/*
 # ignore sql 
 sql/*
 
-#ignore dbCredentials
-dbCredentials
+#ignore dbTables.dbCredentials
+/src/dbTables/dbCredentials.java
 .vscode/*
