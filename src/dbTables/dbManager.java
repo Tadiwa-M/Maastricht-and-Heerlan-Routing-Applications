@@ -5,21 +5,6 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.*;
-
-/* dbCredentials structure
-
-package dbTables;
-
-public class dbCredentials {
-    public static final String HOST = "";
-    public static final String PORT = "";
-    public static final String USERNAME = "";
-    public static final String PASSWORD = "";
-    public static final String databaseName = "";
-}
-*
-* */
 
 public class dbManager {
     private static String USERNAME = dbCredentials.databaseName;
