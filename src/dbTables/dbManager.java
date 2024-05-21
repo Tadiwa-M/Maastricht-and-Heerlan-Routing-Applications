@@ -41,6 +41,51 @@ public class dbManager {
         }
     }
 
+    public static List<Stops> fetchStopsByCoords(double lat, double lon) {
+        Connection conn = getSqlConnection();
+        if (conn == null) return null;
+
+        List<Stops> stopsList = new ArrayList<>();
+        double radiusKm = 0.3; // 300 meters
+
+        String query = "SELECT *, " +
+                "(6371 * acos(cos(radians(?)) * cos(radians(stop_lat)) * cos(radians(stop_lon) - radians(?)) + sin(radians(?)) * sin(radians(stop_lat)))) AS distance " +
+                "FROM stops " +
+                "HAVING distance <= ? " +
+                "ORDER BY distance";
+
+        try {
+            PreparedStatement stmt = conn.prepareStatement(query);
+            stmt.setDouble(1, lat);
+            stmt.setDouble(2, lon);
+            stmt.setDouble(3, lat);
+            stmt.setDouble(4, radiusKm);
+
+            ResultSet resultSet = stmt.executeQuery();
+            while (resultSet.next()) {
+                Stops stop = new Stops();
+                stop.setStopId(resultSet.getInt("stop_id"));
+                stop.setStopCode(resultSet.getString("stop_code"));
+                stop.setStopName(resultSet.getString("stop_name"));
+                stop.setStopLat(resultSet.getFloat("stop_lat"));
+                stop.setStopLon(resultSet.getFloat("stop_lon"));
+                stop.setLocationType(resultSet.getInt("location_type"));
+                stop.setParentStation(resultSet.getString("parent_station"));
+                stop.setStopTimezone(resultSet.getString("stop_timezone"));
+                stop.setWheelchairBoarding(resultSet.getInt("wheelchair_boarding"));
+                stop.setPlatformCode(resultSet.getString("platform_code"));
+                stop.setZoneId(resultSet.getString("zone_id"));
+                stopsList.add(stop);
+            }
+            resultSet.close();
+            stmt.close();
+            conn.close();
+        } catch (SQLException e) {
+            System.err.println("Error: " + e.getMessage());
+        }
+        return stopsList;
+    }
+
     public static Agency fetchAgencyById(String agencyId) {
         Connection conn = getSqlConnection();
         if (conn == null) return null;
