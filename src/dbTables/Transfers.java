@@ -66,5 +66,18 @@ public class Transfers {
     public void setToTripId(int toTripId) {
         this.toTripId = toTripId;
     }
+
+    @Override
+    public String toString() {
+        return "Transfers{" +
+                "fromStopId=" + fromStopId +
+                ", toStopId=" + toStopId +
+                ", fromRouteId=" + fromRouteId +
+                ", toRouteId=" + toRouteId +
+                ", fromTripId=" + fromTripId +
+                ", toTripId=" + toTripId +
+                ", transferType=" + transferType +
+                '}';
+    }
 }
 

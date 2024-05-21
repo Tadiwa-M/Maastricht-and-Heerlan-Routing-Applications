@@ -31,5 +31,13 @@ public class CalendarDates {
         this.exceptionType = exceptionType;
     }
 
+    @Override
+    public String toString() {
+        return "CalendarDates{" +
+                "serviceId=" + serviceId +
+                ", date=" + date +
+                ", exceptionType=" + exceptionType +
+                '}';
+    }
 }
 

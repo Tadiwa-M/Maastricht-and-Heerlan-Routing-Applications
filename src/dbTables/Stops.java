@@ -120,5 +120,24 @@ public class Stops {
     public void setWheelchairBoarding(int wheelchairBoarding) {
         this.wheelchairBoarding = wheelchairBoarding;
     }
+
+    @Override
+    public String toString() {
+        return "Stops{" +
+                "stopId=" + stopId +
+                ", stopCode='" + stopCode + '\'' +
+                ", stopName='" + stopName + '\'' +
+                ", stopLat=" + stopLat +
+                ", stopLon=" + stopLon +
+                ", locationType=" + locationType +
+                ", parentStation='" + parentStation + '\'' +
+                ", stopTimezone='" + stopTimezone + '\'' +
+                ", wheelchairBoarding=" + wheelchairBoarding +
+                ", platformCode='" + platformCode + '\'' +
+                ", zoneId='" + zoneId + '\'' +
+                ", stopDesc='" + stopDesc + '\'' +
+                ", stopUrl='" + stopUrl + '\'' +
+                '}';
+    }
 }
 

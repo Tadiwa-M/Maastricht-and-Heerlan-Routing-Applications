@@ -64,4 +64,17 @@ public class Agency {
     public void setAgencyFareUrl(String agencyFareUrl) {
         this.agencyFareUrl = agencyFareUrl;
     }
+
+    @Override
+    public String toString() {
+        return "Agency{" +
+                "agencyId='" + agencyId + '\'' +
+                ", agencyName='" + agencyName + '\'' +
+                ", agencyUrl='" + agencyUrl + '\'' +
+                ", agencyTimezone='" + agencyTimezone + '\'' +
+                ", agencyLang='" + agencyLang + '\'' +
+                ", agencyPhone='" + agencyPhone + '\'' +
+                ", agencyFareUrl='" + agencyFareUrl + '\'' +
+                '}';
+    }
 }

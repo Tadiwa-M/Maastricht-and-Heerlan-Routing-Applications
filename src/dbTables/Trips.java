@@ -91,5 +91,21 @@ public class Trips {
     public void setBikesAllowed(int bikesAllowed) {
         this.bikesAllowed = bikesAllowed;
     }
+
+    @Override
+    public String toString() {
+        return "Trips{" +
+                "routeId='" + routeId + '\'' +
+                ", serviceId='" + serviceId + '\'' +
+                ", tripId='" + tripId + '\'' +
+                ", tripHeadsign='" + tripHeadsign + '\'' +
+                ", tripShortName='" + tripShortName + '\'' +
+                ", directionId=" + directionId +
+                ", blockId='" + blockId + '\'' +
+                ", shapeId='" + shapeId + '\'' +
+                ", wheelchairAccessible=" + wheelchairAccessible +
+                ", bikesAllowed=" + bikesAllowed +
+                '}';
+    }
 }
 

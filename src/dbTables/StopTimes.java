@@ -84,5 +84,20 @@ public class StopTimes {
     public void setShapeDistTraveled(float shapeDistTraveled) {
         this.shapeDistTraveled = shapeDistTraveled;
     }
+
+    @Override
+    public String toString() {
+        return "StopTimes{" +
+                "tripId=" + tripId +
+                ", stopSequence=" + stopSequence +
+                ", stopHeadsign='" + stopHeadsign + '\'' +
+                ", arrivalTime=" + arrivalTime +
+                ", departureTime=" + departureTime +
+                ", pickupType=" + pickupType +
+                ", dropOffType=" + dropOffType +
+                ", timepoint=" + timepoint +
+                ", shapeDistTraveled=" + shapeDistTraveled +
+                '}';
+    }
 }
 

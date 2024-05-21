@@ -57,5 +57,17 @@ public class FeedInfo {
     public void setFeedVersion(String feedVersion) {
         this.feedVersion = feedVersion;
     }
+
+    @Override
+    public String toString() {
+        return "FeedInfo{" +
+                "feedPublisherName='" + feedPublisherName + '\'' +
+                ", feedPublisherUrl='" + feedPublisherUrl + '\'' +
+                ", feedLang='" + feedLang + '\'' +
+                ", feedStartDate=" + feedStartDate +
+                ", feedEndDate=" + feedEndDate +
+                ", feedVersion='" + feedVersion + '\'' +
+                '}';
+    }
 }
 

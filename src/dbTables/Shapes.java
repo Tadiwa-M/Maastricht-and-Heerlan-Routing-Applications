@@ -48,5 +48,16 @@ public class Shapes {
     public void setShapeDistTraveled(float shapeDistTraveled) {
         this.shapeDistTraveled = shapeDistTraveled;
     }
+
+    @Override
+    public String toString() {
+        return "Shapes{" +
+                "shapeId=" + shapeId +
+                ", shapePtSequence=" + shapePtSequence +
+                ", shapePtLat=" + shapePtLat +
+                ", shapePtLon=" + shapePtLon +
+                ", shapeDistTraveled=" + shapeDistTraveled +
+                '}';
+    }
 }
 

@@ -84,6 +84,21 @@ public class Routes {
     public void setRouteTextColor(String routeTextColor) {
         this.routeTextColor = routeTextColor;
     }
+
+    @Override
+    public String toString() {
+        return "Routes{" +
+                "routeId='" + routeId + '\'' +
+                ", agencyId='" + agencyId + '\'' +
+                ", routeShortName='" + routeShortName + '\'' +
+                ", routeLongName='" + routeLongName + '\'' +
+                ", routeDesc='" + routeDesc + '\'' +
+                ", routeType=" + routeType +
+                ", routeUrl='" + routeUrl + '\'' +
+                ", routeColor='" + routeColor + '\'' +
+                ", routeTextColor='" + routeTextColor + '\'' +
+                '}';
+    }
 }
 
 

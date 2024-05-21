@@ -7,7 +7,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class dbManager {
-    private static String USERNAME = dbCredentials.databaseName;
+    private static String USERNAME = dbCredentials.USERNAME;
     private static String PORT = dbCredentials.PORT;
     private static String HOST = dbCredentials.HOST;
     private static String DATABASE_NAME = dbCredentials.databaseName;
@@ -15,20 +15,20 @@ public class dbManager {
     private static String DATABASE_URL = "jdbc:mysql://" + HOST + ":" + PORT + "/" + DATABASE_NAME + "?autoReconnect=true&useSSL=true&requireSSL=true";
 
     public static void main(String[] args) {
-        Connection conn = getSqlConnection();
-
-        try {//example query
-            PreparedStatement stmt = conn.prepareStatement("SELECT * FROM trips");
-            ResultSet resultSet = stmt.executeQuery();
-            while (resultSet.next()) {
-                System.out.println(resultSet.getString("service_id")+ "   " + resultSet.getString("trip_id")+ "   "+ resultSet.getString("trip_headsign"));
-            }
-            resultSet.close();
-            stmt.close();
-            conn.close();
-        } catch (SQLException e) {
-            System.err.println("Error: " + e.getMessage());
-        }
+//        Connection conn = getSqlConnection();
+//        try {//example query
+//            PreparedStatement stmt = conn.prepareStatement("SELECT * FROM trips");
+//            ResultSet resultSet = stmt.executeQuery();
+//            while (resultSet.next()) {
+//                System.out.println(resultSet.getString("service_id")+ "   " + resultSet.getString("trip_id")+ "   "+ resultSet.getString("trip_headsign"));
+//            }
+//            resultSet.close();
+//            stmt.close();
+            System.out.println(fetchRoutesById("1069"));
+//            conn.close();
+//        } catch (SQLException e) {
+//            System.err.println("Error: " + e.getMessage());
+//        }
     }
 
     private static Connection getSqlConnection() {
