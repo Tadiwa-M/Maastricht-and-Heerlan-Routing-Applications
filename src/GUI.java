@@ -214,11 +214,8 @@ public class GUI extends JFrame {
             g.drawLine(startPoint.x, startPoint.y, endPoint.x, endPoint.y);
 
             if (i == 0) {
-                String route_color = route.getBusStops().get(0).getRouteColor();
-                if(route_color != null)
-                    g.setColor(Color.decode("#" + route_color));
-                else
-                    g.setColor(Color.RED);
+//                String route_color = route.getBusStops().get(0).getRouteColor();
+                g.setColor(Color.RED);
             }
             else if(i == route.getBusStops().size() - 3){
                 g.setColor(Color.BLACK);
