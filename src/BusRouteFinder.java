@@ -63,7 +63,7 @@ public class BusRouteFinder {
 
     public static void main(String[] args) {
         PostAddress start = AddressFinder.getAddress("6229EN");
-        PostAddress end = AddressFinder.getAddress("6212EG");
+        PostAddress end = AddressFinder.getAddress("6216EG");
 
         BusRouteFinder busRouteFinder = new BusRouteFinder(start, end);
         BusRoute shortestRoute = busRouteFinder.findShortestBusRoute();
