@@ -142,8 +142,8 @@ public class GUI extends JFrame {
             for (BusStop bus: busRoute.getBusStops()){
                 System.out.println(bus);
             }
-            busRoute.getBusStops().add(0, new BusStop(0,0,FromCode, null,null,(float) first.getLat(), (float) first.getLon(), null));
-            busRoute.getBusStops().add(new BusStop(0,0,ToCode, null, null, (float) last.getLat(), (float) last.getLon(), null));
+            busRoute.getBusStops().add(0, new BusStop(0,0,FromCode, null,null,(float) first.getLat(), (float) first.getLon(), null, null));
+            busRoute.getBusStops().add(new BusStop(0,0,ToCode, null, null, (float) last.getLat(), (float) last.getLon(), null, null));
             Graphics2D g = (Graphics2D) mapImage.getGraphics();
             drawShortestPathOnMapBusRoute(g, busRoute);
             showBusStopsPopup(busRoute);
@@ -156,7 +156,8 @@ public class GUI extends JFrame {
     }
 
     private void showBusStopsPopup(BusRoute route) {
-        StringBuilder stopNames = new StringBuilder("Bus Stops for line (" + route.getRouteName() + "):\n");
+        String routeName = route.getBusStops().get(1).getRouteName();
+        StringBuilder stopNames = new StringBuilder("Bus Stops for line (" + routeName + "):\n");
         for (BusStop busStop : route.getBusStops()) {
             stopNames.append(busStop.getStopName()).append("\n");
         }
