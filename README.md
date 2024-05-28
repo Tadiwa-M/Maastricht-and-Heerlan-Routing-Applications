@@ -15,7 +15,7 @@ The Maastricht Transportation Application is a project developed by [Your Team N
 To install and run the application, follow these steps:
 
 1. Clone the repository: `git clone https://github.com/Amir-Mohseni/Project1-2.git`
-2. Navigate to the project directory: `cd Project1-2.src`
+2. Navigate to the project directory: `cd Project1-2`
 3. Run the Maven installation script based on your operating system:
     - For Unix/Linux: `./maven_script.sh`
     - For Windows: `maven_script.bat`
