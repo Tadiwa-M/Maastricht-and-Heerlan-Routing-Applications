@@ -115,7 +115,16 @@ public class GUI extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 boolean accept = buttonClickSharedOperations(postCodeFromField, postCodeToField, vehicleBox, true);
-                drawPoints(getAddressFromDataManager(FromCode), getAddressFromDataManager(ToCode));
+                if (!accept) return;
+
+                PostAddress fromAddress = getAddressFromDataManager(FromCode);
+                PostAddress toAddress = getAddressFromDataManager(ToCode);
+                if (fromAddress == null || toAddress == null) {
+                    showError("The postal code was not found.");
+                    return;
+                }
+
+                drawPoints(fromAddress, toAddress);
                 mapImageWithPoints = drawPointsOnMap(mapImage, fromPoint, toPoint);
                 showStraightLineDistance();
             }
@@ -123,15 +132,30 @@ public class GUI extends JFrame {
 
         algorithmButton.addActionListener(e -> {
             boolean accept = buttonClickSharedOperations(postCodeFromField, postCodeToField, vehicleBox, true);
-            if (!accept) { return; }
-            runPathFindingAlgorithm(getAddressFromDataManager(FromCode), getAddressFromDataManager(ToCode));
+            if (!accept) return;
+
+            PostAddress fromAddress = getAddressFromDataManager(FromCode);
+            PostAddress toAddress = getAddressFromDataManager(ToCode);
+            if (fromAddress == null || toAddress == null) {
+                // Show pop up error message
+                showError("The postal code was not found.");
+                return;
+            }
+
+            runPathFindingAlgorithm(fromAddress, toAddress);
         });
 
         busRouteButton.addActionListener(e -> {
-            boolean accept = buttonClickSharedOperations(postCodeFromField,postCodeToField, vehicleBox, false);
+            boolean accept = buttonClickSharedOperations(postCodeFromField, postCodeToField, vehicleBox, false);
             if (!accept) return;
+
             PostAddress first = getAddressFromDataManager(FromCode);
             PostAddress last = getAddressFromDataManager(ToCode);
+            if (first == null || last == null) {
+                showError("The postal code was not found.");
+                return;
+            }
+
             BusRouteFinder finder = new BusRouteFinder(first , last);
             BusRoute busRoute = finder.findShortestBusRoute();
             for (BusStop bus: busRoute.getBusStops()){
@@ -145,6 +169,11 @@ public class GUI extends JFrame {
             busRouteButton.setSelected(false);
         });
     }
+
+    private void showError(String message) {
+        JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
+    }
+
     private void showBusStopsPopup(BusRoute route) {
         StringBuilder stopNames = new StringBuilder("Bus Stops:\n");
         for (BusStop busStop : route.getBusStops()) {
@@ -497,8 +526,15 @@ public class GUI extends JFrame {
 
 
     public PostAddress getAddressFromDataManager(String postalCode) {
-        return AddressFinder.getAddress(postalCode);
+        try {
+            return AddressFinder.getAddress(postalCode);
+        } catch (Exception e) {
+            // Handle the exception gracefully, such as logging an error message
+            e.printStackTrace(); // Print the stack trace for debugging purposes
+            return null; // Return null to indicate that the address retrieval failed
+        }
     }
+
 
     public boolean acceptCode(String code) {
         return code.length() == 6;

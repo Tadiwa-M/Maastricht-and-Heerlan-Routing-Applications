@@ -24,6 +24,7 @@ public class AddressFinder {
         }
     }
 
+
     public static PostAddress getAddressFromServer(String postalCode) {
         String clientIp = "localhost";
         if (!rateLimiter.isRequestAllowed(clientIp)) {
@@ -38,6 +39,7 @@ public class AddressFinder {
         JSONObject jsonBody = new JSONObject();
         jsonBody.put("postcode", postalCode);
 
+
         Request request = new Request.Builder()
                 .url(url)
                 .post(okhttp3.RequestBody.create(jsonBody.toString(), okhttp3.MediaType.parse("application/json")))
@@ -47,11 +49,15 @@ public class AddressFinder {
             ResponseBody responseBody;
             try (Response response = client.newCall(request).execute()) {
                 if (!response.isSuccessful()) {
-                    System.out.println("Fuckk");
-                    throw new RuntimeException("Failed to execute request: " + response);
+                    System.out.println("Unexpected code " + response);
+                    return null;
                 }
 
                 responseBody = response.body();
+            }
+            catch (Exception e) {
+                System.out.println("Error while sending request to server: " + e.getMessage());
+                return null;
             }
 
             String jsonString = responseBody.string();
