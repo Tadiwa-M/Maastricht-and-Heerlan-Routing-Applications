@@ -25,20 +25,50 @@ public class BusRouteFinder {
             return null;
         }
 
+        BusRoute shortestRoute = null;
+        int shortestTime = Integer.MAX_VALUE;
+        int bestStartStopId = -1;
 
         // Find the shortest route
-        RouteDetails routeDetails = findShortestRoute(closeToStartStops, closeToEndStops);
-        if (routeDetails != null) {
-            BusRoute route = getAllStopsFromTripId(routeDetails.getTripId(), routeDetails.getStartStopSequence(), routeDetails.getEndStopSequence());
+        for (Stops startStop : closeToStartStops) {
+            for (Stops endStop : closeToEndStops) {
 
-            assert route != null;
+                System.out.println("Start: " + startStop.getStopName());
+                System.out.println("End: " + endStop.getStopName());
+                System.out.println();
 
-            return route;
+                String tripId = findShortestRoute(startStop.getStopId(), endStop.getStopId());
+                if (tripId != null) {
+                    BusRoute route = getAllStopsFromTripId(tripId);
+
+                    assert route != null;
+
+                    int tripTime = route.calculateTripTime();
+
+                    if (tripTime < shortestTime) {
+                        shortestTime = tripTime;
+                        shortestRoute = route;
+                        bestStartStopId = startStop.getStopId();
+                    }
+                }
+            }
         }
-        else {
+
+        if (shortestRoute == null) {
             System.out.println("No route found");
-            return null;
         }
+
+        // Remove all stops before the best start stop
+        for (int i = 0; i < shortestRoute.getBusStops().size(); i++) {
+            if(shortestRoute.getBusStops().get(i).getStopId() == bestStartStopId) {
+                //Remove all stops before the best start stop
+                shortestRoute.getBusStops().subList(0, i).clear();
+                break;
+            }
+        }
+
+        return shortestRoute;
+
     }
 
     public static List<Stops> findNearestBusStop(PostAddress address) {
@@ -48,7 +78,7 @@ public class BusRouteFinder {
 
     public static void main(String[] args) {
         PostAddress start = AddressFinder.getAddress("6229EN");
-        PostAddress end = AddressFinder.getAddress("6229HD");
+        PostAddress end = AddressFinder.getAddress("6216EG");
 
         BusRouteFinder busRouteFinder = new BusRouteFinder(start, end);
         BusRoute shortestRoute = busRouteFinder.findShortestBusRoute();
