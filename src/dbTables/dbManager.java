@@ -1,5 +1,7 @@
 package dbTables;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -44,31 +46,40 @@ public class dbManager {
         }
     }
 
-    public static BusRoute getAllStopsFromTripId(String tripID) {
+    public static BusRoute getAllStopsFromTripId(String tripID, int startSequence, int endSequence) {
         Connection conn = getSqlConnection();
         if (conn == null) return null;
 
         List<BusStop> busStops = new ArrayList<>();
 
-        String query = "SELECT \n" +
-                "    st.stop_id, \n" +
-                "    st.stop_sequence, \n" +
-                "    s.stop_name, \n" +
-                "    st.arrival_time, \n" +
-                "    st.departure_time, \n" +
-                "    s.stop_lat, \n" +
-                "    s.stop_lon\n" +
-                "FROM \n" +
-                "    stop_times st\n" +
-                "JOIN \n" +
-                "    stops s ON st.stop_id = s.stop_id\n" +
-                "WHERE \n" +
-                "    st.trip_id = ?\n" +
-                "ORDER BY \n" +
-                "    st.stop_sequence;\n";
+        String query = "SELECT " +
+                "    st.stop_id, " +
+                "    st.stop_sequence, " +
+                "    s.stop_name, " +
+                "    st.arrival_time, " +
+                "    st.departure_time, " +
+                "    s.stop_lat, " +
+                "    s.stop_lon, " +
+                "    r.route_color " +
+                "FROM " +
+                "    stop_times st " +
+                "JOIN " +
+                "    stops s ON st.stop_id = s.stop_id " +
+                "JOIN " +
+                "    trips t ON st.trip_id = t.trip_id " +
+                "JOIN " +
+                "    routes r ON t.route_id = r.route_id " +
+                "WHERE " +
+                "    st.trip_id = ? AND " +
+                "    st.stop_sequence BETWEEN ? AND ? " +
+                "ORDER BY " +
+                "    st.stop_sequence;";
+
         try {
             PreparedStatement stmt = conn.prepareStatement(query);
             stmt.setString(1, tripID);
+            stmt.setInt(2, startSequence);
+            stmt.setInt(3, endSequence);
             ResultSet resultSet = stmt.executeQuery();
             while (resultSet.next()) {
                 BusStop busStop = new BusStop(
@@ -78,60 +89,68 @@ public class dbManager {
                         resultSet.getString("arrival_time"),
                         resultSet.getString("departure_time"),
                         resultSet.getFloat("stop_lat"),
-                        resultSet.getFloat("stop_lon")
+                        resultSet.getFloat("stop_lon"),
+                        resultSet.getString("route_color")
                 );
                 busStops.add(busStop);
             }
-            BusRoute busRoute = new BusRoute(busStops);
 
             resultSet.close();
             stmt.close();
             conn.close();
 
-            return busRoute;
+            return new BusRoute(busStops);
         } catch (SQLException e) {
             System.err.println("Error retrieving stops: " + e.getMessage());
             return null;
         }
     }
 
-    public static String findShortestRoute(int startStopId, int endStopId) {
+    public static class RouteDetails {
+        private String tripId;
+        private int startStopSequence;
+        private int endStopSequence;
+
+        public RouteDetails(String tripId, int startStopSequence, int endStopSequence) {
+            this.tripId = tripId;
+            this.startStopSequence = startStopSequence;
+            this.endStopSequence = endStopSequence;
+        }
+
+        public String getTripId() {
+            return tripId;
+        }
+
+        public int getStartStopSequence() {
+            return startStopSequence;
+        }
+
+        public int getEndStopSequence() {
+            return endStopSequence;
+        }
+    }
+
+    public static RouteDetails findShortestRoute(List<Stops> startStopIds, List<Stops> endStopIds) {
         Connection conn = getSqlConnection();
         if (conn == null) return null;
 
-
-        String query = "SELECT \n" +
-                "    trip_id\n" +
-                "FROM (\n" +
-                "    SELECT \n" +
-                "        st1.trip_id, \n" +
-                "        TIMESTAMPDIFF(SECOND, st1.departure_time, st2.arrival_time) AS travel_time\n" +
-                "    FROM \n" +
-                "        stop_times st1\n" +
-                "    JOIN \n" +
-                "        stop_times st2 ON st1.trip_id = st2.trip_id\n" +
-                "    WHERE \n" +
-                "        st1.stop_id = ? AND \n" +
-                "        st2.stop_id = ? AND \n" +
-                "        st1.stop_sequence < st2.stop_sequence\n" +
-                ") AS trip_times\n" +
-                "ORDER BY \n" +
-                "    travel_time\n" +
-                "LIMIT 1;\n";
+        String query = getRouteQuery(startStopIds, endStopIds);
 
         try {
             PreparedStatement stmt = conn.prepareStatement(query);
-            stmt.setInt(1, startStopId);
-            stmt.setInt(2, endStopId);
             ResultSet resultSet = stmt.executeQuery();
             if (resultSet.next()) {
                 String tripId = resultSet.getString("trip_id");
+                int startStopSequence = resultSet.getInt("start_stop_sequence");
+                int endStopSequence = resultSet.getInt("end_stop_sequence");
                 resultSet.close();
                 stmt.close();
                 conn.close();
-                return tripId;
-            }
-            else {
+                return new RouteDetails(tripId, startStopSequence, endStopSequence);
+            } else {
+                resultSet.close();
+                stmt.close();
+                conn.close();
                 System.out.println("No trip found");
                 return null;
             }
@@ -140,6 +159,44 @@ public class dbManager {
             return null;
         }
     }
+
+    private static @NotNull String getRouteQuery(List<Stops> startStopIds, List<Stops> endStopIds) {
+        StringBuilder startStopsBuilder = new StringBuilder();
+        StringBuilder endStopsBuilder = new StringBuilder();
+
+        for (int i = 0; i < startStopIds.size(); i++) {
+            startStopsBuilder.append(startStopIds.get(i).getStopId());
+            if (i < startStopIds.size() - 1) {
+                startStopsBuilder.append(",");
+            }
+        }
+
+        for (int i = 0; i < endStopIds.size(); i++) {
+            endStopsBuilder.append(endStopIds.get(i).getStopId());
+            if (i < endStopIds.size() - 1) {
+                endStopsBuilder.append(",");
+            }
+        }
+
+        String query = "SELECT " +
+                "    st1.trip_id, " +
+                "    st1.stop_sequence AS start_stop_sequence, " +
+                "    st2.stop_sequence AS end_stop_sequence, " +
+                "    TIMESTAMPDIFF(SECOND, st1.departure_time, st2.arrival_time) AS travel_time " +
+                "FROM " +
+                "    stop_times st1 " +
+                "JOIN " +
+                "    stop_times st2 ON st1.trip_id = st2.trip_id " +
+                "WHERE " +
+                "    st1.stop_id IN (" + startStopsBuilder.toString() + ") AND " +
+                "    st2.stop_id IN (" + endStopsBuilder.toString() + ") AND " +
+                "    st1.stop_sequence < st2.stop_sequence " +
+                "ORDER BY " +
+                "    travel_time " +
+                "LIMIT 1;";
+        return query;
+    }
+
 
     public static List<Stops> fetchStopsByCoords(double lat, double lon) {
         Connection conn = getSqlConnection();
