@@ -214,7 +214,11 @@ public class GUI extends JFrame {
             g.drawLine(startPoint.x, startPoint.y, endPoint.x, endPoint.y);
 
             if (i == 0) {
-                g.setColor(Color.RED);
+                String route_color = route.getBusStops().get(0).getRouteColor();
+                if(route_color != null)
+                    g.setColor(Color.decode("#" + route_color));
+                else
+                    g.setColor(Color.RED);
             }
             else if(i == route.getBusStops().size() - 3){
                 g.setColor(Color.BLACK);
@@ -429,9 +433,9 @@ public class GUI extends JFrame {
     }
 
     private void runPathFindingAlgorithm(PostAddress from, PostAddress to) {
-        Graph graph = new GraphCreator().createGraph();
-        ShortestPathFinder pathFinder = new ShortestPathFinder(graph);
-        pathFinder.setShortestPathAlgorithm(new Dijkstra(graph));
+//        Graph graph = new GraphCreator().createGraph();
+//        ShortestPathFinder pathFinder = new ShortestPathFinder(graph);
+//        pathFinder.setShortestPathAlgorithm(new Dijkstra(graph));
 
         /*
         ArrayList<PostAddress> shortestPath = pathFinder.findPath(from, to);
