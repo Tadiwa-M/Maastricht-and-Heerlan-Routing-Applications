@@ -134,6 +134,11 @@ public class GUI extends JFrame {
             PostAddress last = getAddressFromDataManager(ToCode);
             BusRouteFinder finder = new BusRouteFinder(first , last);
             BusRoute busRoute = finder.findShortestBusRoute();
+            if (busRoute == null){
+                JOptionPane.showMessageDialog(null, "There is no bus route that connects these two postal codes");
+                busRouteButton.setSelected(false);
+                return;
+            }
             for (BusStop bus: busRoute.getBusStops()){
                 System.out.println(bus);
             }
