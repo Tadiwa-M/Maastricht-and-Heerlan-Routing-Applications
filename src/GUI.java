@@ -42,7 +42,7 @@ public class GUI extends JFrame {
     private String SelectedVehicle;
     private JButton goButton;
     private JButton algorithmButton;
-    private JButton busRouteButton;
+    private JToggleButton busRouteButton;
 
     private JToggleButton footButton;
     private JToggleButton bikeButton;
@@ -110,11 +110,11 @@ public class GUI extends JFrame {
     }
 
 
-    private void setupActionListeners(JFormattedTextField postCodeFromField, JFormattedTextField postCodeToField, JComboBox<String> vehicleBox, JButton goButton, JButton algorithmButton, JButton busRouteButton) {
+    private void setupActionListeners(JFormattedTextField postCodeFromField, JFormattedTextField postCodeToField, JComboBox<String> vehicleBox, JButton goButton, JButton algorithmButton, JToggleButton busRouteButton) {
         goButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                boolean accept = buttonClickSharedOperations(postCodeFromField, postCodeToField, vehicleBox);
+                boolean accept = buttonClickSharedOperations(postCodeFromField, postCodeToField, vehicleBox, true);
                 drawPoints(getAddressFromDataManager(FromCode), getAddressFromDataManager(ToCode));
                 mapImageWithPoints = drawPointsOnMap(mapImage, fromPoint, toPoint);
                 showStraightLineDistance();
@@ -122,13 +122,13 @@ public class GUI extends JFrame {
         });
 
         algorithmButton.addActionListener(e -> {
-            boolean accept = buttonClickSharedOperations(postCodeFromField, postCodeToField, vehicleBox);
+            boolean accept = buttonClickSharedOperations(postCodeFromField, postCodeToField, vehicleBox, true);
             if (!accept) { return; }
             runPathFindingAlgorithm(getAddressFromDataManager(FromCode), getAddressFromDataManager(ToCode));
         });
 
         busRouteButton.addActionListener(e -> {
-            boolean accept = buttonClickSharedOperations(postCodeFromField,postCodeToField, vehicleBox);
+            boolean accept = buttonClickSharedOperations(postCodeFromField,postCodeToField, vehicleBox, false);
             if (!accept) return;
             PostAddress first = getAddressFromDataManager(FromCode);
             PostAddress last = getAddressFromDataManager(ToCode);
@@ -142,6 +142,7 @@ public class GUI extends JFrame {
             Graphics2D g = (Graphics2D) mapImage.getGraphics();
             drawShortestPathOnMapBusRoute(g, busRoute);
             showBusStopsPopup(busRoute);
+            busRouteButton.setSelected(false);
         });
     }
     private void showBusStopsPopup(BusRoute route) {
@@ -244,6 +245,12 @@ public class GUI extends JFrame {
         busButton = createToggleButton("CAR", "car_hollow.png", "car.png", 20, 20);
         controlPanel.add(busButton, gbc);
 
+
+        gbc.gridy++;
+        busRouteButton = createBusRouteButton();
+        controlPanel.add(busRouteButton, gbc);
+
+
         gbc.gridy++;
         gbc.gridwidth = 2; 
         goButton = createAlgorithmButton("Straight Line");
@@ -253,9 +260,7 @@ public class GUI extends JFrame {
         algorithmButton = createAlgorithmButton("Shortest Distance");
         controlPanel.add(algorithmButton, gbc);
 
-        gbc.gridy++;
-        busRouteButton = createAlgorithmButton("Bus Route");
-        controlPanel.add(busRouteButton, gbc);
+
 
         return controlPanel;
     }
@@ -265,6 +270,17 @@ public class GUI extends JFrame {
 
 
 
+    private JToggleButton createBusRouteButton(){
+
+        String prefix = "data/img/icons/";
+        ImageIcon hollow = new ImageIcon(new ImageIcon(prefix + "bus_hollow.png").getImage().getScaledInstance(20, 20, Image.SCALE_DEFAULT));
+        ImageIcon filled = new ImageIcon(new ImageIcon(prefix + "bus.png").getImage().getScaledInstance(20, 20, Image.SCALE_DEFAULT));
+        JToggleButton button = new JToggleButton("Bus Route", hollow);
+        button.setSelectedIcon(filled);
+        button.setPreferredSize(new Dimension(20 + 100, 20));
+        return button;
+
+    }
     private JButton createAlgorithmButton(String name){
         JButton algorithmButton = new JButton(name);
         algorithmButton.setPreferredSize(new Dimension(150, 30));
@@ -319,7 +335,7 @@ public class GUI extends JFrame {
 
     
     
-    private boolean buttonClickSharedOperations(JFormattedTextField postCodeFromField, JFormattedTextField postCodeToField, JComboBox<String> vehicleBox){
+    private boolean buttonClickSharedOperations(JFormattedTextField postCodeFromField, JFormattedTextField postCodeToField, JComboBox<String> vehicleBox, boolean careForVehicle){
         DrawBaseImage((Graphics2D) mapImage.getGraphics());
         boolean accept = true;
         repaint();
@@ -330,7 +346,7 @@ public class GUI extends JFrame {
 
         accept = buttonClickConditionals(codeFromString,codeToString);
         boolean vehicleFlag = true;
-        if (SelectedVehicle == null){
+        if (careForVehicle && SelectedVehicle == null){
             vehicleFlag = false;
             JOptionPane.showMessageDialog(null, "Foreign vehicle or none selected. \nPlease select another and try again");
 
