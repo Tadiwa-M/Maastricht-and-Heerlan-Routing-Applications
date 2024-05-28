@@ -27,10 +27,15 @@ public class BusRouteFinder {
 
         BusRoute shortestRoute = null;
         int shortestTime = Integer.MAX_VALUE;
+        int bestStartStopId = -1;
 
         // Find the shortest route
         for (Stops startStop : closeToStartStops) {
             for (Stops endStop : closeToEndStops) {
+
+                System.out.println("Start: " + startStop.getStopName());
+                System.out.println("End: " + endStop.getStopName());
+                System.out.println();
 
                 String tripId = findShortestRoute(startStop.getStopId(), endStop.getStopId());
                 if (tripId != null) {
@@ -43,6 +48,7 @@ public class BusRouteFinder {
                     if (tripTime < shortestTime) {
                         shortestTime = tripTime;
                         shortestRoute = route;
+                        bestStartStopId = startStop.getStopId();
                     }
                 }
             }
@@ -50,6 +56,15 @@ public class BusRouteFinder {
 
         if (shortestRoute == null) {
             System.out.println("No route found");
+        }
+
+        // Remove all stops before the best start stop
+        for (int i = 0; i < shortestRoute.getBusStops().size(); i++) {
+            if(shortestRoute.getBusStops().get(i).getStopId() == bestStartStopId) {
+                //Remove all stops before the best start stop
+                shortestRoute.getBusStops().subList(0, i).clear();
+                break;
+            }
         }
 
         return shortestRoute;

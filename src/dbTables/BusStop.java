@@ -6,15 +6,19 @@ public class BusStop {
     private final String stopName;
     private final String arrivalTime;
     private final String departureTime;
+    private final float stopLat;
+    private final float stopLon;
 
 //    private String routeColor;
 
-    public BusStop(int stopId, int stopSequence, String stopName, String arrivalTime, String departureTime) {
+    public BusStop(int stopId, int stopSequence, String stopName, String arrivalTime, String departureTime, float stopLat, float stopLon) {
         this.stopId = stopId;
         this.stopSequence = stopSequence;
         this.stopName = stopName;
         this.arrivalTime = arrivalTime;
         this.departureTime = departureTime;
+        this.stopLat = stopLat;
+        this.stopLon = stopLon;
     }
 
     public int getStopId() {
@@ -35,5 +39,13 @@ public class BusStop {
 
     public String getDepartureTime() {
         return departureTime;
+    }
+
+    public float getStopLat() {
+        return stopLat;
+    }
+
+    public float getStopLon() {
+        return stopLon;
     }
 }

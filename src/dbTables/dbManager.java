@@ -55,7 +55,9 @@ public class dbManager {
                 "    st.stop_sequence, \n" +
                 "    s.stop_name, \n" +
                 "    st.arrival_time, \n" +
-                "    st.departure_time\n" +
+                "    st.departure_time, \n" +
+                "    s.stop_lat, \n" +
+                "    s.stop_lon\n" +
                 "FROM \n" +
                 "    stop_times st\n" +
                 "JOIN \n" +
@@ -74,7 +76,9 @@ public class dbManager {
                         resultSet.getInt("stop_sequence"),
                         resultSet.getString("stop_name"),
                         resultSet.getString("arrival_time"),
-                        resultSet.getString("departure_time")
+                        resultSet.getString("departure_time"),
+                        resultSet.getFloat("stop_lat"),
+                        resultSet.getFloat("stop_lon")
                 );
                 busStops.add(busStop);
             }
@@ -142,7 +146,7 @@ public class dbManager {
         if (conn == null) return null;
 
         List<Stops> stopsList = new ArrayList<>();
-        double radiusKm = 0.3; // 300 meters
+        double radiusKm = 0.4; // 400 meters
 
         String query = "SELECT *, " +
                 "(6371 * acos(cos(radians(?)) * cos(radians(stop_lat)) * cos(radians(stop_lon) - radians(?)) + sin(radians(?)) * sin(radians(stop_lat)))) AS distance " +
