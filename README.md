@@ -1,3 +1,4 @@
+# **Project 1-2**
 # Maastricht Transportation Application
 
 ## Overview
@@ -29,7 +30,7 @@ To install and run the application, follow these steps:
 6. Optionally, visualize the route on the map.
 
 ### Application Screenshot
-![Maastricht Transportation Application](<img width="900" alt="image" src="https://github.com/Kaktotak00p/Project1-2/assets/51225853/55690288-9a1e-4d46-9c04-a0293df05cfd">
+![Maastricht Transportation Application](data/img/screenshots/img_2.png)
 )
 
 ## Dependencies
@@ -42,7 +43,5 @@ To install and run the application, follow these steps:
 This project is licensed under the MIT License.
 
 ## Screenshots
-![Screenshot 1](<img width="900" alt="image" src="https://github.com/Kaktotak00p/Project1-2/assets/51225853/d5e99cff-2163-497d-9b92-3459ffb9c149">
-)
-![Screenshot 2](<img width="900" alt="image" src="https://github.com/Kaktotak00p/Project1-2/assets/51225853/2b091af3-1294-4a84-bda5-7df080e652f1">
-)
+![Screenshot 1](data/img/screenshots/img_1.png)
+![Screenshot 2](data/img/screenshots/img.png)
