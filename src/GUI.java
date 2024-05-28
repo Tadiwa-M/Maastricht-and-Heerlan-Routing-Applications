@@ -115,16 +115,7 @@ public class GUI extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 boolean accept = buttonClickSharedOperations(postCodeFromField, postCodeToField, vehicleBox, true);
-                if (!accept) return;
-
-                PostAddress fromAddress = getAddressFromDataManager(FromCode);
-                PostAddress toAddress = getAddressFromDataManager(ToCode);
-                if (fromAddress == null || toAddress == null) {
-                    showError("The postal code was not found.");
-                    return;
-                }
-
-                drawPoints(fromAddress, toAddress);
+                drawPoints(getAddressFromDataManager(FromCode), getAddressFromDataManager(ToCode));
                 mapImageWithPoints = drawPointsOnMap(mapImage, fromPoint, toPoint);
                 showStraightLineDistance();
             }
@@ -132,30 +123,15 @@ public class GUI extends JFrame {
 
         algorithmButton.addActionListener(e -> {
             boolean accept = buttonClickSharedOperations(postCodeFromField, postCodeToField, vehicleBox, true);
-            if (!accept) return;
-
-            PostAddress fromAddress = getAddressFromDataManager(FromCode);
-            PostAddress toAddress = getAddressFromDataManager(ToCode);
-            if (fromAddress == null || toAddress == null) {
-                // Show pop up error message
-                showError("The postal code was not found.");
-                return;
-            }
-
-            runPathFindingAlgorithm(fromAddress, toAddress);
+            if (!accept) { return; }
+            runPathFindingAlgorithm(getAddressFromDataManager(FromCode), getAddressFromDataManager(ToCode));
         });
 
         busRouteButton.addActionListener(e -> {
-            boolean accept = buttonClickSharedOperations(postCodeFromField, postCodeToField, vehicleBox, false);
+            boolean accept = buttonClickSharedOperations(postCodeFromField,postCodeToField, vehicleBox, false);
             if (!accept) return;
-
             PostAddress first = getAddressFromDataManager(FromCode);
             PostAddress last = getAddressFromDataManager(ToCode);
-            if (first == null || last == null) {
-                showError("The postal code was not found.");
-                return;
-            }
-
             BusRouteFinder finder = new BusRouteFinder(first , last);
             BusRoute busRoute = finder.findShortestBusRoute();
             if (busRoute == null){
