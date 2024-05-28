@@ -156,7 +156,7 @@ public class GUI extends JFrame {
     }
 
     private void showBusStopsPopup(BusRoute route) {
-        StringBuilder stopNames = new StringBuilder("Bus Stops:\n");
+        StringBuilder stopNames = new StringBuilder("Bus Stops for line (" + route.getRouteName() + "):\n");
         for (BusStop busStop : route.getBusStops()) {
             stopNames.append(busStop.getStopName()).append("\n");
         }
