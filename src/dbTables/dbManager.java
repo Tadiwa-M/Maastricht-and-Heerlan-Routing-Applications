@@ -203,7 +203,7 @@ public class dbManager {
         if (conn == null) return null;
 
         List<Stops> stopsList = new ArrayList<>();
-        double radiusKm = 0.4; // 300 meters
+        double radiusKm = 0.4; // 400 meters
 
         String query = "SELECT *, " +
                 "(6371 * acos(cos(radians(?)) * cos(radians(stop_lat)) * cos(radians(stop_lon) - radians(?)) + sin(radians(?)) * sin(radians(stop_lat)))) AS distance " +
