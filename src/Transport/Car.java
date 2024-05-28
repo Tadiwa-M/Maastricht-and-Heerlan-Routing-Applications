@@ -3,7 +3,7 @@ package Transport;
 public class Car extends Vehicle {
     public Car(double distance) {
         super(distance);
-        this.speed = 0.67;
+        this.speed = 0.6;
         this.vehicleConstant = 1.5;
     }
 
