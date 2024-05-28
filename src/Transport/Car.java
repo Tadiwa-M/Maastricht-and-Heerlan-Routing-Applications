@@ -3,7 +3,7 @@ package Transport;
 public class Car extends Vehicle {
     public Car(double distance) {
         super(distance);
-        this.speed = 30 / 60;
+        this.speed = 0.5;
         this.vehicleConstant = 1.5;
     }
 
@@ -15,10 +15,6 @@ public class Car extends Vehicle {
     @Override
     public double getSpeed() {
         return speed;
-    }
-    @Override
-    public double calculateTime() {
-        return distance / speed;
     }
 
 }
