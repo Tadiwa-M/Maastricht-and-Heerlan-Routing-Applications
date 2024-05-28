@@ -20,6 +20,10 @@ public class BusRoute {
         return busStops;
     }
 
+    public String getRouteName() {
+        return "Route Name";
+    }
+
     public int calculateTripTime() {
         BusStop firstStop = busStops.get(0);
         BusStop lastStop = busStops.get(busStops.size() - 1);
