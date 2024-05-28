@@ -5,6 +5,9 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
 
 public class dbManager {
     private static String USERNAME = dbCredentials.USERNAME;
@@ -37,6 +40,99 @@ public class dbManager {
             return DriverManager.getConnection(DATABASE_URL, USERNAME, PASSWORD);
         } catch (SQLException | ClassNotFoundException e) {
             System.err.println("Error establishing database connection: " + e.getMessage());
+            return null;
+        }
+    }
+
+    public static BusRoute getAllStopsFromTripId(String tripID) {
+        Connection conn = getSqlConnection();
+        if (conn == null) return null;
+
+        List<BusStop> busStops = new ArrayList<>();
+
+        String query = "SELECT \n" +
+                "    st.stop_id, \n" +
+                "    st.stop_sequence, \n" +
+                "    s.stop_name, \n" +
+                "    st.arrival_time, \n" +
+                "    st.departure_time\n" +
+                "FROM \n" +
+                "    stop_times st\n" +
+                "JOIN \n" +
+                "    stops s ON st.stop_id = s.stop_id\n" +
+                "WHERE \n" +
+                "    st.trip_id = ?\n" +
+                "ORDER BY \n" +
+                "    st.stop_sequence;\n";
+        try {
+            PreparedStatement stmt = conn.prepareStatement(query);
+            stmt.setString(1, tripID);
+            ResultSet resultSet = stmt.executeQuery();
+            while (resultSet.next()) {
+                BusStop busStop = new BusStop(
+                        resultSet.getInt("stop_id"),
+                        resultSet.getInt("stop_sequence"),
+                        resultSet.getString("stop_name"),
+                        resultSet.getString("arrival_time"),
+                        resultSet.getString("departure_time")
+                );
+                busStops.add(busStop);
+            }
+            BusRoute busRoute = new BusRoute(busStops);
+
+            resultSet.close();
+            stmt.close();
+            conn.close();
+
+            return busRoute;
+        } catch (SQLException e) {
+            System.err.println("Error retrieving stops: " + e.getMessage());
+            return null;
+        }
+    }
+
+    public static String findShortestRoute(int startStopId, int endStopId) {
+        Connection conn = getSqlConnection();
+        if (conn == null) return null;
+
+
+        String query = "SELECT \n" +
+                "    trip_id\n" +
+                "FROM (\n" +
+                "    SELECT \n" +
+                "        st1.trip_id, \n" +
+                "        TIMESTAMPDIFF(SECOND, st1.departure_time, st2.arrival_time) AS travel_time\n" +
+                "    FROM \n" +
+                "        stop_times st1\n" +
+                "    JOIN \n" +
+                "        stop_times st2 ON st1.trip_id = st2.trip_id\n" +
+                "    WHERE \n" +
+                "        st1.stop_id = ? AND \n" +
+                "        st2.stop_id = ? AND \n" +
+                "        st1.stop_sequence < st2.stop_sequence\n" +
+                ") AS trip_times\n" +
+                "ORDER BY \n" +
+                "    travel_time\n" +
+                "LIMIT 1;\n";
+
+        try {
+            PreparedStatement stmt = conn.prepareStatement(query);
+            stmt.setInt(1, startStopId);
+            stmt.setInt(2, endStopId);
+            ResultSet resultSet = stmt.executeQuery();
+            if (resultSet.next()) {
+                String tripId = resultSet.getString("trip_id");
+                resultSet.close();
+                stmt.close();
+                conn.close();
+                return tripId;
+            }
+            else {
+                System.out.println("No trip found");
+                return null;
+            }
+        } catch (SQLException e) {
+            System.err.println("Error retrieving trip id: " + e.getMessage());
             return null;
         }
     }
