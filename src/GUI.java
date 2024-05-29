@@ -167,6 +167,7 @@ public class GUI extends JFrame {
 
         stopNames.append("\nTotal Travel Time: ").append(totalTimeMinutes + 5).append(" minutes");
 
+
         JOptionPane.showMessageDialog(null, stopNames.toString(), "Bus Route", JOptionPane.INFORMATION_MESSAGE);
     }
 
@@ -323,25 +324,17 @@ public class GUI extends JFrame {
 
 
 
-
-
-    private JComboBox<String> createVehicleBox(){
-        String[] vehicleList = {"Foot", "Bike", "Bus"};
-        JComboBox<String> vehicleBox = new JComboBox<>(vehicleList);
-        vehicleBox.setPreferredSize(new Dimension(100, 30));
-        gbc.gridx = 0;
-        gbc.gridy++;
-        gbc.gridwidth = 4;
-        return vehicleBox;
-    }
-
-
-
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            GUI frame = new GUI();
-            frame.setVisible(true);
-        });
+        try {
+            SwingUtilities.invokeLater(() -> {
+                GUI frame = new GUI();
+                frame.setVisible(true);
+            });
+        }
+        catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "An error occurred while initializing the GUI");
+            main(args);
+        }
     }
 
 
@@ -383,6 +376,14 @@ public class GUI extends JFrame {
         }
         if (codeTo.equals(codeFrom)) {
             JOptionPane.showMessageDialog(null, "The Post Codes are the same\n No distance between them");
+            return false;
+        }
+        if(getAddressFromDataManager(codeFrom) == null){
+            JOptionPane.showMessageDialog(null, "The \"FROM\" PostCode is not valid");
+            return false;
+        }
+        if(getAddressFromDataManager(codeTo) == null){
+            JOptionPane.showMessageDialog(null, "The \"TO\" PostCode is not valid");
             return false;
         }
         return true;

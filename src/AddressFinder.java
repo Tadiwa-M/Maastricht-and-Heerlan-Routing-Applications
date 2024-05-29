@@ -31,7 +31,7 @@ public class AddressFinder {
             throw new RuntimeException("Rate limit exceeded");
         }
 
-        String baseUrl = "https://computerscience.dacs.unimaas.nl";
+        String baseUrl = "https://project12.ashish.nl/project12";
         String url = baseUrl + "/get_coordinates";
 
         OkHttpClient client = new OkHttpClient();
