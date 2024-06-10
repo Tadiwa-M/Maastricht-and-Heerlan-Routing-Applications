@@ -2,7 +2,7 @@ import java.util.HashMap;
 
 public final class DataManager {
     private static DataManager dataManager;
-    private static final String filePath = "data/postcodetabelLatLon.csv";
+    private static final String filePath = "data/maastricht_postal_codes.csv";
     HashMap<String, PostAddress> postAddresses;
 
     public DataManager() {
