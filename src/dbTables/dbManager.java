@@ -192,8 +192,9 @@ public class dbManager {
         String query = "SELECT *, " +
                 "(6371 * acos(cos(radians(?)) * cos(radians(stop_lat)) * cos(radians(stop_lon) - radians(?)) + sin(radians(?)) * sin(radians(stop_lat)))) AS distance " +
                 "FROM stops " +
+                "HAVING distance <= 0.4 " +
                 "ORDER BY distance " +
-                "LIMIT 5";
+                "LIMIT 7;";
 
         try {
             PreparedStatement stmt = conn.prepareStatement(query);
