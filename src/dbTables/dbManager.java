@@ -186,7 +186,7 @@ public class dbManager {
                 "    travel_time " +
                 "LIMIT 1;";
     }
-
+    
     public static List<Stops> fetchStopsByCoords(double lat, double lon) {
         Connection conn = getSqlConnection();
         if (conn == null)
@@ -232,7 +232,13 @@ public class dbManager {
         }
         return stopsList;
     }
-
+    /**
+     * Returns a sorted(closest first) list of tourism shops and malls close to the lat, lon in radius
+     * @param lat
+     * @param lon
+     * @param radius
+     * @return
+     */
     public static List<Shop> fetchShopsByCoords(double lat, double lon, double radius) {
         Connection conn = getSqlConnection();
         if (conn == null)
@@ -266,7 +272,13 @@ public class dbManager {
         }
         return nearbyShops;
     }
-
+    /**
+     * Returns a sorted(closest first) list of tourism attraction close to the lat, lon in radius
+     * @param lat
+     * @param lon
+     * @param radius
+     * @return
+     */
     public static List<Tourism> fetchAttractionsByCoords(double lat, double lon, double radius) {
         Connection conn = getSqlConnection();
         if (conn == null)
