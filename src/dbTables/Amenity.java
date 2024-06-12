@@ -1,11 +1,11 @@
 package dbTables;
 
-public class Amenety {
+public class Amenity {
     private double lat;
     private double lon;
     private String type;
 
-    public Amenety(double lat, double lon, String type) {
+    public Amenity(double lat, double lon, String type) {
         this.lat = lat;
         this.lon = lon;
         this.type = type;

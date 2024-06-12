@@ -326,9 +326,9 @@ public class dbManager {
 
             ResultSet resultSet = stmt.executeQuery();
             while (resultSet.next()) {
-                Amenety amenety = new Amenety(resultSet.getDouble("lat"),
+                Amenity Amenity = new Amenity(resultSet.getDouble("lat"),
                         resultSet.getDouble("lon"), resultSet.getString("`propertiesamenety`"));
-                nearbyAmeneties.add(amenety);
+                nearbyAmeneties.add(Amenity);
             }
             resultSet.close();
             stmt.close();
