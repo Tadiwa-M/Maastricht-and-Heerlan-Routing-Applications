@@ -97,9 +97,9 @@ public class dbManager {
     }
 
     public static class RouteDetails {
-        private String tripId;
-        private int startStopSequence;
-        private int endStopSequence;
+        private final String tripId;
+        private final int startStopSequence;
+        private final int endStopSequence;
 
         public RouteDetails(String tripId, int startStopSequence, int endStopSequence) {
             this.tripId = tripId;
@@ -179,8 +179,8 @@ public class dbManager {
                 "JOIN " +
                 "    stop_times st2 ON st1.trip_id = st2.trip_id " +
                 "WHERE " +
-                "    st1.stop_id IN (" + startStopsBuilder.toString() + ") AND " +
-                "    st2.stop_id IN (" + endStopsBuilder.toString() + ") AND " +
+                "    st1.stop_id IN (" + startStopsBuilder + ") AND " +
+                "    st2.stop_id IN (" + endStopsBuilder + ") AND " +
                 "    st1.stop_sequence < st2.stop_sequence " +
                 "ORDER BY " +
                 "    travel_time " +
@@ -244,7 +244,7 @@ public class dbManager {
         if (conn == null)
             return null;
 
-        List<Shop> nearbyShops = new ArrayList<Shop>();
+        List<Shop> nearbyShops = new ArrayList<>();
 
         String query = "SELECT lat, lon, `properties/name`, `properties/shop`, " +
                 "(6371 * acos(cos(radians(?)) * cos(radians(lat)) * cos(radians(lon) - radians(?)) + sin(radians(?)) * sin(radians(lat)))) AS distance " +
@@ -320,7 +320,7 @@ public class dbManager {
         if (conn == null)
             return null;
 
-        List<Amenity> nearbyAmeneties = new ArrayList<Amenity>();
+        List<Amenity> nearbyAmenities = new ArrayList<Amenity>();
 
         String query = "SELECT lat, lon, propertiesamenity, " +
                 "(6371 * acos(cos(radians(?)) * cos(radians(lat)) * cos(radians(lon) - radians(?)) + sin(radians(?)) * sin(radians(lat)))) AS distance "
@@ -340,7 +340,7 @@ public class dbManager {
             while (resultSet.next()) {
                 Amenity Amenity = new Amenity(resultSet.getDouble("lat"),
                         resultSet.getDouble("lon"), resultSet.getString("`propertiesamenety`"));
-                nearbyAmeneties.add(Amenity);
+                nearbyAmenities.add(Amenity);
             }
             resultSet.close();
             stmt.close();
@@ -348,7 +348,7 @@ public class dbManager {
         } catch (SQLException e) {
             System.err.println("Error: " + e.getMessage());
         }
-        return nearbyAmeneties;
+        return nearbyAmenities;
     }
 
     public static PostAddress fetchAddress(String postalCode) {
