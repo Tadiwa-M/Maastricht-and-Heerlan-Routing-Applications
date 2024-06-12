@@ -243,7 +243,7 @@ public class dbManager {
         String query = "SELECT lat, lon, `properties/name`, " +
                 "(6371 * acos(cos(radians(?)) * cos(radians(stop_lat)) * cos(radians(stop_lon) - radians(?)) + sin(radians(?)) * sin(radians(stop_lat)))) AS distance "
                 +
-                "FROM shops " +
+                "FROM shop " +
                 "WHERE `properties/shop` = 'supermarket' OR `properties/shop` = 'mall'" +
                 "HAVING distance <= ? " +
                 "ORDER BY distance";
