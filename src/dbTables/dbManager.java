@@ -169,7 +169,7 @@ public class dbManager {
             }
         }
 
-        String query = "SELECT " +
+        return "SELECT " +
                 "    st1.trip_id, " +
                 "    st1.stop_sequence AS start_stop_sequence, " +
                 "    st2.stop_sequence AS end_stop_sequence, " +
@@ -185,7 +185,6 @@ public class dbManager {
                 "ORDER BY " +
                 "    travel_time " +
                 "LIMIT 1;";
-        return query;
     }
 
     public static List<Stops> fetchStopsByCoords(double lat, double lon) {
