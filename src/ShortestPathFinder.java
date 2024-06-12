@@ -1,3 +1,5 @@
+import dbTables.PostAddress;
+
 import java.util.ArrayList;
 
 public class ShortestPathFinder {

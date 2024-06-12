@@ -1,3 +1,5 @@
+package dbTables;
+
 public class Amenety {
     private double lat;
     private double lon;

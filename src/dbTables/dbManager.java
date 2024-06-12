@@ -169,7 +169,7 @@ public class dbManager {
             }
         }
 
-        String query = "SELECT " +
+        return "SELECT " +
                 "    st1.trip_id, " +
                 "    st1.stop_sequence AS start_stop_sequence, " +
                 "    st2.stop_sequence AS end_stop_sequence, " +
@@ -185,7 +185,6 @@ public class dbManager {
                 "ORDER BY " +
                 "    travel_time " +
                 "LIMIT 1;";
-        return query;
     }
 
     public static List<Stops> fetchStopsByCoords(double lat, double lon) {
@@ -243,7 +242,7 @@ public class dbManager {
 
         String query = "SELECT lat, lon, `properties/name`, `properties/shop` " +
                 "(6371 * acos(cos(radians(?)) * cos(radians(stop_lat)) * cos(radians(stop_lon) - radians(?)) + sin(radians(?)) * sin(radians(stop_lat)))) AS distance " +
-                "FROM shops" +
+                "FROM shop" +
                 "HAVING distance <= ? " +
                 "ORDER BY distance";
 
@@ -338,5 +337,59 @@ public class dbManager {
             System.err.println("Error: " + e.getMessage());
         }
         return nearbyAmeneties;
+    }
+
+    public static PostAddress fetchAddress(String postalCode) {
+        Connection conn = getSqlConnection();
+        if (conn == null)
+            return null;
+
+        String query = "SELECT * FROM postal_codes WHERE postal_code = ?";
+
+        try {
+            PreparedStatement stmt = conn.prepareStatement(query);
+            stmt.setString(1, postalCode);
+            ResultSet resultSet = stmt.executeQuery();
+            if (resultSet.next()) {
+                PostAddress address = new PostAddress(resultSet.getString("postal_code"), resultSet.getDouble("latitude"), resultSet.getDouble("longitude"));
+                resultSet.close();
+                stmt.close();
+                conn.close();
+                return address;
+            } else {
+                resultSet.close();
+                stmt.close();
+                conn.close();
+                return null;
+            }
+        } catch (SQLException e) {
+            System.err.println("Error retrieving postal code: " + e.getMessage());
+            return null;
+        }
+    }
+
+    public static List<PostAddress> fetchAllAddresses() {
+        Connection conn = getSqlConnection();
+        if (conn == null)
+            return null;
+
+        List<PostAddress> addresses = new ArrayList<>();
+
+        String query = "SELECT * FROM postal_codes";
+
+        try {
+            PreparedStatement stmt = conn.prepareStatement(query);
+            ResultSet resultSet = stmt.executeQuery();
+            while (resultSet.next()) {
+                PostAddress address = new PostAddress(resultSet.getString("postal_code"), resultSet.getDouble("latitude"), resultSet.getDouble("longitude"));
+                addresses.add(address);
+            }
+            resultSet.close();
+            stmt.close();
+            conn.close();
+        } catch (SQLException e) {
+            System.err.println("Error retrieving postal codes: " + e.getMessage());
+        }
+        return addresses;
     }
 }

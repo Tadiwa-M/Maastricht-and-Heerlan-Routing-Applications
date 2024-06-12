@@ -1,3 +1,5 @@
+package dbTables;
+
 public class Tourism {
     private String name;
     private double lat;
@@ -43,5 +45,5 @@ public class Tourism {
         this.lon = lon;
     }
 
-    
+
 }
