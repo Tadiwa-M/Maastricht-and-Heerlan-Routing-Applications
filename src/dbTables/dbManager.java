@@ -61,6 +61,8 @@ public class dbManager {
     }
 
 
+
+
     public static BusRoute getAllStopsFromTripId(String tripID, int startSequence, int endSequence) {
         Connection conn = getSqlConnection();
         if (conn == null)
