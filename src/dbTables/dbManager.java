@@ -268,4 +268,58 @@ public class dbManager {
         }
         return nearbyShops;
     }
+
+    public static PostAddress fetchAddress(String postalCode) {
+        Connection conn = getSqlConnection();
+        if (conn == null)
+            return null;
+
+        String query = "SELECT * FROM postal_codes WHERE postal_code = ?";
+
+        try {
+            PreparedStatement stmt = conn.prepareStatement(query);
+            stmt.setString(1, postalCode);
+            ResultSet resultSet = stmt.executeQuery();
+            if (resultSet.next()) {
+                PostAddress address = new PostAddress(resultSet.getString("postal_code"), resultSet.getDouble("latitude"), resultSet.getDouble("longitude"));
+                resultSet.close();
+                stmt.close();
+                conn.close();
+                return address;
+            } else {
+                resultSet.close();
+                stmt.close();
+                conn.close();
+                return null;
+            }
+        } catch (SQLException e) {
+            System.err.println("Error retrieving postal code: " + e.getMessage());
+            return null;
+        }
+    }
+
+    public static List<PostAddress> fetchAllAddresses() {
+        Connection conn = getSqlConnection();
+        if (conn == null)
+            return null;
+
+        List<PostAddress> addresses = new ArrayList<>();
+
+        String query = "SELECT * FROM postal_codes";
+
+        try {
+            PreparedStatement stmt = conn.prepareStatement(query);
+            ResultSet resultSet = stmt.executeQuery();
+            while (resultSet.next()) {
+                PostAddress address = new PostAddress(resultSet.getString("postal_code"), resultSet.getDouble("latitude"), resultSet.getDouble("longitude"));
+                addresses.add(address);
+            }
+            resultSet.close();
+            stmt.close();
+            conn.close();
+        } catch (SQLException e) {
+            System.err.println("Error retrieving postal codes: " + e.getMessage());
+        }
+        return addresses;
+    }
 }

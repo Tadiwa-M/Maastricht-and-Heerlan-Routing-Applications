@@ -1,9 +1,11 @@
+import dbTables.PostAddress;
+
 public class Query {
     PostAddress startingPoint;
     PostAddress endPoint;
     VehicleType vehicleType;
 
-    public Query(String startingPoint, String endPoint, VehicleType vehicleType) {
+    public Query(String startingPoint, String endPoint, VehicleType vehicleType) throws Exception {
         this.startingPoint = AddressFinder.getAddress(startingPoint);
         this.endPoint = AddressFinder.getAddress(endPoint);
         this.vehicleType = vehicleType;

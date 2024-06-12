@@ -1,5 +1,6 @@
 import dbTables.BusRoute;
 import dbTables.BusStop;
+import dbTables.PostAddress;
 import dbTables.Stops;
 
 import java.util.List;

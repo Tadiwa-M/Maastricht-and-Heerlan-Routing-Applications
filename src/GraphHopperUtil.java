@@ -7,6 +7,7 @@ import com.graphhopper.GraphHopper;
 import com.graphhopper.config.Profile;
 import com.graphhopper.util.PointList;
 import com.graphhopper.util.shapes.GHPoint;
+import dbTables.PostAddress;
 
 public class GraphHopperUtil {
     final String osmFile = "data/locationInfo/Maastricht.osm.pbf";
@@ -26,7 +27,7 @@ public class GraphHopperUtil {
         graphHopper.importOrLoad();
     }
 
-    public QueryResponse calculateRoute(String sourcePostalCode, String destinationPostalCode, String vehicle) {
+    public QueryResponse calculateRoute(String sourcePostalCode, String destinationPostalCode, String vehicle) throws Exception {
         PostAddress source = AddressFinder.getAddress(sourcePostalCode);
         PostAddress destination = AddressFinder.getAddress(destinationPostalCode);
 
@@ -58,10 +59,10 @@ public class GraphHopperUtil {
         return queryResponse;
     }
 
-    private String findClosestPostalCode(double lat, double lon) {
+    private String findClosestPostalCode(double lat, double lon) throws Exception {
         double minDist = Double.MAX_VALUE;
         String closestPostalCode = "";
-        for (PostAddress address: DataManager.getDataManager().postAddresses.values()) {
+        for (PostAddress address: AddressFinder.getAllAddresses()) {
             double dist = PostAddress.basicDistances(address, new PostAddress("", lat, lon));
             if (dist < minDist) {
                 minDist = dist;
@@ -71,7 +72,7 @@ public class GraphHopperUtil {
         return closestPostalCode;
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         GraphHopperUtil graphHopperUtil = new GraphHopperUtil();
         graphHopperUtil.calculateRoute("6229EN", "6229HD", "foot");
         graphHopperUtil.calculateRoute("6229EN", "6229HD", "bike");

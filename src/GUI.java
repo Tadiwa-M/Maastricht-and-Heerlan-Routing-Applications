@@ -1,8 +1,8 @@
 
 import Transport.*;
-import com.azure.core.annotation.Post;
 import dbTables.BusRoute;
 import dbTables.BusStop;
+import dbTables.PostAddress;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -124,7 +124,11 @@ public class GUI extends JFrame {
         algorithmButton.addActionListener(e -> {
             boolean accept = buttonClickSharedOperations(postCodeFromField, postCodeToField, vehicleBox, true);
             if (!accept) { return; }
-            runPathFindingAlgorithm(getAddressFromDataManager(FromCode), getAddressFromDataManager(ToCode));
+            try {
+                runPathFindingAlgorithm(getAddressFromDataManager(FromCode), getAddressFromDataManager(ToCode));
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
         });
 
         busRouteButton.addActionListener(e -> {
@@ -412,13 +416,13 @@ public class GUI extends JFrame {
         return imageWithPoints;
     }
 
-    private void runPathFindingAlgorithm(PostAddress from, PostAddress to) {
+    private void runPathFindingAlgorithm(PostAddress from, PostAddress to) throws Exception {
 //        Graph graph = new GraphCreator().createGraph();
 //        ShortestPathFinder pathFinder = new ShortestPathFinder(graph);
 //        pathFinder.setShortestPathAlgorithm(new Dijkstra(graph));
 
         /*
-        ArrayList<PostAddress> shortestPath = pathFinder.findPath(from, to);
+        ArrayList<dbTables.PostAddress> shortestPath = pathFinder.findPath(from, to);
         double value = pathFinder.getDistance(from, to);
         */
 

@@ -1,3 +1,5 @@
+package dbTables;
+
 import java.util.Objects;
 
 public class PostAddress {

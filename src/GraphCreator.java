@@ -1,3 +1,5 @@
+import dbTables.PostAddress;
+
 import java.util.ArrayList;
 
 public class GraphCreator {
@@ -5,18 +7,18 @@ public class GraphCreator {
     ArrayList<ArrayList<Integer>> adj;
     ArrayList<PostAddress> addresses;
 
-    public GraphCreator() {
+    public GraphCreator() throws Exception {
         // Array of adj list
         this.adj = new ArrayList<ArrayList<Integer>>();
         this.addresses = new ArrayList<>();
 
-        for (PostAddress address : DataManager.getDataManager().postAddresses.values()) {
+        for (PostAddress address : AddressFinder.getAllAddresses()) {
             if(ValidPostalCode(address.getPostalCode())) {
                 addresses.add(address);
             }
         }
 
-        DataManager.getDataManager().postAddresses.forEach((k, v) -> {
+        AddressFinder.getAllAddresses().forEach(address -> {
             adj.add(new ArrayList<Integer>());
         });
     }
