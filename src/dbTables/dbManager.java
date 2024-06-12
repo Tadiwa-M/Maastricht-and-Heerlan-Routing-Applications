@@ -10,8 +10,12 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-
 public class dbManager {
+
+    public static void main(String[] args) {
+        fetchShopsByCoords(5.66, 50.86, 0.5);
+    }
+
     private static Connection getSqlConnection() {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
@@ -20,7 +24,8 @@ public class dbManager {
             String HOST = dbCredentials.HOST;
             String DATABASE_NAME = dbCredentials.databaseName;
             String PASSWORD = dbCredentials.PASSWORD;
-            String DATABASE_URL = "jdbc:mysql://" + HOST + ":" + PORT + "/" + DATABASE_NAME + "?autoReconnect=true&useSSL=true&requireSSL=true";
+            String DATABASE_URL = "jdbc:mysql://" + HOST + ":" + PORT + "/" + DATABASE_NAME
+                    + "?autoReconnect=true&useSSL=true&requireSSL=true";
 
             return DriverManager.getConnection(DATABASE_URL, USERNAME, PASSWORD);
         } catch (SQLException | ClassNotFoundException e) {
@@ -31,7 +36,8 @@ public class dbManager {
 
     public static BusRoute getAllStopsFromTripId(String tripID, int startSequence, int endSequence) {
         Connection conn = getSqlConnection();
-        if (conn == null) return null;
+        if (conn == null)
+            return null;
 
         List<BusStop> busStops = new ArrayList<>();
 
@@ -75,8 +81,7 @@ public class dbManager {
                         resultSet.getFloat("stop_lat"),
                         resultSet.getFloat("stop_lon"),
                         resultSet.getString("route_color"),
-                        resultSet.getString("route_short_name")
-                );
+                        resultSet.getString("route_short_name"));
                 busStops.add(busStop);
             }
 
@@ -117,7 +122,8 @@ public class dbManager {
 
     public static RouteDetails findShortestRoute(List<Stops> startStopIds, List<Stops> endStopIds) {
         Connection conn = getSqlConnection();
-        if (conn == null) return null;
+        if (conn == null)
+            return null;
 
         String query = getRouteQuery(startStopIds, endStopIds);
 
@@ -182,15 +188,16 @@ public class dbManager {
         return query;
     }
 
-
     public static List<Stops> fetchStopsByCoords(double lat, double lon) {
         Connection conn = getSqlConnection();
-        if (conn == null) return null;
+        if (conn == null)
+            return null;
 
         List<Stops> stopsList = new ArrayList<>();
 
         String query = "SELECT *, " +
-                "(6371 * acos(cos(radians(?)) * cos(radians(stop_lat)) * cos(radians(stop_lon) - radians(?)) + sin(radians(?)) * sin(radians(stop_lat)))) AS distance " +
+                "(6371 * acos(cos(radians(?)) * cos(radians(stop_lat)) * cos(radians(stop_lon) - radians(?)) + sin(radians(?)) * sin(radians(stop_lat)))) AS distance "
+                +
                 "FROM stops " +
                 "HAVING distance <= 0.4 " +
                 "ORDER BY distance " +
@@ -226,5 +233,40 @@ public class dbManager {
         }
         return stopsList;
     }
-}
 
+    public static List<Shop> fetchShopsByCoords(double lat, double lon, double radius) {
+        Connection conn = getSqlConnection();
+        if (conn == null)
+            return null;
+
+        List<Shop> nearbyShops = new ArrayList<Shop>();
+
+        String query = "SELECT lat, lon, `properties/name`, " +
+                "(6371 * acos(cos(radians(?)) * cos(radians(stop_lat)) * cos(radians(stop_lon) - radians(?)) + sin(radians(?)) * sin(radians(stop_lat)))) AS distance "
+                +
+                "FROM shops " +
+                "WHERE `properties/shop` = 'supermarket' OR `properties/shop` = 'mall'" +
+                "HAVING distance <= ? " +
+                "ORDER BY distance";
+
+        try {
+            PreparedStatement stmt = conn.prepareStatement(query);
+            stmt.setDouble(1, lon);
+            stmt.setDouble(2, lat);
+            stmt.setDouble(3, lon);
+            stmt.setDouble(4, radius);
+
+            ResultSet resultSet = stmt.executeQuery();
+            while (resultSet.next()) {
+                Shop shop = new Shop(resultSet.getString("`properties/name`"), resultSet.getDouble("lat"), resultSet.getDouble("lon"));
+                nearbyShops.add(shop);
+            }
+            resultSet.close();
+            stmt.close();
+            conn.close();
+        } catch (SQLException e) {
+            System.err.println("Error: " + e.getMessage());
+        }
+        return nearbyShops;
+    }
+}
