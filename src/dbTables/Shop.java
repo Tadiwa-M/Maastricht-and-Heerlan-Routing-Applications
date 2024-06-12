@@ -1,3 +1,5 @@
+package dbTables;
+
 public class Shop {
     private String name;
     private double lat;
