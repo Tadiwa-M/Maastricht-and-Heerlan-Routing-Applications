@@ -246,9 +246,9 @@ public class dbManager {
 
         List<Shop> nearbyShops = new ArrayList<Shop>();
 
-        String query = "SELECT lat, lon, `properties/name`, `properties/shop` " +
-                "(6371 * acos(cos(radians(?)) * cos(radians(stop_lat)) * cos(radians(stop_lon) - radians(?)) + sin(radians(?)) * sin(radians(stop_lat)))) AS distance " +
-                "FROM shop" +
+        String query = "SELECT lat, lon, `properties/name`, `properties/shop`, " +
+                "(6371 * acos(cos(radians(?)) * cos(radians(lat)) * cos(radians(lon) - radians(?)) + sin(radians(?)) * sin(radians(lat)))) AS distance " +
+                "FROM shop " +
                 "HAVING distance <= ? " +
                 "ORDER BY distance";
 
@@ -287,7 +287,7 @@ public class dbManager {
         List<Tourism> nearbyAttractions = new ArrayList<Tourism>();
 
         String query = "SELECT lat, lon, `properties/name`, `properties/tourism`, " +
-                "(6371 * acos(cos(radians(?)) * cos(radians(stop_lat)) * cos(radians(stop_lon) - radians(?)) + sin(radians(?)) * sin(radians(stop_lat)))) AS distance "
+                "(6371 * acos(cos(radians(?)) * cos(radians(lat)) * cos(radians(lon) - radians(?)) + sin(radians(?)) * sin(radians(lat)))) AS distance "
                 +
                 "FROM tourism " +
                 "HAVING distance <= ? " +
@@ -322,8 +322,8 @@ public class dbManager {
 
         List<Amenity> nearbyAmeneties = new ArrayList<Amenity>();
 
-        String query = "SELECT lat, lon, `propertiesamenety`, " +
-                "(6371 * acos(cos(radians(?)) * cos(radians(stop_lat)) * cos(radians(stop_lon) - radians(?)) + sin(radians(?)) * sin(radians(stop_lat)))) AS distance "
+        String query = "SELECT lat, lon, propertiesamenity, " +
+                "(6371 * acos(cos(radians(?)) * cos(radians(lat)) * cos(radians(lon) - radians(?)) + sin(radians(?)) * sin(radians(lat)))) AS distance "
                 +
                 "FROM amenities " +
                 "HAVING distance <= ? " +
