@@ -27,6 +27,13 @@ public class BusRoute {
         String firstDepartureTime = firstStop.getDepartureTime();
         String lastArrivalTime = lastStop.getArrivalTime();
 
+        Duration duration = getDuration(firstDepartureTime, lastArrivalTime);
+
+        // Return the duration in minutes
+        return (int) duration.toMinutes();
+    }
+
+    private static Duration getDuration(String firstDepartureTime, String lastArrivalTime) {
         // Define the date-time format
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
         // Parse the strings into LocalDateTime objects
@@ -34,9 +41,6 @@ public class BusRoute {
         LocalTime dateTime2 = LocalTime.parse(lastArrivalTime, formatter);
 
         // Calculate the time difference
-        Duration duration = Duration.between(dateTime1, dateTime2);
-
-        // Return the duration in minutes
-        return (int) duration.toMinutes();
+        return Duration.between(dateTime1, dateTime2);
     }
 }

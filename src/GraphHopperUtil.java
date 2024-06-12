@@ -71,11 +71,4 @@ public class GraphHopperUtil {
         }
         return closestPostalCode;
     }
-
-    public static void main(String[] args) throws Exception {
-        GraphHopperUtil graphHopperUtil = new GraphHopperUtil();
-        graphHopperUtil.calculateRoute("6229EN", "6229HD", "foot");
-        graphHopperUtil.calculateRoute("6229EN", "6229HD", "bike");
-        graphHopperUtil.calculateRoute("6229EN", "6229HD", "car");
-    }
 }

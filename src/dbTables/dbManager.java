@@ -7,6 +7,8 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,6 +35,31 @@ public class dbManager {
             return null;
         }
     }
+
+    private List<String> findPotentialTransferStops(String startStopId, String endStopId) {
+        Connection conn = getSqlConnection();
+        if (conn == null)
+            return null;
+        String sql = "SELECT DISTINCT st2.stop_id " +
+                "FROM stop_times st1 " +
+                "JOIN stop_times st2 ON st1.trip_id = st2.trip_id " +
+                "WHERE st1.stop_id = ? AND st2.stop_id != ? AND st1.stop_sequence < st2.stop_sequence";
+
+        List<String> transferStops = new ArrayList<>();
+        try {
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setString(1, startStopId);
+            stmt.setString(2, endStopId);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                transferStops.add(rs.getString("stop_id"));
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return transferStops;
+    }
+
 
     public static BusRoute getAllStopsFromTripId(String tripID, int startSequence, int endSequence) {
         Connection conn = getSqlConnection();
