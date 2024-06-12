@@ -315,12 +315,12 @@ public class dbManager {
         return nearbyAttractions;
     }
 
-    public static List<Ameneties> fetchAmenitiesByCoords(double lat, double lon, double radius) {
+    public static List<Amenity> fetchAmenitiesByCoords(double lat, double lon, double radius) {
         Connection conn = getSqlConnection();
         if (conn == null)
             return null;
 
-        List<Ameneties> nearbyAmeneties = new ArrayList<Ameneties>();
+        List<Amenity> nearbyAmeneties = new ArrayList<Amenity>();
 
         String query = "SELECT lat, lon, `propertiesamenety`, " +
                 "(6371 * acos(cos(radians(?)) * cos(radians(stop_lat)) * cos(radians(stop_lon) - radians(?)) + sin(radians(?)) * sin(radians(stop_lat)))) AS distance "
