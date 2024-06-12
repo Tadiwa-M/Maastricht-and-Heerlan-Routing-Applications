@@ -241,11 +241,9 @@ public class dbManager {
 
         List<Shop> nearbyShops = new ArrayList<Shop>();
 
-        String query = "SELECT lat, lon, `properties/name`, " +
-                "(6371 * acos(cos(radians(?)) * cos(radians(stop_lat)) * cos(radians(stop_lon) - radians(?)) + sin(radians(?)) * sin(radians(stop_lat)))) AS distance "
-                +
-                "FROM shops " +
-                "WHERE `properties/shop` = 'supermarket' OR `properties/shop` = 'mall'" +
+        String query = "SELECT lat, lon, `properties/name`, `properties/shop` " +
+                "(6371 * acos(cos(radians(?)) * cos(radians(stop_lat)) * cos(radians(stop_lon) - radians(?)) + sin(radians(?)) * sin(radians(stop_lat)))) AS distance " +
+                "FROM shops" +
                 "HAVING distance <= ? " +
                 "ORDER BY distance";
 
@@ -258,7 +256,7 @@ public class dbManager {
 
             ResultSet resultSet = stmt.executeQuery();
             while (resultSet.next()) {
-                Shop shop = new Shop(resultSet.getString("`properties/name`"), resultSet.getDouble("lat"), resultSet.getDouble("lon"));
+                Shop shop = new Shop(resultSet.getString("`properties/name`"), resultSet.getDouble("lat"), resultSet.getDouble("lon"), resultSet.getString("`properties/shop`"));
                 nearbyShops.add(shop);
             }
             resultSet.close();
@@ -268,5 +266,77 @@ public class dbManager {
             System.err.println("Error: " + e.getMessage());
         }
         return nearbyShops;
+    }
+
+    public static List<Tourism> fetchAttractionsByCoords(double lat, double lon, double radius) {
+        Connection conn = getSqlConnection();
+        if (conn == null)
+            return null;
+
+        List<Tourism> nearbyAttractions = new ArrayList<Tourism>();
+
+        String query = "SELECT lat, lon, `properties/name`, `properties/tourism`, " +
+                "(6371 * acos(cos(radians(?)) * cos(radians(stop_lat)) * cos(radians(stop_lon) - radians(?)) + sin(radians(?)) * sin(radians(stop_lat)))) AS distance "
+                +
+                "FROM tourism " +
+                "HAVING distance <= ? " +
+                "ORDER BY distance";
+
+        try {
+            PreparedStatement stmt = conn.prepareStatement(query);
+            stmt.setDouble(1, lon);
+            stmt.setDouble(2, lat);
+            stmt.setDouble(3, lon);
+            stmt.setDouble(4, radius);
+
+            ResultSet resultSet = stmt.executeQuery();
+            while (resultSet.next()) {
+                Tourism attraction = new Tourism(resultSet.getString("`properties/name`"), resultSet.getDouble("lat"),
+                        resultSet.getDouble("lon"), resultSet.getString("`properties/tourism`"));
+                nearbyAttractions.add(attraction);
+            }
+            resultSet.close();
+            stmt.close();
+            conn.close();
+        } catch (SQLException e) {
+            System.err.println("Error: " + e.getMessage());
+        }
+        return nearbyAttractions;
+    }
+
+    public static List<Ameneties> fetchAmenitiesByCoords(double lat, double lon, double radius) {
+        Connection conn = getSqlConnection();
+        if (conn == null)
+            return null;
+
+        List<Ameneties> nearbyAmeneties = new ArrayList<Ameneties>();
+
+        String query = "SELECT lat, lon, `propertiesamenety`, " +
+                "(6371 * acos(cos(radians(?)) * cos(radians(stop_lat)) * cos(radians(stop_lon) - radians(?)) + sin(radians(?)) * sin(radians(stop_lat)))) AS distance "
+                +
+                "FROM amenities " +
+                "HAVING distance <= ? " +
+                "ORDER BY distance";
+
+        try {
+            PreparedStatement stmt = conn.prepareStatement(query);
+            stmt.setDouble(1, lon);
+            stmt.setDouble(2, lat);
+            stmt.setDouble(3, lon);
+            stmt.setDouble(4, radius);
+
+            ResultSet resultSet = stmt.executeQuery();
+            while (resultSet.next()) {
+                Amenety amenety = new Amenety(resultSet.getDouble("lat"),
+                        resultSet.getDouble("lon"), resultSet.getString("`propertiesamenety`"));
+                nearbyAmeneties.add(amenety);
+            }
+            resultSet.close();
+            stmt.close();
+            conn.close();
+        } catch (SQLException e) {
+            System.err.println("Error: " + e.getMessage());
+        }
+        return nearbyAmeneties;
     }
 }
