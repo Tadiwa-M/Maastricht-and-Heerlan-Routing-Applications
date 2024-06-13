@@ -16,11 +16,15 @@ public class AddressFinderTest {
 
     @Test
     public void testInvalidAddress() {
-        PostAddress address = AddressFinder.getAddress("0000AA");
+        PostAddress address = AddressFinder.getAddress("021000AA");
         assert address == null;
 
         // Test if the address is not found
         address = AddressFinder.getAddress("7000AA");
+        assert address == null;
+
+        // Test if the address is not found
+        address = AddressFinder.getAddress("-7000AA");
         assert address == null;
     }
 }
