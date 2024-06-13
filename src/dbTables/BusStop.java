@@ -1,7 +1,7 @@
 package dbTables;
 
 public class BusStop {
-    private final int stopId;
+    private final String stopId;
     private final int stopSequence;
     private final String stopName;
     private final String arrivalTime;
@@ -11,7 +11,7 @@ public class BusStop {
     private final String routeName;
 
 
-    public BusStop(int stopId, int stopSequence, String stopName, String arrivalTime, String departureTime, float stopLat, float stopLon, String routeName) {
+    public BusStop(String stopId, int stopSequence, String stopName, String arrivalTime, String departureTime, float stopLat, float stopLon, String routeName) {
         this.stopId = stopId;
         this.stopSequence = stopSequence;
         this.stopName = stopName;
@@ -22,7 +22,7 @@ public class BusStop {
         this.routeName = routeName;
     }
 
-    public int getStopId() {
+    public String getStopId() {
         return stopId;
     }
 

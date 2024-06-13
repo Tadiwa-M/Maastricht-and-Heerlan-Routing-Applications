@@ -1,9 +1,7 @@
 package dbTables;
 
-import java.sql.*;
-//XXX: incorrect variables.
 public class Stops {
-    private int stopId;
+    private String stopId;
     private String stopCode;
     private String stopName;
     private float stopLat;
@@ -33,11 +31,11 @@ public class Stops {
         return stopCode;
     }
 
-    public int getStopId() {
+    public String getStopId() {
         return stopId;
     }
 
-    public void setStopId(int stopId) {
+    public void setStopId(String stopId) {
         this.stopId = stopId;
     }
 

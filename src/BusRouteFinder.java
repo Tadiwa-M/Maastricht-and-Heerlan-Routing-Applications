@@ -1,15 +1,13 @@
-import dbTables.BusRoute;
-import dbTables.BusStop;
-import dbTables.PostAddress;
-import dbTables.Stops;
+import dbTables.*;
 
 import java.util.List;
 
+import static dbTables.BusRoute.getDuration;
 import static dbTables.dbManager.*;
 
 public class BusRouteFinder {
-    PostAddress start;
-    PostAddress end;
+    private final PostAddress start;
+    private final PostAddress end;
 
     public BusRouteFinder(PostAddress start, PostAddress end) {
         this.start = start;
@@ -48,6 +46,42 @@ public class BusRouteFinder {
     }
 
     public static void main(String[] args) {
+        String startPostCode = "6216EG";
+        String endPostCode = "6229EN";
+
+        PostAddress start = AddressFinder.getAddress(startPostCode);
+        PostAddress end = AddressFinder.getAddress(endPostCode);
+
+        List<String> startStops = findNearestBusStop(start).stream().map(Stops::getStopId).toList();
+        List<String> endStops = findNearestBusStop(end).stream().map(Stops::getStopId).toList();
+
+        String startTime = "10:00:00";
+
+        // Assume we pick the first stop from the list of nearest stops for simplicity
+        if (!startStops.isEmpty() && !endStops.isEmpty()) {
+            Route bestRoute = findBestRoute(startStops, endStops, startTime);
+            if (bestRoute != null) {
+                System.out.println("Best route found");
+
+                System.out.println("Total Time: " + getDuration(startTime, bestRoute.getArrivalTime()).toMinutes());
+                System.out.println("Trip time: " + bestRoute.getTotalTravelTime() + " minutes");
+                BusRoute fromRoute = getStopsFromRoute(bestRoute.getFromRoute());
+                BusRoute toRoute = getStopsFromRoute(bestRoute.getToRoute());
+                for (BusStop busStop : fromRoute.getBusStops()) {
+                    System.out.println(busStop.getStopName() + " " + busStop.getRouteName() + " " + busStop.getDepartureTime());
+                }
+                System.out.println("Change at: " + (toRoute.getBusStops().get(0)).getStopName());
+                for (BusStop busStop : toRoute.getBusStops()) {
+                    System.out.println(busStop.getStopName() + " " + busStop.getRouteName() + " " + busStop.getDepartureTime());
+                }
+            }
+            else {
+                System.out.println("No route found");
+            }
+        }
+    }
+
+    public static void test() {
         PostAddress start = AddressFinder.getAddress("6229EN");
         PostAddress end = AddressFinder.getAddress("6229HD");
 

@@ -33,7 +33,7 @@ public class BusRoute {
         return (int) duration.toMinutes();
     }
 
-    private static Duration getDuration(String firstDepartureTime, String lastArrivalTime) {
+    public static Duration getDuration(String firstDepartureTime, String lastArrivalTime) {
         // Define the date-time format
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
         // Parse the strings into LocalDateTime objects

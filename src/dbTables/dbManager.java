@@ -9,13 +9,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class dbManager {
 
     public static void main(String[] args) {
-        fetchShopsByCoords(5.66, 50.86, 0.5);
+
     }
 
     private static Connection getSqlConnection() {
@@ -36,31 +35,179 @@ public class dbManager {
         }
     }
 
-    private List<String> findPotentialTransferStops(String startStopId, String endStopId) {
-        Connection conn = getSqlConnection();
-        if (conn == null)
-            return null;
-        String sql = "SELECT DISTINCT st2.stop_id " +
-                "FROM stop_times st1 " +
-                "JOIN stop_times st2 ON st1.trip_id = st2.trip_id " +
-                "WHERE st1.stop_id = ? AND st2.stop_id != ? AND st1.stop_sequence < st2.stop_sequence";
+    public static Route findBestRoute(List<String> startIds, List<String> endIds, String startTime) {
+        List<Route> allRoutes = new ArrayList<>();
 
-        List<String> transferStops = new ArrayList<>();
-        try {
-            PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setString(1, startStopId);
-            stmt.setString(2, endStopId);
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                transferStops.add(rs.getString("stop_id"));
+        for (String startId : startIds) {
+            for (String endId : endIds) {
+                List<Route> transferRoutes = findRoutesWithTransfers(startId, endId, startTime);
+                allRoutes.addAll(transferRoutes);
             }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
         }
-        return transferStops;
+
+        // Return the fastest route
+        return getFastestRoute(allRoutes).get(0);
     }
 
+    public static List<Route> findDirectRoutes(String startStopId, String endStopId, String startTime) {
+        Connection conn = getSqlConnection();
+        if (conn == null) {
+            return null;
+        }
 
+        String sql = "SELECT t.trip_id, t.route_id, r.route_short_name, r.route_long_name, " +
+                "st1.departure_time, st2.arrival_time, st1.stop_id AS start_stop_id, st2.stop_id AS end_stop_id " +
+                "FROM trips t " +
+                "JOIN stop_times st1 ON t.trip_id = st1.trip_id " +
+                "JOIN stop_times st2 ON t.trip_id = st2.trip_id " +
+                "JOIN routes r ON t.route_id = r.route_id " +
+                "WHERE st1.stop_id = ? AND st2.stop_id = ? AND st1.stop_sequence < st2.stop_sequence " +
+                "AND st1.departure_time >= ? AND st2.arrival_time <= ? " +
+                "ORDER BY st1.departure_time";
+
+        List<Route> routes = new ArrayList<>();
+        try {
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, startStopId);
+            pstmt.setString(2, endStopId);
+            pstmt.setString(3, startTime);
+            pstmt.setString(4, LocalTime.parse(startTime).plusHours(2).toString());
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                routes.add(new Route(
+                        rs.getString("trip_id"),
+                        rs.getString("route_id"),
+                        rs.getString("route_short_name"),
+                        rs.getString("route_long_name"),
+                        rs.getString("departure_time"),
+                        rs.getString("arrival_time"),
+                        rs.getString("start_stop_id"),
+                        rs.getString("end_stop_id")
+                ));
+            }
+            rs.close();
+            pstmt.close();
+            conn.close();
+        } catch (SQLException e) {
+            System.err.println("Error retrieving direct routes: " + e.getMessage());
+        }
+        return routes;
+    }
+
+    public static List<Route> findRoutesWithTransfers(String startStopId, String endStopId, String startTime) {
+        Connection conn = getSqlConnection();
+        if (conn == null) {
+            return null;
+        }
+
+        List<Route> routesWithTransfers = new ArrayList<>();
+        String sql = "SELECT " +
+                "st1.trip_id AS first_trip_id, t1.route_id AS first_route_id, r1.route_short_name AS first_route_short_name, r1.route_long_name AS first_route_long_name, " +
+                "st1.departure_time AS first_departure_time, st2.arrival_time AS first_arrival_time, st1.stop_id AS first_start_stop_id, st2.stop_id AS first_end_stop_id, " +
+                "st3.trip_id AS second_trip_id, t2.route_id AS second_route_id, r2.route_short_name AS second_route_short_name, r2.route_long_name AS second_route_long_name, " +
+                "st2.departure_time AS second_departure_time, st3.arrival_time AS second_arrival_time, st2.stop_id AS second_start_stop_id, st3.stop_id AS second_end_stop_id " +
+                "FROM stop_times st1 " +
+                "JOIN trips t1 ON st1.trip_id = t1.trip_id " +
+                "JOIN routes r1 ON t1.route_id = r1.route_id " +
+                "JOIN stop_times st2 ON st1.trip_id = st2.trip_id AND st1.stop_id = ? AND st2.stop_id != st1.stop_id AND st1.stop_sequence < st2.stop_sequence " +
+                "JOIN stop_times st3 ON st2.stop_id = st3.stop_id AND st2.trip_id != st3.trip_id " +
+                "JOIN trips t2 ON st3.trip_id = t2.trip_id " +
+                "JOIN routes r2 ON t2.route_id = r2.route_id " +
+                "WHERE st3.stop_id = ? AND st2.arrival_time < st3.departure_time AND TIMESTAMPDIFF(MINUTE, st2.arrival_time, st3.departure_time) >= 3 " +
+                "AND st1.departure_time >= ? AND st3.arrival_time <= ? " +
+                "ORDER BY TIMESTAMPDIFF(MINUTE, ?, st3.arrival_time) ASC " + // Order by the travel time from the provided start time
+                "LIMIT 1;";
+
+        try {
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, startStopId);
+            pstmt.setString(2, endStopId);
+            pstmt.setString(3, startTime);
+            pstmt.setString(4, LocalTime.parse(startTime).plusHours(2).toString());
+            pstmt.setString(5, startTime); // This is where the startTime is used for ordering
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                Route firstRoute = new Route(
+                        rs.getString("first_trip_id"),
+                        rs.getString("first_route_id"),
+                        rs.getString("first_route_short_name"),
+                        rs.getString("first_route_long_name"),
+                        rs.getString("first_departure_time"),
+                        rs.getString("first_arrival_time"),
+                        rs.getString("first_start_stop_id"),
+                        rs.getString("first_end_stop_id")
+                );
+                Route secondRoute = new Route(
+                        rs.getString("second_trip_id"),
+                        rs.getString("second_route_id"),
+                        rs.getString("second_route_short_name"),
+                        rs.getString("second_route_long_name"),
+                        rs.getString("second_departure_time"),
+                        rs.getString("second_arrival_time"),
+                        rs.getString("second_start_stop_id"),
+                        rs.getString("second_end_stop_id")
+                );
+                routesWithTransfers.add(new Route(firstRoute, secondRoute));
+            }
+            rs.close();
+            pstmt.close();
+            conn.close();
+        } catch (SQLException e) {
+            System.err.println("SQL Error: " + e.getMessage());
+        }
+        return routesWithTransfers;
+    }
+
+    public static BusRoute getStopsFromRoute(Route route) {
+        Connection conn = getSqlConnection();
+        if (conn == null) {
+            return null;
+        }
+
+        List<BusStop> busStops = new ArrayList<>();
+        String query = "SELECT " +
+                "st.stop_id, st.stop_sequence, s.stop_name, st.arrival_time, st.departure_time, " +
+                "s.stop_lat, s.stop_lon, r.route_short_name " +
+                "FROM stop_times st " +
+                "JOIN stops s ON st.stop_id = s.stop_id " +
+                "JOIN trips t ON st.trip_id = t.trip_id " +
+                "JOIN routes r ON t.route_id = r.route_id " +
+                "WHERE st.trip_id = ? AND " +
+                "st.stop_sequence BETWEEN (SELECT stop_sequence FROM stop_times WHERE stop_id = ? AND trip_id = ? LIMIT 1) " +
+                "AND (SELECT stop_sequence FROM stop_times WHERE stop_id = ? AND trip_id = ? LIMIT 1) " +
+                "ORDER BY st.stop_sequence";
+
+        try {
+            PreparedStatement stmt = conn.prepareStatement(query);
+            stmt.setString(1, route.getTripId());
+            stmt.setString(2, route.getStartStopId());
+            stmt.setString(3, route.getTripId());
+            stmt.setString(4, route.getEndStopId());
+            stmt.setString(5, route.getTripId());
+            ResultSet resultSet = stmt.executeQuery();
+
+            while (resultSet.next()) {
+                BusStop busStop = new BusStop(
+                        resultSet.getString("stop_id"),
+                        resultSet.getInt("stop_sequence"),
+                        resultSet.getString("stop_name"),
+                        resultSet.getString("arrival_time"),
+                        resultSet.getString("departure_time"),
+                        resultSet.getFloat("stop_lat"),
+                        resultSet.getFloat("stop_lon"),
+                        resultSet.getString("route_short_name"));
+                busStops.add(busStop);
+            }
+
+            resultSet.close();
+            stmt.close();
+            conn.close();
+            return new BusRoute(busStops);
+        } catch (SQLException e) {
+            System.err.println("Error retrieving stops: " + e.getMessage());
+            return null;
+        }
+    }
 
 
     public static BusRoute getAllStopsFromTripId(String tripID, int startSequence, int endSequence) {
@@ -101,7 +248,7 @@ public class dbManager {
             ResultSet resultSet = stmt.executeQuery();
             while (resultSet.next()) {
                 BusStop busStop = new BusStop(
-                        resultSet.getInt("stop_id"),
+                        resultSet.getString("stop_id"),
                         resultSet.getInt("stop_sequence"),
                         resultSet.getString("stop_name"),
                         resultSet.getString("arrival_time"),
@@ -178,6 +325,14 @@ public class dbManager {
         }
     }
 
+    private static List<Route> getFastestRoute(List<Route> routesWithTransfers) {
+        if (routesWithTransfers.isEmpty()) return routesWithTransfers;
+
+        // Sort routes based on total travel time and return the fastest
+        routesWithTransfers.sort(Comparator.comparing(Route::getTotalTravelTime));
+        return Collections.singletonList(routesWithTransfers.get(0));
+    }
+
     private static @NotNull String getRouteQuery(List<Stops> startStopIds, List<Stops> endStopIds) {
         StringBuilder startStopsBuilder = new StringBuilder();
         StringBuilder endStopsBuilder = new StringBuilder();
@@ -238,7 +393,7 @@ public class dbManager {
             ResultSet resultSet = stmt.executeQuery();
             while (resultSet.next()) {
                 Stops stop = new Stops();
-                stop.setStopId(resultSet.getInt("stop_id"));
+                stop.setStopId(resultSet.getString("stop_id"));
                 stop.setStopCode(resultSet.getString("stop_code"));
                 stop.setStopName(resultSet.getString("stop_name"));
                 stop.setStopLat(resultSet.getFloat("stop_lat"));
