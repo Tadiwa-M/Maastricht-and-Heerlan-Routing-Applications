@@ -8,7 +8,7 @@ import java.util.Map;
 import static dbTables.dbManager.fetchAddress;
 import static dbTables.dbManager.fetchAllAddresses;
 
-public class AddressFinder {
+public class  AddressFinder {
     static Map<String, PostAddress> allAddresses = new HashMap<>();
     public static PostAddress getAddress(String postalCode) {
         if (!allAddresses.isEmpty()) {

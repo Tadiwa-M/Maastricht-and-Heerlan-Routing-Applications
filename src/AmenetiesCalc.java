@@ -9,14 +9,14 @@ import static dbTables.dbManager.*;
 import java.util.List;
 
 public class AmenetiesCalc {
-    final double RADIUS = 4;
-    final double essentialShopWeight = .3;
-    final double essentialAmenityWeight = .4;
-    final double nonEssentialShopWeight = .1;
-    final double nonEssentialAmenityWeight = .1;
-    final double TourismWeight = .1;
+    final static double RADIUS = 4;
+    final static double essentialShopWeight = .3;
+    final static double essentialAmenityWeight = .4;
+    final static double nonEssentialShopWeight = .1;
+    final static double nonEssentialAmenityWeight = .1;
+    final static double TourismWeight = .1;
 
-    private double shopScores(PostAddress postAddress){
+    private static double shopScores(PostAddress postAddress){
         List<Shop> shops = fetchShopsByCoords(postAddress.getLat(), postAddress.getLon(), RADIUS);
         double score = 0;
         double weigtlessScore = 0;
@@ -33,7 +33,7 @@ public class AmenetiesCalc {
         return score;
     }
 
-    private double amenityScores(PostAddress postAddress){
+    private static double amenityScores(PostAddress postAddress){
         List<Amenity> amenities = fetchAmenitiesByCoords(postAddress.getLat(), postAddress.getLon(), RADIUS);
         double score = 0;
         double weigtlessScore = 0;
@@ -51,7 +51,7 @@ public class AmenetiesCalc {
         return score;
     }
 
-    private double tourismScores(PostAddress postAddress){
+    private static double tourismScores(PostAddress postAddress){
         List<Tourism> landmarks = fetchAttractionsByCoords(postAddress.getLat(), postAddress.getLon(), RADIUS);
         double score = 0;
         double weigtlessScore = 0;
@@ -64,12 +64,12 @@ public class AmenetiesCalc {
         return score;
     }
 
-    public double gaussianScore(double distance) {
+    public static double gaussianScore(double distance) {
         double mu = 0; // Mean distance (zero for maximum score at zero distance)
         return Math.exp(-Math.pow(distance - mu, 2) / (2 * Math.pow(RADIUS/2, 2)));
     }
 
-    public double calculateScore(PostAddress postAddress){
+    public static double calculateScore(PostAddress postAddress){
         return tourismScores(postAddress) + amenityScores(postAddress) + shopScores(postAddress);
     }
 

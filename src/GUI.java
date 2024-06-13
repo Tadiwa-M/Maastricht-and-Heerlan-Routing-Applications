@@ -1,8 +1,10 @@
 
+
 import Transport.*;
 import dbTables.BusRoute;
 import dbTables.BusStop;
 import dbTables.PostAddress;
+
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -17,8 +19,12 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
 
 public class GUI extends JFrame {
+
 
     public static String FromCode = "FROM";
     public static String ToCode = "TO";
@@ -28,13 +34,16 @@ public class GUI extends JFrame {
     public static final double minLon = 5.638466;
     public static final double maxLat = 50.812057;
 
+
     private BufferedImage mapImageWithPoints;
     private BufferedImage clearMapImage;
+
 
     public static Point fromPoint;
     public static Point toPoint;
     private BufferedImage mapImage;
     public static GridBagConstraints gbc;
+
 
     private JFormattedTextField postCodeFromField;
     private JFormattedTextField postCodeToField;
@@ -43,10 +52,14 @@ public class GUI extends JFrame {
     private JButton goButton;
     private JButton algorithmButton;
     private JToggleButton busRouteButton;
+    private JButton accessibilityButton;
+
 
     private JToggleButton footButton;
     private JToggleButton bikeButton;
     private JToggleButton busButton;
+
+
 
 
     public GUI() {
@@ -55,6 +68,7 @@ public class GUI extends JFrame {
         setTitle("Distance Calculator using Maastricht Postal Codes");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
+
         try {
             mapImage = ImageIO.read(new File("data/img/Map.png"));
             clearMapImage = ImageIO.read(new File("data/img/Map.png"));
@@ -62,22 +76,31 @@ public class GUI extends JFrame {
             e.printStackTrace();
         }
 
+
         JPanel mainPanel = new JPanel(new BorderLayout());
         mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
 
         JPanel controlPanel = createControlPanel();
         JPanel mapPanel = createMapPanel();
 
+
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, controlPanel, mapPanel);
-        splitPane.setDividerLocation(200); 
+        splitPane.setDividerLocation(200);
         splitPane.setEnabled(false);
         splitPane.setOneTouchExpandable(true);
+
 
         mainPanel.add(splitPane, BorderLayout.CENTER);
         add(mainPanel);
 
-        setupActionListeners(postCodeFromField, postCodeToField, vehicleBox, goButton, algorithmButton, busRouteButton);
+
+        setupActionListeners();
     }
+
+
+
+
 
 
 
@@ -88,7 +111,7 @@ public class GUI extends JFrame {
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 if (mapImage != null) {
-                    g.drawImage(mapImage, 0, 0, 621, 557, this); 
+                    g.drawImage(mapImage, 0, 0, 621, 557, this);
                 }
                 if (fromPoint != null && toPoint != null) {
                     g.setColor(Color.RED);
@@ -105,24 +128,27 @@ public class GUI extends JFrame {
                 }
             }
         };
-        mapPanel.setPreferredSize(new Dimension(621, 557)); 
+        mapPanel.setPreferredSize(new Dimension(621, 557));
         return mapPanel;
     }
 
 
-    private void setupActionListeners(JFormattedTextField postCodeFromField, JFormattedTextField postCodeToField, JComboBox<String> vehicleBox, JButton goButton, JButton algorithmButton, JToggleButton busRouteButton) {
+
+
+    private void setupActionListeners() {
         goButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                boolean accept = buttonClickSharedOperations(postCodeFromField, postCodeToField, vehicleBox, true);
+                boolean accept = buttonClickSharedOperations(postCodeFromField, postCodeToField, vehicleBox, true,accessibilityButton);
                 drawPoints(getAddressFromDataManager(FromCode), getAddressFromDataManager(ToCode));
                 mapImageWithPoints = drawPointsOnMap(mapImage, fromPoint, toPoint);
                 showStraightLineDistance();
             }
         });
 
+
         algorithmButton.addActionListener(e -> {
-            boolean accept = buttonClickSharedOperations(postCodeFromField, postCodeToField, vehicleBox, true);
+            boolean accept = buttonClickSharedOperations(postCodeFromField, postCodeToField, vehicleBox, true,accessibilityButton);
             if (!accept) { return; }
             try {
                 runPathFindingAlgorithm(getAddressFromDataManager(FromCode), getAddressFromDataManager(ToCode));
@@ -131,8 +157,9 @@ public class GUI extends JFrame {
             }
         });
 
+
         busRouteButton.addActionListener(e -> {
-            boolean accept = buttonClickSharedOperations(postCodeFromField,postCodeToField, vehicleBox, false);
+            boolean accept = buttonClickSharedOperations(postCodeFromField,postCodeToField, vehicleBox, false,accessibilityButton);
             if (!accept) return;
             PostAddress first = getAddressFromDataManager(FromCode);
             PostAddress last = getAddressFromDataManager(ToCode);
@@ -153,11 +180,79 @@ public class GUI extends JFrame {
             showBusStopsPopup(busRoute);
             busRouteButton.setSelected(false);
         });
+
+
+
+
+        accessibilityButton.addActionListener(e -> {
+            try {
+                showPostalCodeAccessibilityScores();
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+        });
+
+
     }
+
+
+    private void showPostalCodeAccessibilityScores() throws Exception {
+        JFrame parentFrame = new JFrame();
+        parentFrame.setResizable(false);
+        parentFrame.setVisible(true);
+        parentFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Adjust as needed
+
+
+        // Create a JPanel to hold your content
+        JPanel panel = new JPanel(new BorderLayout());
+        parentFrame.add(panel);
+
+
+        // Create your custom content (JTextArea in a JScrollPane)
+        JTextArea textArea = new JTextArea();
+        textArea.setEditable(false);
+        textArea.setFont(new Font("Monospaced", Font.PLAIN, 12)); // Monospaced font for alignment
+
+
+        // Build the text content
+        StringBuilder scoresBuilder = new StringBuilder("Postal Code Accessibility Scores:\n\n");
+        scoresBuilder.append(String.format("%-15s %s\n", "Postal Code", "Accessibility Score (Higher is Better)"));
+        scoresBuilder.append("--------------------------------------------------------\n");
+
+        java.util.List<PostAddress> addressList = AddressFinder.getAllAddresses();
+
+        for (PostAddress address: addressList) {
+            scoresBuilder.append(String.format("%-15s %s\n", address, AmenetiesCalc.calculateScore(address)));
+        }
+        textArea.setText(scoresBuilder.toString());
+
+
+        // Add text area to scroll pane
+        JScrollPane scrollPane = new JScrollPane(textArea);
+        panel.add(scrollPane, BorderLayout.CENTER);
+
+
+        // Set frame properties
+        parentFrame.setTitle("Accessibility Scores");
+        parentFrame.setSize(400, 600);
+        parentFrame.setLocationRelativeTo(null); // Center on screen
+
+
+        // Show the frame
+        parentFrame.setVisible(true);
+    }
+
+
+
+
+
+
+
 
     private void showError(String message) {
         JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
     }
+
 
     private void showBusStopsPopup(BusRoute route) {
         String routeName = route.getBusStops().get(1).getRouteName();
@@ -169,17 +264,23 @@ public class GUI extends JFrame {
         String lastDepartureTime = route.getBusStops().get(route.getBusStops().size() - 2).getDepartureTime();
         long totalTimeMinutes = calculateTimeDifference(firstArrivalTime, lastDepartureTime);
 
+
         stopNames.append("\nTotal Travel Time: ").append(totalTimeMinutes + 5).append(" minutes");
+
+
 
 
         JOptionPane.showMessageDialog(null, stopNames.toString(), "Bus Route", JOptionPane.INFORMATION_MESSAGE);
     }
 
 
+
+
     private long calculateTimeDifference(String startTime, String endTime) {
         if (startTime == null || endTime == null) {
-            return 0;  
+            return 0;
         }
+
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
         LocalTime start = LocalTime.parse(startTime, formatter);
@@ -190,15 +291,19 @@ public class GUI extends JFrame {
         DrawBaseImage(g);
 
 
-        
+
+
+
         g.setColor(Color.BLACK);
         g.setStroke(new BasicStroke(3));
 
-        
+
+
         for (int i = 0; i < route.getBusStops().size() - 1; i++) {
             Point startPoint = findPostCodeCoordinate(route.getBusStops().get(i).getStopLon(), route.getBusStops().get(i).getStopLat());
             Point endPoint = findPostCodeCoordinate(route.getBusStops().get(i + 1).getStopLon(), route.getBusStops().get(i + 1).getStopLat());
             g.drawLine(startPoint.x, startPoint.y, endPoint.x, endPoint.y);
+
 
             if (i == 0) {
 //                String route_color = route.getBusStops().get(0).getRouteColor();
@@ -211,13 +316,15 @@ public class GUI extends JFrame {
     }
     private JFormattedTextField createPostCodeField(String contents, Point textPanelPosition) {
         JFormattedTextField postCodeField = new JFormattedTextField();
-        postCodeField.setPreferredSize(new Dimension(60, 30)); 
+        postCodeField.setPreferredSize(new Dimension(60, 30));
         postCodeField.setText(contents);
 
-        
-        int xOffset = textPanelPosition.x + 100 + 20; 
-        int yOffset = textPanelPosition.y; 
-        postCodeField.setBounds(xOffset, yOffset, 80, 30); 
+
+
+        int xOffset = textPanelPosition.x + 100 + 20;
+        int yOffset = textPanelPosition.y;
+        postCodeField.setBounds(xOffset, yOffset, 80, 30);
+
 
         return postCodeField;
     }
@@ -225,38 +332,47 @@ public class GUI extends JFrame {
 
 
 
+
+
     private JPanel createControlPanel() {
         JPanel controlPanel = new JPanel(new GridBagLayout());
-        controlPanel.setPreferredSize(new Dimension(200, 600)); 
-        gbc = new GridBagConstraints();
+        controlPanel.setPreferredSize(new Dimension(200, 600));
+        GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.weightx = 1.0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
+
 
         gbc.gridx = 0;
         gbc.gridy = 0;
         JLabel fromLabel = new JLabel("From: ");
         controlPanel.add(fromLabel, gbc);
 
+
         gbc.gridy++;
         postCodeFromField = createPostCodeField("6211AL", fromLabel.getLocation());
         controlPanel.add(postCodeFromField, gbc);
+
 
         gbc.gridy++;
         JLabel toLabel = new JLabel("To: ");
         controlPanel.add(toLabel, gbc);
 
+
         gbc.gridy++;
         postCodeToField = createPostCodeField("6225AG", toLabel.getLocation());
         controlPanel.add(postCodeToField, gbc);
+
 
         gbc.gridy++;
         footButton = createToggleButton("FOOT", "walk_hollow.png", "walk.png", 20, 20);
         controlPanel.add(footButton, gbc);
 
+
         gbc.gridy++;
         bikeButton = createToggleButton("BIKE", "bike_hollow.png", "bike.png", 20, 20);
         controlPanel.add(bikeButton, gbc);
+
 
         gbc.gridy++;
         busButton = createToggleButton("CAR", "car_hollow.png", "car.png", 20, 20);
@@ -269,14 +385,19 @@ public class GUI extends JFrame {
 
 
         gbc.gridy++;
-        gbc.gridwidth = 2; 
+        gbc.gridwidth = 1;  // Reset gridwidth to 1 for individual buttons
         goButton = createAlgorithmButton("Straight Line");
         controlPanel.add(goButton, gbc);
+
 
         gbc.gridy++;
         algorithmButton = createAlgorithmButton("Shortest Distance");
         controlPanel.add(algorithmButton, gbc);
 
+
+        gbc.gridy++;
+        accessibilityButton = createAlgorithmButton("Accessibility Score");
+        controlPanel.add(accessibilityButton, gbc);
 
 
         return controlPanel;
@@ -287,7 +408,14 @@ public class GUI extends JFrame {
 
 
 
+
+
+
+
+
+
     private JToggleButton createBusRouteButton(){
+
 
         String prefix = "data/img/icons/";
         ImageIcon hollow = new ImageIcon(new ImageIcon(prefix + "bus_hollow.png").getImage().getScaledInstance(20, 20, Image.SCALE_DEFAULT));
@@ -296,6 +424,7 @@ public class GUI extends JFrame {
         button.setSelectedIcon(filled);
         button.setPreferredSize(new Dimension(20 + 100, 20));
         return button;
+
 
     }
     private JButton createAlgorithmButton(String name){
@@ -308,13 +437,16 @@ public class GUI extends JFrame {
 
 
 
+
+
+
     private JToggleButton createToggleButton(String text, String hollowIcon, String fillIcon, int width, int height) {
         String prefix = "data/img/icons/";
         ImageIcon hollow = new ImageIcon(new ImageIcon(prefix + hollowIcon).getImage().getScaledInstance(width, height, Image.SCALE_DEFAULT));
         ImageIcon filled = new ImageIcon(new ImageIcon(prefix + fillIcon).getImage().getScaledInstance(width, height, Image.SCALE_DEFAULT));
         JToggleButton button = new JToggleButton(text, hollow);
         button.setSelectedIcon(filled);
-        button.setPreferredSize(new Dimension(width + 100, height)); 
+        button.setPreferredSize(new Dimension(width + 100, height));
         button.addActionListener(e -> {
             footButton.setSelected(false);
             bikeButton.setSelected(false);
@@ -325,6 +457,9 @@ public class GUI extends JFrame {
         });
         return button;
     }
+
+
+
 
 
 
@@ -342,9 +477,11 @@ public class GUI extends JFrame {
     }
 
 
-    
-    
-    private boolean buttonClickSharedOperations(JFormattedTextField postCodeFromField, JFormattedTextField postCodeToField, JComboBox<String> vehicleBox, boolean careForVehicle){
+
+
+
+
+    private boolean buttonClickSharedOperations(JFormattedTextField postCodeFromField, JFormattedTextField postCodeToField, JComboBox<String> vehicleBox, boolean careForVehicle, JButton accessibilityButton){
         DrawBaseImage((Graphics2D) mapImage.getGraphics());
         boolean accept = true;
         repaint();
@@ -353,11 +490,13 @@ public class GUI extends JFrame {
         String codeToString = postCodeToField.getText().replace(" ", "");
         String codeFromString = postCodeFromField.getText().replace(" ", "");
 
+
         accept = buttonClickConditionals(codeFromString,codeToString);
         boolean vehicleFlag = true;
         if (careForVehicle && SelectedVehicle == null){
             vehicleFlag = false;
             JOptionPane.showMessageDialog(null, "Foreign vehicle or none selected. \nPlease select another and try again");
+
 
         }
         accept = accept && vehicleFlag;
@@ -368,7 +507,8 @@ public class GUI extends JFrame {
         return accept;
     }
 
-    
+
+
     private boolean buttonClickConditionals(String codeFrom, String codeTo){
         if (!acceptCode(codeTo)) {
             JOptionPane.showMessageDialog(null, "The \"TO\" PostCode is Not in the proper format\nFormat: 1234AB or 1234 AB");
@@ -393,48 +533,62 @@ public class GUI extends JFrame {
         return true;
     }
 
+
     private BufferedImage drawPointsOnMap(BufferedImage mapImage, Point fromPoint, Point toPoint) {
         BufferedImage imageWithPoints = new BufferedImage(mapImage.getWidth(), mapImage.getHeight(), BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = (Graphics2D) imageWithPoints.getGraphics();
 
+
         g.drawImage(mapImage, 0, 0, null);
+
 
         if (fromPoint != null && toPoint != null) {
             g.setColor(Color.RED);
             g.setStroke(new BasicStroke(5));
             g.drawLine(fromPoint.x, fromPoint.y, toPoint.x, toPoint.y);
 
+
             g.setColor(Color.GREEN);
             g.fillOval(fromPoint.x - 10, fromPoint.y - 10, 20, 20);
+
 
             g.setColor(Color.BLUE);
             g.fillOval(toPoint.x - 10, toPoint.y - 10, 20, 20);
         }
 
+
         g.dispose();
+
 
         return imageWithPoints;
     }
+
 
     private void runPathFindingAlgorithm(PostAddress from, PostAddress to) throws Exception {
 //        Graph graph = new GraphCreator().createGraph();
 //        ShortestPathFinder pathFinder = new ShortestPathFinder(graph);
 //        pathFinder.setShortestPathAlgorithm(new Dijkstra(graph));
 
-        /*
-        ArrayList<dbTables.PostAddress> shortestPath = pathFinder.findPath(from, to);
-        double value = pathFinder.getDistance(from, to);
-        */
+
+       /*
+       ArrayList<dbTables.PostAddress> shortestPath = pathFinder.findPath(from, to);
+       double value = pathFinder.getDistance(from, to);
+       */
+
 
         GraphHopperUtil graphHopperUtil = new GraphHopperUtil();
         QueryResponse queryResponse = graphHopperUtil.calculateRoute(from.getPostalCode(), to.getPostalCode(), currentVehicle.toString().toLowerCase());
 
+
         double value = queryResponse.getDistance() / 1000;
         ArrayList<PostAddress> shortestPath = queryResponse.getPath();
 
+
         visualizeShortestPath(shortestPath);
 
+
         value = Double.parseDouble(new DecimalFormat("##.##").format(value));
+
 
         Vehicle vehicle;
         if (currentVehicle == VehicleType.FOOT) {
@@ -445,16 +599,18 @@ public class GUI extends JFrame {
             vehicle = new Car(value);
         }
         else {
-            
+
             JOptionPane.showMessageDialog(null, "The vehicle is not supported");
             return;
         }
         showAlgorithmDistanceMessage(value, vehicle);
     }
 
+
     private void showAlgorithmDistanceMessage(double value, Vehicle vehicle){
         double time = Double.parseDouble(new DecimalFormat("##.##").format(vehicle.calculateTime()));
         JOptionPane.showMessageDialog(null, "Distance: " + value + "km\nCompleted In: " + (int) time + " minutes");
+
 
     }
     private void showStraightLineDistance(){
@@ -464,31 +620,39 @@ public class GUI extends JFrame {
         JOptionPane.showMessageDialog(null, "The Bird's Flight Distance is: " + distance + "km");
     }
 
+
     private void visualizeShortestPath(ArrayList<PostAddress> shortestPath) {
+
 
         if (shortestPath.size() >= 2) {
             fromPoint = findPostCodeCoordinate(shortestPath.get(0).getLon(), shortestPath.get(0).getLat());
             toPoint = findPostCodeCoordinate(shortestPath.get(shortestPath.size() - 1).getLon(), shortestPath.get(shortestPath.size() - 1).getLat());
         }
 
-        
+
+
         Graphics2D g = (Graphics2D) mapImage.getGraphics();
         drawShortestPathOnMap(g, shortestPath);
+
 
         repaint();
     }
 
-    
+
+
     private void drawShortestPathOnMap(Graphics2D g, ArrayList<PostAddress> shortestPath) {
-        
+
         DrawBaseImage(g);
 
 
-        
+
+
+
         g.setColor(Color.BLACK);
         g.setStroke(new BasicStroke(3));
 
-        
+
+
         for (int i = 0; i < shortestPath.size() - 1; i++) {
             Point startPoint = findPostCodeCoordinate(shortestPath.get(i).getLon(), shortestPath.get(i).getLat());
             Point endPoint = findPostCodeCoordinate(shortestPath.get(i + 1).getLon(), shortestPath.get(i + 1).getLat());
@@ -496,9 +660,11 @@ public class GUI extends JFrame {
         }
     }
 
+
     private void DrawBaseImage(Graphics2D g) {
         g.drawImage(clearMapImage, 0, 0, null);
     }
+
 
     public static boolean encodeVehicle(String vehicle) {
         try{
@@ -509,7 +675,11 @@ public class GUI extends JFrame {
             return true;
         }
 
+
     }
+
+
+
 
 
 
@@ -524,9 +694,12 @@ public class GUI extends JFrame {
     }
 
 
+
+
     public boolean acceptCode(String code) {
         return code.length() == 6;
     }
+
 
     public Point findPostCodeCoordinate(double lon, double lat) {
         int imageWidth = mapImage.getWidth();
@@ -536,13 +709,17 @@ public class GUI extends JFrame {
         int xPixel = (int) (lonPercent * imageWidth);
         int yPixel = (int) (latPercent * imageHeight);
 
+
         return new Point(xPixel, yPixel);
     }
+
 
     public void drawPoints(PostAddress from, PostAddress to) {
         fromPoint = findPostCodeCoordinate(from.getLon(), from.getLat());
         toPoint = findPostCodeCoordinate(to.getLon(), to.getLat());
 
+
         repaint();
     }
 }
+
