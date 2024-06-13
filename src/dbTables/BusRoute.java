@@ -11,9 +11,31 @@ import java.util.List;
 
 public class BusRoute {
     private List<BusStop> busStops;
+    private String startTime;
+    private String endTime;
 
     public BusRoute(List<BusStop> busStops) {
         this.busStops = busStops;
+
+        if (busStops.isEmpty()) {
+            System.out.println("Route is empty");
+            return;
+        }
+
+        this.startTime = busStops.get(0).getDepartureTime();
+        this.endTime = busStops.get(busStops.size() - 1).getArrivalTime();
+    }
+
+    public BusRoute(List<BusStop> busStops, String startTime) {
+        this.busStops = busStops;
+        this.startTime = startTime;
+
+        if (busStops.isEmpty()) {
+            System.out.println("Route is empty");
+            return;
+        }
+
+        this.endTime = busStops.get(busStops.size() - 1).getArrivalTime();
     }
 
     public List<BusStop> getBusStops() {
@@ -21,13 +43,7 @@ public class BusRoute {
     }
 
     public int calculateTripTime() {
-        BusStop firstStop = busStops.get(0);
-        BusStop lastStop = busStops.get(busStops.size() - 1);
-
-        String firstDepartureTime = firstStop.getDepartureTime();
-        String lastArrivalTime = lastStop.getArrivalTime();
-
-        Duration duration = getDuration(firstDepartureTime, lastArrivalTime);
+        Duration duration = getDuration(startTime, endTime);
 
         // Return the duration in minutes
         return (int) duration.toMinutes();

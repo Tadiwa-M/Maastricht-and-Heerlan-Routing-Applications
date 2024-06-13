@@ -37,12 +37,12 @@ public class dbManager {
         }
     }
 
-    public static Route findBestRoute(List<String> startIds, List<String> endIds, String startTime) {
+    public static Route findBestRoute(List<Stops> startIds, List<Stops> endIds, String startTime) {
         Route bestTransferRoute = null;
 
-        for (String startId : startIds) {
-            for (String endId : endIds) {
-                Route currentRoute = findRoutesWithTransfers(startId, endId, startTime);
+        for (Stops startId : startIds) {
+            for (Stops endId : endIds) {
+                Route currentRoute = findRoutesWithTransfers(startId.getStopId(), endId.getStopId(), startTime);
                 if (currentRoute != null) {
                     if (bestTransferRoute == null) {
                         bestTransferRoute = currentRoute;
@@ -211,11 +211,13 @@ public class dbManager {
             resultSet.close();
             stmt.close();
             conn.close();
-            return new BusRoute(busStops);
+            if (!busStops.isEmpty()) {
+                return new BusRoute(busStops);
+            }
         } catch (SQLException e) {
             System.err.println("Error retrieving stops: " + e.getMessage());
-            return null;
         }
+        return null;
     }
 
 
