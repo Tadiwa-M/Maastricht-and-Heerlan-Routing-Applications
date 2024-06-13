@@ -78,7 +78,6 @@ public class dbManager {
                 "    st.departure_time, " +
                 "    s.stop_lat, " +
                 "    s.stop_lon, " +
-                "    r.route_color, " +
                 "    r.route_short_name " +
                 "FROM " +
                 "    stop_times st " +
@@ -109,7 +108,6 @@ public class dbManager {
                         resultSet.getString("departure_time"),
                         resultSet.getFloat("stop_lat"),
                         resultSet.getFloat("stop_lon"),
-                        resultSet.getString("route_color"),
                         resultSet.getString("route_short_name"));
                 busStops.add(busStop);
             }
