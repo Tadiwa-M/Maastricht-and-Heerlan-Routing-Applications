@@ -55,7 +55,7 @@ public class BusRouteFinder {
         List<String> startStops = findNearestBusStop(start).stream().map(Stops::getStopId).toList();
         List<String> endStops = findNearestBusStop(end).stream().map(Stops::getStopId).toList();
 
-        String startTime = "10:00:00";
+        String startTime = "11:00:00";
 
         // Assume we pick the first stop from the list of nearest stops for simplicity
         if (!startStops.isEmpty() && !endStops.isEmpty()) {
@@ -82,8 +82,8 @@ public class BusRouteFinder {
     }
 
     public static void test() {
-        PostAddress start = AddressFinder.getAddress("6229EN");
-        PostAddress end = AddressFinder.getAddress("6229HD");
+        PostAddress start = AddressFinder.getAddress("6216EG");
+        PostAddress end = AddressFinder.getAddress("6229EN");
 
         BusRouteFinder busRouteFinder = new BusRouteFinder(start, end);
         BusRoute shortestRoute = busRouteFinder.findShortestBusRoute();
