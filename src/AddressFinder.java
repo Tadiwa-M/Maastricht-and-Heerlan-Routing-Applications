@@ -38,9 +38,4 @@ public class AddressFinder {
         }
         return postAddresses;
     }
-
-    public static void main(String[] args) {
-        PostAddress address = AddressFinder.getAddress("6216EG");
-        System.out.println(address.getLat() + " " + address.getLon() + " " + address.getPostalCode());
-    }
 }
