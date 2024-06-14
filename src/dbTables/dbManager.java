@@ -56,6 +56,89 @@ public class dbManager {
         return bestTransferRoute;
     }
 
+    public static Route findFastestTransferRouteWithoutStartTime(String startStopId, String endStopId) {
+        Connection conn = getSqlConnection();
+        if (conn == null) {
+            return null;
+        }
+
+        String sql = "SELECT " +
+                "st1.trip_id AS first_trip_id, t1.route_id AS first_route_id, r1.route_short_name AS first_route_short_name, r1.route_long_name AS first_route_long_name, " +
+                "st1.departure_time AS first_departure_time, st2.arrival_time AS first_arrival_time, st1.stop_id AS first_start_stop_id, st2.stop_id AS first_end_stop_id, " +
+                "st3.trip_id AS second_trip_id, t2.route_id AS second_route_id, r2.route_short_name AS second_route_short_name, r2.route_long_name AS second_route_long_name, " +
+                "st2.departure_time AS second_departure_time, st3.arrival_time AS second_arrival_time, st2.stop_id AS second_start_stop_id, st3.stop_id AS second_end_stop_id " +
+                "FROM stop_times st1 " +
+                "JOIN trips t1 ON st1.trip_id = t1.trip_id " +
+                "JOIN routes r1 ON t1.route_id = r1.route_id " +
+                "JOIN stop_times st2 ON st1.trip_id = st2.trip_id AND st1.stop_id = ? AND st2.stop_id != st1.stop_id AND st1.stop_sequence < st2.stop_sequence " +
+                "JOIN stop_times st3 ON st2.stop_id = st3.stop_id AND st2.trip_id != st3.trip_id " +
+                "JOIN trips t2 ON st3.trip_id = t2.trip_id " +
+                "JOIN routes r2 ON t2.route_id = r2.route_id " +
+                "WHERE st3.stop_id = ? AND st2.arrival_time < st3.departure_time AND TIMESTAMPDIFF(MINUTE, st2.arrival_time, st3.departure_time) >= 3 " +
+                "ORDER BY TIMESTAMPDIFF(MINUTE, st1.departure_time, st3.arrival_time) ASC " + // Order by the overall travel time
+                "LIMIT 1;";
+
+        try {
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, startStopId);
+            pstmt.setString(2, endStopId);
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                Route firstRoute = new Route(
+                        rs.getString("first_trip_id"),
+                        rs.getString("first_route_id"),
+                        rs.getString("first_route_short_name"),
+                        rs.getString("first_route_long_name"),
+                        rs.getString("first_departure_time"),
+                        rs.getString("first_arrival_time"),
+                        rs.getString("first_start_stop_id"),
+                        rs.getString("first_end_stop_id")
+                );
+                Route secondRoute = new Route(
+                        rs.getString("second_trip_id"),
+                        rs.getString("second_route_id"),
+                        rs.getString("second_route_short_name"),
+                        rs.getString("second_route_long_name"),
+                        rs.getString("second_departure_time"),
+                        rs.getString("second_arrival_time"),
+                        rs.getString("second_start_stop_id"),
+                        rs.getString("second_end_stop_id")
+                );
+
+                rs.close();
+                pstmt.close();
+                conn.close();
+
+                return new Route(firstRoute, secondRoute);
+            }
+        } catch (SQLException e) {
+            System.err.println("SQL Error: " + e.getMessage());
+        }
+        return null;
+    }
+
+    public static Route findBestTransferRouteWithoutStartTime(List<Stops> startIds, List<Stops> endIds) {
+        Route bestTransferRoute = null;
+
+        for (Stops startId : startIds) {
+            for (Stops endId : endIds) {
+                Route currentRoute = findFastestTransferRouteWithoutStartTime(startId.getStopId(), endId.getStopId());
+                if (currentRoute != null) {
+                    if (bestTransferRoute == null ||
+                            getDuration(currentRoute.getDepartureTime(), currentRoute.getArrivalTime()).toMinutes() <
+                                    getDuration(bestTransferRoute.getDepartureTime(), bestTransferRoute.getArrivalTime()).toMinutes()) {
+                        bestTransferRoute = currentRoute;
+                    }
+                }
+            }
+        }
+
+        // Return the fastest route
+        return bestTransferRoute;
+    }
+
+
+
     public static Route findShortestDirectRoute(List<Stops> startStops, List<Stops> endStops, String startTime) {
         Connection conn = getSqlConnection();
         if (conn == null) {
@@ -66,36 +149,34 @@ public class dbManager {
         StringBuilder endStopsBuilder = new StringBuilder();
 
         for (int i = 0; i < startStops.size(); i++) {
-            startStopsBuilder.append(startStops.get(i).getStopId());
+            startStopsBuilder.append("'").append(startStops.get(i).getStopId()).append("'");
             if (i < startStops.size() - 1) {
                 startStopsBuilder.append(",");
             }
         }
 
         for (int i = 0; i < endStops.size(); i++) {
-            endStopsBuilder.append(endStops.get(i).getStopId());
+            endStopsBuilder.append("'").append(endStops.get(i).getStopId()).append("'");
             if (i < endStops.size() - 1) {
                 endStopsBuilder.append(",");
             }
         }
 
-        // Find the shortest direct route between the start and end stops within the given time frame
         String sql = "SELECT " +
                 "st1.trip_id, r1.route_id, r1.route_short_name, r1.route_long_name, st1.departure_time, st2.arrival_time, st1.stop_id AS start_stop_id, st2.stop_id AS end_stop_id " +
                 "FROM stop_times st1 " +
                 "JOIN stop_times st2 ON st1.trip_id = st2.trip_id AND st1.stop_sequence < st2.stop_sequence " +
                 "JOIN trips t1 ON st1.trip_id = t1.trip_id " +
                 "JOIN routes r1 ON t1.route_id = r1.route_id " +
-                "WHERE st1.stop_id IN (" + startStopsBuilder + ") AND st2.stop_id IN (" + endStopsBuilder + ") AND st1.departure_time >= ? AND st2.arrival_time <= ? " +
-                "ORDER BY TIMESTAMPDIFF(MINUTE, ?, st2.arrival_time) ASC " + // Order by the travel time from the provided start time
+                "WHERE st1.stop_id IN (" + startStopsBuilder + ") AND st2.stop_id IN (" + endStopsBuilder + ") " +
+                "AND st1.departure_time >= ? " +
+                "ORDER BY st2.arrival_time ASC " +
                 "LIMIT 1;";
 
         Route shortestRoute = null;
         try {
             PreparedStatement pstmt = conn.prepareStatement(sql);
             pstmt.setString(1, startTime);
-            pstmt.setString(2, LocalTime.parse(startTime).plusHours(2).toString());
-            pstmt.setString(3, startTime);
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
                 shortestRoute = new Route(
@@ -117,6 +198,7 @@ public class dbManager {
         }
         return shortestRoute;
     }
+
 
     public static Route findRoutesWithTransfers(String startStopId, String endStopId, String startTime) {
         Connection conn = getSqlConnection();
@@ -374,7 +456,7 @@ public class dbManager {
                 "    st1.trip_id, " +
                 "    st1.stop_sequence AS start_stop_sequence, " +
                 "    st2.stop_sequence AS end_stop_sequence, " +
-                "    TIMESTAMPDIFF(SECOND, st1.departure_time, st2.arrival_time) AS travel_time " +
+                "    TIMESTAMPDIFF(MINUTE, st1.departure_time, st2.arrival_time) AS travel_time " +
                 "FROM " +
                 "    stop_times st1 " +
                 "JOIN " +
