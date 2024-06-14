@@ -1,64 +1,58 @@
 package dbTables;
 
 import java.time.Duration;
+import java.util.List;
 
-import static dbTables.BusRoute.getDuration;
+public class TransferRoute extends BusRoute {
+    private DirectRoute startRoute;
+    private DirectRoute endRoute;
 
-public class TransferRoute {
-    private BusRoute startRoute;
-    private BusRoute endRoute;
-    private String startTime;
-    private String endTime;
+    public TransferRoute(DirectRoute startRoute, DirectRoute endRoute) {
+        super(startRoute == null || startRoute.getBusStops().isEmpty() ? null : startRoute.getBusStops().get(0).getDepartureTime(),
+                endRoute == null || endRoute.getBusStops().isEmpty() ? null : endRoute.getBusStops().get(endRoute.getBusStops().size() - 1).getArrivalTime());
 
-    public TransferRoute(BusRoute startRoute, BusRoute endRoute) {
+        if (startRoute == null || endRoute == null || getStartBusStops().isEmpty() || getEndBusStops().isEmpty()) {
+            throw new IllegalArgumentException("One of the routes is null or empty");
+        }
         this.startRoute = startRoute;
         this.endRoute = endRoute;
-
-        if(startRoute.getBusStops().isEmpty() || endRoute.getBusStops().isEmpty()) {
-            System.out.println("Route is empty");
-            return;
-        }
-        this.startTime = startRoute.getBusStops().get(0).getDepartureTime();
-        this.endTime = endRoute.getBusStops().get(endRoute.getBusStops().size() - 1).getArrivalTime();
     }
 
-    public TransferRoute(BusRoute startRoute, BusRoute endRoute, String startTime) {
+    public TransferRoute(DirectRoute startRoute, DirectRoute endRoute, String startTime) {
+        super(startTime, endRoute == null || endRoute.getBusStops().isEmpty() ? null : endRoute.getBusStops().get(endRoute.getBusStops().size() - 1).getArrivalTime());
+
+        if (startRoute == null || endRoute == null || startRoute.getBusStops().isEmpty() || endRoute.getBusStops().isEmpty()) {
+            throw new IllegalArgumentException("One of the routes is null or empty");
+        }
         this.startRoute = startRoute;
         this.endRoute = endRoute;
+    }
 
-        if(startRoute.getBusStops().isEmpty() || endRoute.getBusStops().isEmpty()) {
-            System.out.println("Route is empty");
-            return;
-        }
+    public List<BusStop> getStartBusStops() {
+        return startRoute.getBusStops();
+    }
 
-        this.startTime = startTime;
-        this.endTime = endRoute.getBusStops().get(endRoute.getBusStops().size() - 1).getArrivalTime();
+    public List<BusStop> getEndBusStops() {
+        return endRoute.getBusStops();
     }
 
     public String getTransferLine() {
-        return startRoute.getBusStops().get(0).getRouteName() + " -> " + endRoute.getBusStops().get(0).getRouteName();
+        return getStartBusStops().get(0).getRouteName() + " -> " + getEndBusStops().get(0).getRouteName();
     }
 
-    public BusRoute getStartRoute() {
+    public DirectRoute getStartRoute() {
         return startRoute;
     }
 
-    public BusRoute getEndRoute() {
+    public void setStartRoute(DirectRoute startRoute) {
+        this.startRoute = startRoute;
+    }
+
+    public DirectRoute getEndRoute() {
         return endRoute;
     }
 
-    public String getStartTime() {
-        return startTime;
-    }
-
-    public String getEndTime() {
-        return endTime;
-    }
-
-    public int calculateTripTime() {
-        Duration duration = getDuration(startTime, endTime);
-
-        // Return the duration in minutes
-        return (int) duration.toMinutes();
+    public void setEndRoute(DirectRoute endRoute) {
+        this.endRoute = endRoute;
     }
 }

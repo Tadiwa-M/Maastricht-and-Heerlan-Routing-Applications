@@ -1,7 +1,7 @@
 
 
 import Transport.*;
-import dbTables.BusRoute;
+import dbTables.DirectRoute;
 import dbTables.BusStop;
 import dbTables.PostAddress;
 
@@ -19,8 +19,6 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 
 public class GUI extends JFrame {
@@ -164,20 +162,20 @@ public class GUI extends JFrame {
             PostAddress first = getAddressFromDataManager(FromCode);
             PostAddress last = getAddressFromDataManager(ToCode);
             BusRouteFinder finder = new BusRouteFinder(first , last);
-            BusRoute busRoute = finder.findShortestBusRoute();
-            if (busRoute == null){
+            DirectRoute directRoute = finder.findShortestDirectBusRoute();
+            if (directRoute == null){
                 JOptionPane.showMessageDialog(null, "There is no bus route that connects these two postal codes");
                 busRouteButton.setSelected(false);
                 return;
             }
-            for (BusStop bus: busRoute.getBusStops()){
+            for (BusStop bus: directRoute.getBusStops()){
                 System.out.println(bus);
             }
-            busRoute.getBusStops().add(0, new BusStop("0",0,FromCode, null,null,(float) first.getLat(), (float) first.getLon(), null));
-            busRoute.getBusStops().add(new BusStop("0",0,ToCode, null, null, (float) last.getLat(), (float) last.getLon(), null));
+            directRoute.getBusStops().add(0, new BusStop("0",0,FromCode, null,null,(float) first.getLat(), (float) first.getLon(), null));
+            directRoute.getBusStops().add(new BusStop("0",0,ToCode, null, null, (float) last.getLat(), (float) last.getLon(), null));
             Graphics2D g = (Graphics2D) mapImage.getGraphics();
-            drawShortestPathOnMapBusRoute(g, busRoute);
-            showBusStopsPopup(busRoute);
+            drawShortestPathOnMapBusRoute(g, directRoute);
+            showBusStopsPopup(directRoute);
             busRouteButton.setSelected(false);
         });
 
@@ -254,7 +252,7 @@ public class GUI extends JFrame {
     }
 
 
-    private void showBusStopsPopup(BusRoute route) {
+    private void showBusStopsPopup(DirectRoute route) {
         String routeName = route.getBusStops().get(1).getRouteName();
         StringBuilder stopNames = new StringBuilder("Bus Stops for line (" + routeName + "):\n");
         for (BusStop busStop : route.getBusStops()) {
@@ -287,7 +285,7 @@ public class GUI extends JFrame {
         LocalTime end = LocalTime.parse(endTime, formatter);
         return ChronoUnit.MINUTES.between(start, end);
     }
-    private void drawShortestPathOnMapBusRoute(Graphics2D g, BusRoute route) {
+    private void drawShortestPathOnMapBusRoute(Graphics2D g, DirectRoute route) {
         DrawBaseImage(g);
 
 
