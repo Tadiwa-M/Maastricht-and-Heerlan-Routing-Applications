@@ -199,7 +199,8 @@ public class BusRouteFinder {
 
     public static void main(String[] args) {
 //        testOverallWithTime();
-        testOverallWithoutTime();
+//        testOverallWithoutTime();
+        testTransfer();
     }
 
     public static void testOverallWithTime() {
@@ -263,7 +264,7 @@ public class BusRouteFinder {
     }
 
     public static void testTransfer() {
-        PostAddress start = AddressFinder.getAddress("6229GN");
+        PostAddress start = AddressFinder.getAddress("6218BK");
         PostAddress end = AddressFinder.getAddress("6216EG");
 
         BusRouteFinder busRouteFinder = new BusRouteFinder(start, end);

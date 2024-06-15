@@ -4,6 +4,7 @@ import Transport.*;
 import dbTables.DirectRoute;
 import dbTables.BusStop;
 import dbTables.PostAddress;
+import dbTables.TransferRoute;
 
 
 import javax.imageio.ImageIO;
@@ -15,10 +16,13 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 
 public class GUI extends JFrame {
@@ -138,6 +142,7 @@ public class GUI extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 boolean accept = buttonClickSharedOperations(postCodeFromField, postCodeToField, vehicleBox, true,accessibilityButton);
+                if (!accept) return;
                 drawPoints(getAddressFromDataManager(FromCode), getAddressFromDataManager(ToCode));
                 mapImageWithPoints = drawPointsOnMap(mapImage, fromPoint, toPoint);
                 showStraightLineDistance();
@@ -147,7 +152,7 @@ public class GUI extends JFrame {
 
         algorithmButton.addActionListener(e -> {
             boolean accept = buttonClickSharedOperations(postCodeFromField, postCodeToField, vehicleBox, true,accessibilityButton);
-            if (!accept) { return; }
+            if (!accept)  return;
             try {
                 runPathFindingAlgorithm(getAddressFromDataManager(FromCode), getAddressFromDataManager(ToCode));
             } catch (Exception ex) {
@@ -157,26 +162,10 @@ public class GUI extends JFrame {
 
 
         busRouteButton.addActionListener(e -> {
-            boolean accept = buttonClickSharedOperations(postCodeFromField,postCodeToField, vehicleBox, false,accessibilityButton);
-            if (!accept) return;
-            PostAddress first = getAddressFromDataManager(FromCode);
-            PostAddress last = getAddressFromDataManager(ToCode);
-            BusRouteFinder finder = new BusRouteFinder(first , last);
-            DirectRoute directRoute = finder.findShortestDirectBusRoute();
-            if (directRoute == null){
-                JOptionPane.showMessageDialog(null, "There is no bus route that connects these two postal codes");
-                busRouteButton.setSelected(false);
-                return;
+            Object[] options = showBusRouteOptionsDialog();
+            if (options != null) {
+                processBusRouteOptions((JCheckBox) options[0], (JTextField) options[1]);
             }
-            for (BusStop bus: directRoute.getBusStops()){
-                System.out.println(bus);
-            }
-            directRoute.getBusStops().add(0, new BusStop("0",0,FromCode, null,null,(float) first.getLat(), (float) first.getLon(), null));
-            directRoute.getBusStops().add(new BusStop("0",0,ToCode, null, null, (float) last.getLat(), (float) last.getLon(), null));
-            Graphics2D g = (Graphics2D) mapImage.getGraphics();
-            drawShortestPathOnMapBusRoute(g, directRoute);
-            showBusStopsPopup(directRoute);
-            busRouteButton.setSelected(false);
         });
 
 
@@ -193,6 +182,107 @@ public class GUI extends JFrame {
 
     }
 
+
+
+    private Object[] showBusRouteOptionsDialog() {
+        JPanel panel = new JPanel(new GridLayout(0, 1));
+        JLabel transferLabel = new JLabel("Allow Transfers?");
+        JCheckBox transferCheckBox = new JCheckBox();
+        JLabel timeLabel = new JLabel("Preferred Time (HH:mm:ss):");
+        JTextField timeField = new JTextField();
+        JLabel timeNoteLabel = new JLabel("! Keep empty for current time");
+
+        panel.add(transferLabel);
+        panel.add(transferCheckBox);
+        panel.add(timeLabel);
+        panel.add(timeField);
+        panel.add(timeNoteLabel);
+
+        int result = JOptionPane.showConfirmDialog(null, panel, "Bus Route Options", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+        if (result == JOptionPane.OK_OPTION) {
+            return new Object[]{transferCheckBox, timeField};
+        }
+        return null;
+    }
+
+    private void processBusRouteOptions(JCheckBox transferCheckBox, JTextField timeField) {
+        boolean allowTransfers = transferCheckBox.isSelected();
+        String preferredTime = timeField.getText();
+
+        if (preferredTime.isEmpty()) {
+            preferredTime = new SimpleDateFormat("HH:mm:ss").format(new Date());
+        }
+
+        if (!preferredTime.matches("\\d{2}:\\d{2}:\\d{2}")) {
+            JOptionPane.showMessageDialog(null, "Invalid time format. Please use HH-mm-ss.");
+            return;
+        }
+
+        boolean accept = buttonClickSharedOperations(postCodeFromField, postCodeToField, vehicleBox, false, accessibilityButton);
+        if (!accept) return;
+
+        PostAddress first = getAddressFromDataManager(FromCode);
+        PostAddress last = getAddressFromDataManager(ToCode);
+
+        if (!allowTransfers) {
+            handleDirectBusRoute(first, last, preferredTime);
+        } else {
+            handleTransfers(first, last, preferredTime);
+        }
+
+        busRouteButton.setSelected(false);
+    }
+
+
+
+    private void handleTransfers(PostAddress first, PostAddress last, String preferredTime) {
+        BusRouteFinder finder = new BusRouteFinder(first, last);
+        TransferRoute route = finder.findShortestTransferRouteWithTime(preferredTime);
+        if (route == null){
+            noBusError();
+            return;
+        }
+        int length = route.getStartBusStops().size();
+
+        for (BusStop stop: route.getStartBusStops()){
+            System.out.println(stop.getStopName());
+        }
+        System.out.println();
+
+        for (BusStop stop: route.getEndBusStops()){
+            System.out.println(stop.getStopName());
+        }
+
+        route.getStartBusStops().addAll(route.getEndBusStops());
+        List<BusStop> totalBusStops = new ArrayList<>();
+        totalBusStops.add(createBusStopFromPostalCode(first));
+        totalBusStops.addAll(route.getStartBusStops());
+        totalBusStops.add(createBusStopFromPostalCode(last));
+
+        Graphics2D g = (Graphics2D) mapImage.getGraphics();
+        DirectRoute directRoute = new DirectRoute(totalBusStops);
+        drawShortestPathOnMapBusRoute(g,directRoute, length);
+        showBusStopsPopup(directRoute);
+    }
+
+    private void handleDirectBusRoute(PostAddress first, PostAddress last, String prefferedTime){
+        BusRouteFinder finder = new BusRouteFinder(first, last);
+        DirectRoute directRoute = finder.findShortestDirectBusRouteWithTime(prefferedTime);
+        if (directRoute == null) {
+            noBusError();
+            return;
+        }
+        directRoute.getBusStops().add(0,createBusStopFromPostalCode(first));
+        directRoute.getBusStops().add(createBusStopFromPostalCode(last));
+        Graphics2D g = (Graphics2D) mapImage.getGraphics();
+        drawShortestPathOnMapBusRoute(g, directRoute, 0);
+        showBusStopsPopup(directRoute);
+    }
+
+    private BusStop createBusStopFromPostalCode(PostAddress postalCode){
+        return new BusStop("0", 0,postalCode.getPostalCode() , null, null, (float) postalCode.getLat(), (float) postalCode.getLon(), null);
+    }
 
     private void showPostalCodeAccessibilityScores() throws Exception {
         JFrame parentFrame = new JFrame();
@@ -246,6 +336,10 @@ public class GUI extends JFrame {
 
 
 
+    private void noBusError(){
+        JOptionPane.showMessageDialog(null, "There is no bus route that connects these two postal codes");
+        busRouteButton.setSelected(false);
+    }
 
     private void showError(String message) {
         JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
@@ -262,11 +356,7 @@ public class GUI extends JFrame {
         String lastDepartureTime = route.getBusStops().get(route.getBusStops().size() - 2).getDepartureTime();
         long totalTimeMinutes = calculateTimeDifference(firstArrivalTime, lastDepartureTime);
 
-
         stopNames.append("\nTotal Travel Time: ").append(totalTimeMinutes + 5).append(" minutes");
-
-
-
 
         JOptionPane.showMessageDialog(null, stopNames.toString(), "Bus Route", JOptionPane.INFORMATION_MESSAGE);
     }
@@ -285,7 +375,7 @@ public class GUI extends JFrame {
         LocalTime end = LocalTime.parse(endTime, formatter);
         return ChronoUnit.MINUTES.between(start, end);
     }
-    private void drawShortestPathOnMapBusRoute(Graphics2D g, DirectRoute route) {
+    private void drawShortestPathOnMapBusRoute(Graphics2D g, DirectRoute route, int index) {
         DrawBaseImage(g);
 
 
@@ -306,6 +396,9 @@ public class GUI extends JFrame {
             if (i == 0) {
 //                String route_color = route.getBusStops().get(0).getRouteColor();
                 g.setColor(Color.RED);
+            }
+            else if (i == index){
+                g.setColor(Color.BLUE);
             }
             else if(i == route.getBusStops().size() - 3){
                 g.setColor(Color.BLACK);
