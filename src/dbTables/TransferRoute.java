@@ -11,7 +11,7 @@ public class TransferRoute extends BusRoute {
         super(startRoute == null || startRoute.getBusStops().isEmpty() ? null : startRoute.getBusStops().get(0).getDepartureTime(),
                 endRoute == null || endRoute.getBusStops().isEmpty() ? null : endRoute.getBusStops().get(endRoute.getBusStops().size() - 1).getArrivalTime());
 
-        if (startRoute == null || endRoute == null || getStartBusStops().isEmpty() || getEndBusStops().isEmpty()) {
+        if (startRoute == null || endRoute == null || startRoute.getBusStops().isEmpty() || endRoute.getBusStops().isEmpty()) {
             throw new IllegalArgumentException("One of the routes is null or empty");
         }
         this.startRoute = startRoute;

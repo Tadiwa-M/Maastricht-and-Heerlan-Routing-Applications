@@ -137,8 +137,6 @@ public class dbManager {
         return bestTransferRoute;
     }
 
-
-
     public static Route findShortestDirectRoute(List<Stops> startStops, List<Stops> endStops, String startTime) {
         Connection conn = getSqlConnection();
         if (conn == null) {
@@ -220,7 +218,8 @@ public class dbManager {
                 "JOIN routes r2 ON t2.route_id = r2.route_id " +
                 "WHERE st3.stop_id = ? AND st2.arrival_time < st3.departure_time AND TIMESTAMPDIFF(MINUTE, st2.arrival_time, st3.departure_time) >= 3 " +
                 "AND st1.departure_time >= ? AND st3.arrival_time <= ? " +
-                "ORDER BY TIMESTAMPDIFF(MINUTE, ?, st3.arrival_time) ASC " + // Order by the travel time from the provided start time
+                "AND t1.route_id != t2.route_id " + // Ensure the second trip is on a different route
+                "ORDER BY st3.arrival_time ASC " + // Order by the travel time from the provided start time
                 "LIMIT 1;";
 
         try {
@@ -229,9 +228,8 @@ public class dbManager {
             pstmt.setString(2, endStopId);
             pstmt.setString(3, startTime);
             pstmt.setString(4, LocalTime.parse(startTime).plusHours(2).toString());
-            pstmt.setString(5, startTime); // This is where the startTime is used for ordering
             ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
+            if (rs.next()) {
                 Route firstRoute = new Route(
                         rs.getString("first_trip_id"),
                         rs.getString("first_route_id"),
@@ -264,6 +262,7 @@ public class dbManager {
         }
         return null;
     }
+
 
     public static DirectRoute getStopsFromRoute(Route route) {
         Connection conn = getSqlConnection();
