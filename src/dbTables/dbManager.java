@@ -197,7 +197,6 @@ public class dbManager {
         return shortestRoute;
     }
 
-
     public static Route findRoutesWithTransfersWithStartTime(String startStopId, String endStopId, String startTime) {
         Connection conn = getSqlConnection();
         if (conn == null) {
@@ -262,7 +261,6 @@ public class dbManager {
         }
         return null;
     }
-
 
     public static DirectRoute getStopsFromRoute(Route route) {
         Connection conn = getSqlConnection();
@@ -481,7 +479,8 @@ public class dbManager {
                 +
                 "FROM stops " +
                 "HAVING distance <= 0.4 " +
-                "ORDER BY distance";
+                "ORDER BY distance " +
+                "LIMIT 7;";
 
         try {
             PreparedStatement stmt = conn.prepareStatement(query);

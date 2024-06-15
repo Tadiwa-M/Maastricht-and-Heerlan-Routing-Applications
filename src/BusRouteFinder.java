@@ -198,9 +198,9 @@ public class BusRouteFinder {
     }
 
     public static void main(String[] args) {
-//        testOverallWithTime();
+        testOverallWithTime();
 //        testOverallWithoutTime();
-        testTransfer();
+//        testTransfer();
     }
 
     public static void testOverallWithTime() {
