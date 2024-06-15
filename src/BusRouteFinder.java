@@ -162,6 +162,41 @@ public class BusRouteFinder {
         }
     }
 
+    public BusRoute findOverallShortestRoute() {
+        // Find bus stops near start and end
+        List<Stops> startStops = findNearestBusStop(start);
+        List<Stops> endStops = findNearestBusStop(end);
+
+        if(startStops.isEmpty() || endStops.isEmpty()) {
+            System.out.println("No bus stops found near start or end");
+            return null;
+        }
+
+        DirectRoute shortestDirectBusRoute = findShortestDirectBusRoute();
+        TransferRoute shortestTransferRoute = findShortestTransferRoute();
+
+        if(shortestDirectBusRoute != null && shortestTransferRoute != null) {
+            System.out.println("Both direct and transfer route found");
+
+            if(shortestDirectBusRoute.calculateTripTime() < shortestTransferRoute.calculateTripTime())
+                return shortestDirectBusRoute;
+            else
+                return shortestTransferRoute;
+        }
+        else if (shortestTransferRoute != null) {
+            System.out.println("Only transfer route found");
+            return shortestTransferRoute;
+        }
+        else if (shortestDirectBusRoute != null) {
+            System.out.println("Only direct route found");
+            return shortestDirectBusRoute;
+        }
+        else {
+            System.out.println("No route found");
+            return null;
+        }
+    }
+
     public static void main(String[] args) {
 //        testOverallWithTime();
         testOverallWithoutTime();
@@ -224,41 +259,6 @@ public class BusRouteFinder {
                     System.out.println(busStop.getStopName() + " " + busStop.getDepartureTime() + " " + busStop.getStopId());
                 }
             }
-        }
-    }
-
-    public BusRoute findOverallShortestRoute() {
-        // Find bus stops near start and end
-        List<Stops> startStops = findNearestBusStop(start);
-        List<Stops> endStops = findNearestBusStop(end);
-
-        if(startStops.isEmpty() || endStops.isEmpty()) {
-            System.out.println("No bus stops found near start or end");
-            return null;
-        }
-
-        DirectRoute shortestDirectBusRoute = findShortestDirectBusRoute();
-        TransferRoute shortestTransferRoute = findShortestTransferRoute();
-
-        if(shortestDirectBusRoute != null && shortestTransferRoute != null) {
-            System.out.println("Both direct and transfer route found");
-
-            if(shortestDirectBusRoute.calculateTripTime() < shortestTransferRoute.calculateTripTime())
-                return shortestDirectBusRoute;
-            else
-                return shortestTransferRoute;
-        }
-        else if (shortestTransferRoute != null) {
-            System.out.println("Only transfer route found");
-            return shortestTransferRoute;
-        }
-        else if (shortestDirectBusRoute != null) {
-            System.out.println("Only direct route found");
-            return shortestDirectBusRoute;
-        }
-        else {
-            System.out.println("No route found");
-            return null;
         }
     }
 
