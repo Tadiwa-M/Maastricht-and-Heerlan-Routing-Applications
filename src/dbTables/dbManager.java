@@ -41,7 +41,7 @@ public class dbManager {
 
         for (Stops startId : startIds) {
             for (Stops endId : endIds) {
-                Route currentRoute = findRoutesWithTransfers(startId.getStopId(), endId.getStopId(), startTime);
+                Route currentRoute = findRoutesWithTransfersWithStartTime(startId.getStopId(), endId.getStopId(), startTime);
                 if (currentRoute != null) {
                     if (bestTransferRoute == null) {
                         bestTransferRoute = currentRoute;
@@ -198,7 +198,7 @@ public class dbManager {
     }
 
 
-    public static Route findRoutesWithTransfers(String startStopId, String endStopId, String startTime) {
+    public static Route findRoutesWithTransfersWithStartTime(String startStopId, String endStopId, String startTime) {
         Connection conn = getSqlConnection();
         if (conn == null) {
             return null;
