@@ -23,6 +23,9 @@ public class RoutingApplication {
             List<Stops> endStops = getStopsByPostalCode("6229EN");
             String startTime = "08:00:00";
 
+            Route bestRoute = null;
+            List<AStarWithTime.PathNode> bestPath = null;
+
             for (Stops start : startStops) {
                 for (Stops end : endStops) {
                     if (!addressMap.containsKey(start.getStopId())) {
@@ -37,13 +40,19 @@ public class RoutingApplication {
 
                     List<AStarWithTime.PathNode> path = AStarWithTime.findShortestPath(graph, start.getStopId(), end.getStopId(), startTime, addressMap);
                     if (!path.isEmpty()) {
-                        printPathDetails(path, start.getStopId(), end.getStopId(), startTime);
-                        return;
+                        if (bestRoute == null || getTotalTravelTime(path, startTime) < getTotalTravelTime(bestPath, startTime)) {
+                            bestRoute = new Route(start.getStopId(), end.getStopId());
+                            bestPath = path;
+                        }
                     }
                 }
             }
 
-            System.out.println("No path found between the given stops.");
+            if (bestPath != null) {
+                printPathDetails(bestPath, bestRoute.startStopId, bestRoute.endStopId, startTime);
+            } else {
+                System.out.println("No path found between the given stops.");
+            }
         } catch (Exception e) {
             System.err.println("Error: " + e.getMessage());
         }
@@ -60,9 +69,11 @@ public class RoutingApplication {
 
     private static void printPathDetails(List<AStarWithTime.PathNode> path, String startStopId, String endStopId, String startTime) {
         System.out.println("Shortest path from " + startStopId + " to " + endStopId + " starting at " + startTime + ":");
+
         String previousTripId = null;
         String firstDepartureTime = startTime;
         String finalArrivalTime = null;
+        int totalTravelTimeInSeconds = 0;
 
         for (AStarWithTime.PathNode node : path) {
             Stop stop = GTFSLoader.getStopDetails(node.previousStopId);
@@ -82,14 +93,30 @@ public class RoutingApplication {
             previousTripId = node.tripId;
         }
 
-        if (firstDepartureTime != null && finalArrivalTime != null) {
-            int totalTimeInSeconds = AStarWithTime.timeToSeconds(finalArrivalTime) - AStarWithTime.timeToSeconds(firstDepartureTime);
+        // Calculate total travel time from the startTime to the final arrival time
+        if (finalArrivalTime != null) {
+            totalTravelTimeInSeconds = AStarWithTime.timeToSeconds(finalArrivalTime) - AStarWithTime.timeToSeconds(startTime);
 
-            int hours = totalTimeInSeconds / 3600;
-            int minutes = (totalTimeInSeconds % 3600) / 60;
-            int seconds = totalTimeInSeconds % 60;
+            int hours = totalTravelTimeInSeconds / 3600;
+            int minutes = (totalTravelTimeInSeconds % 3600) / 60;
+            int seconds = totalTravelTimeInSeconds % 60;
 
             System.out.println("Total travel time: " + String.format("%02d:%02d:%02d", hours, minutes, seconds));
+        }
+    }
+
+    private static int getTotalTravelTime(List<AStarWithTime.PathNode> path, String startTime) {
+        String finalArrivalTime = path.get(path.size() - 1).arrivalTime;
+        return AStarWithTime.timeToSeconds(finalArrivalTime) - AStarWithTime.timeToSeconds(startTime);
+    }
+
+    public static class Route {
+        String startStopId;
+        String endStopId;
+
+        Route(String startStopId, String endStopId) {
+            this.startStopId = startStopId;
+            this.endStopId = endStopId;
         }
     }
 }
