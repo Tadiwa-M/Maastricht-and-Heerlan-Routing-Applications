@@ -1,12 +1,16 @@
 package dbTables;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
-
-import static dbTables.PostAddress.EARTH_RADIUS_KM;
-import static dbTables.PostAddress.degToRad;
 
 public class AStarWithTime {
     private static final int TRANSFER_PENALTY = 300; // 5 minutes penalty for transfer
+    private static final double AVERAGE_SPEED_KM_PER_HOUR = 20.0; // Example average speed
+    private static final int MAX_TRAVEL_TIME_SECONDS = 7200; // Maximum travel time of 2 hours
+    private static final double EARTH_RADIUS_KM = 6378; // Earth radius in kilometers
 
     public static List<PathNode> findShortestPath(BusGraph graph, String startStopId, String endStopId, String startTime, Map<String, Stop> addressMap) {
         PriorityQueue<Node> openSet = new PriorityQueue<>(Comparator.comparingDouble(n -> n.fScore));
@@ -52,7 +56,11 @@ public class AStarWithTime {
                     tentativeGScore += TRANSFER_PENALTY;
                 }
 
-                // Check if 'neighbor.toStopId' is not null and ensure it is initialized in the gScore map
+                // Skip if the tentative travel time exceeds 2 hours
+                if (tentativeGScore > MAX_TRAVEL_TIME_SECONDS) {
+                    continue;
+                }
+
                 if (tentativeGScore < gScore.getOrDefault(neighbor.toStopId, Double.POSITIVE_INFINITY)) {
                     cameFrom.put(neighbor.toStopId, new PathNode(current.stopId, neighbor.tripId, neighbor.departureTime, neighbor.arrivalTime, neighbor.routeId));
                     gScore.put(neighbor.toStopId, tentativeGScore);
@@ -81,7 +89,8 @@ public class AStarWithTime {
             return Double.POSITIVE_INFINITY;
         }
 
-        return basicDistances(fromAddress, toAddress);
+        double distance = basicDistances(fromAddress, toAddress);
+        return (distance / AVERAGE_SPEED_KM_PER_HOUR) * 3600; // Convert distance to travel time in seconds
     }
 
     public static double basicDistances(Stop start, Stop end) {
@@ -119,6 +128,10 @@ public class AStarWithTime {
         int minutes = Integer.parseInt(parts[1]);
         int seconds = Integer.parseInt(parts[2]);
         return hours * 3600 + minutes * 60 + seconds;
+    }
+
+    public static double degToRad(double deg) {
+        return deg * (Math.PI / 180);
     }
 
     public static class Node {

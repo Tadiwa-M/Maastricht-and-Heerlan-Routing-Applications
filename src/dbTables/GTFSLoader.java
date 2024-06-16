@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.util.*;
 
 public class GTFSLoader {
+
     public static BusGraph loadGraph() {
         BusGraph graph = new BusGraph();
         Connection conn = getSqlConnection();
@@ -28,7 +29,7 @@ public class GTFSLoader {
                 String fromStopId = rs.getString("stop_id");
                 String toStopId = rs.getString("next_stop_id");
                 String tripId = rs.getString("trip_id");
-                String routeId = rs.getString("route_id"); // Get routeId from result set
+                String routeId = rs.getString("route_id");
                 String departureTime = rs.getString("departure_time_str");
                 String arrivalTime = rs.getString("arrival_time_str");
                 int weight = computeTimeDifferenceInSeconds(departureTime, arrivalTime);
@@ -79,6 +80,63 @@ public class GTFSLoader {
         return addressMap;
     }
 
+    public static Map<String, String> fetchAllRouteNames() {
+        Map<String, String> routeNames = new HashMap<>();
+        Connection conn = getSqlConnection();
+        if (conn == null) {
+            return Collections.emptyMap();
+        }
+
+        String sql = "SELECT route_id, route_short_name, route_long_name FROM routes";
+
+        try (PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+            while (rs.next()) {
+                String routeId = rs.getString("route_id");
+                String routeName = rs.getString("route_short_name") + " - " + rs.getString("route_long_name");
+                routeNames.put(routeId, routeName);
+            }
+        } catch (SQLException e) {
+            System.err.println("SQL Error: " + e.getMessage());
+        }
+
+        return routeNames;
+    }
+
+    public static List<IntermediateStop> getIntermediateStopsForTrip(String tripId, String startStopId, String endStopId) {
+        List<IntermediateStop> stops = new ArrayList<>();
+        String sql = "SELECT s.stop_name, st.departure_time, st.arrival_time " +
+                "FROM stop_times st " +
+                "JOIN stops s ON st.stop_id = s.stop_id " +
+                "WHERE st.trip_id = ? AND st.stop_sequence >= " +
+                "(SELECT stop_sequence FROM stop_times WHERE trip_id = ? AND stop_id = ?) " +
+                "AND st.stop_sequence <= " +
+                "(SELECT stop_sequence FROM stop_times WHERE trip_id = ? AND stop_id = ?) " +
+                "ORDER BY st.stop_sequence";
+
+        try (Connection conn = getSqlConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, tripId);
+            pstmt.setString(2, tripId);
+            pstmt.setString(3, startStopId);
+            pstmt.setString(4, tripId);
+            pstmt.setString(5, endStopId);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    String stopName = rs.getString("stop_name");
+                    String departureTime = rs.getString("departure_time");
+                    String arrivalTime = rs.getString("arrival_time");
+                    stops.add(new IntermediateStop(stopName, departureTime, arrivalTime));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("SQL Error: " + e.getMessage());
+        }
+
+        return stops;
+    }
+
     public static Stop getStopDetails(String stopId) {
         Connection conn = getSqlConnection();
         if (conn == null) {
@@ -104,7 +162,30 @@ public class GTFSLoader {
         return null;
     }
 
-    private static Connection getSqlConnection() {
+    public static boolean isValidTimeInDatabase(String stopId, String departureTime, String arrivalTime) {
+        String sql = "SELECT COUNT(*) FROM stop_times WHERE stop_id = ? AND departure_time = ? AND arrival_time = ?";
+        try (Connection conn = getSqlConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, stopId);
+            pstmt.setString(2, departureTime);
+            pstmt.setString(3, arrivalTime);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    int count = rs.getInt(1);
+                    if (count > 0) {
+                        return true;
+                    } else {
+                        System.err.println("No matching records found for stopId: " + stopId + ", departure: " + departureTime + ", arrival: " + arrivalTime);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("SQL Error: " + e.getMessage());
+        }
+        return false;
+    }
+
+    static Connection getSqlConnection() {
         return dbManager.getSqlConnection();
     }
 }
