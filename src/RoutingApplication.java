@@ -19,7 +19,7 @@ public class RoutingApplication {
         }
 
         try {
-            List<Stops> startStops = getStopsByPostalCode("6216EG");
+            List<Stops> startStops = getStopsByPostalCode("6218BK");
             List<Stops> endStops = getStopsByPostalCode("6229EN");
             String startTime = "08:00:00";
 
@@ -73,7 +73,7 @@ public class RoutingApplication {
         String previousTripId = null;
         String firstDepartureTime = startTime;
         String finalArrivalTime = null;
-        int totalTravelTimeInSeconds = 0;
+        int totalTravelTimeInSeconds;
 
         for (AStarWithTime.PathNode node : path) {
             Stop stop = GTFSLoader.getStopDetails(node.previousStopId);
@@ -92,16 +92,22 @@ public class RoutingApplication {
             finalArrivalTime = node.arrivalTime;
             previousTripId = node.tripId;
         }
+        // Print final stop name
+        Stop stop = GTFSLoader.getStopDetails(endStopId);
+        System.out.println("Stop: " + (stop != null ? stop.getStopName() : endStopId));
 
         // Calculate total travel time from the startTime to the final arrival time
         if (finalArrivalTime != null) {
-            totalTravelTimeInSeconds = AStarWithTime.timeToSeconds(finalArrivalTime) - AStarWithTime.timeToSeconds(startTime);
+            totalTravelTimeInSeconds = AStarWithTime.timeToSeconds(finalArrivalTime) - AStarWithTime.timeToSeconds(firstDepartureTime);
 
             int hours = totalTravelTimeInSeconds / 3600;
             int minutes = (totalTravelTimeInSeconds % 3600) / 60;
             int seconds = totalTravelTimeInSeconds % 60;
 
             System.out.println("Total travel time: " + String.format("%02d:%02d:%02d", hours, minutes, seconds));
+        }
+        else {
+            System.out.println("Total travel time: N/A");
         }
     }
 

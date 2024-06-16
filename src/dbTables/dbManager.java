@@ -9,6 +9,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalTime;
 import java.util.*;
+import java.util.concurrent.*;
 
 import static dbTables.DirectRoute.getDuration;
 
@@ -36,12 +37,42 @@ public class dbManager {
         }
     }
 
+//    public static Route findBestTransferRoute(List<Stops> startIds, List<Stops> endIds, String startTime) {
+//        Route bestTransferRoute = null;
+//
+//        for (Stops startId : startIds) {
+//            for (Stops endId : endIds) {
+//                Route currentRoute = findRoutesWithTransfersWithStartTime(startId.getStopId(), endId.getStopId(), startTime);
+//                if (currentRoute != null) {
+//                    if (bestTransferRoute == null) {
+//                        bestTransferRoute = currentRoute;
+//                    } else if (getDuration(startTime, currentRoute.getArrivalTime()).toMinutes() < getDuration(startTime, bestTransferRoute.getArrivalTime()).toMinutes()) {
+//                        bestTransferRoute = currentRoute;
+//                    }
+//                }
+//            }
+//        }
+//
+//        // Return the fastest route
+//        return bestTransferRoute;
+//    }
+
     public static Route findBestTransferRoute(List<Stops> startIds, List<Stops> endIds, String startTime) {
-        Route bestTransferRoute = null;
+        ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        List<Future<Route>> futures = new ArrayList<>();
 
         for (Stops startId : startIds) {
             for (Stops endId : endIds) {
-                Route currentRoute = findRoutesWithTransfersWithStartTime(startId.getStopId(), endId.getStopId(), startTime);
+                Callable<Route> task = () -> findRoutesWithTransfersWithStartTime(startId.getStopId(), endId.getStopId(), startTime);
+                futures.add(executorService.submit(task));
+            }
+        }
+
+        Route bestTransferRoute = null;
+
+        for (Future<Route> future : futures) {
+            try {
+                Route currentRoute = future.get();
                 if (currentRoute != null) {
                     if (bestTransferRoute == null) {
                         bestTransferRoute = currentRoute;
@@ -49,10 +80,46 @@ public class dbManager {
                         bestTransferRoute = currentRoute;
                     }
                 }
+            } catch (InterruptedException | ExecutionException e) {
+                System.err.println("Error processing future: " + e.getMessage());
             }
         }
 
-        // Return the fastest route
+        executorService.shutdown();
+
+        return bestTransferRoute;
+    }
+
+    public static Route findBestTransferRouteWithoutStartTime(List<Stops> startIds, List<Stops> endIds) {
+        ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        List<Future<Route>> futures = new ArrayList<>();
+
+        for (Stops startId : startIds) {
+            for (Stops endId : endIds) {
+                Callable<Route> task = () -> findFastestTransferRouteWithoutStartTime(startId.getStopId(), endId.getStopId());
+                futures.add(executorService.submit(task));
+            }
+        }
+
+        Route bestTransferRoute = null;
+
+        for (Future<Route> future : futures) {
+            try {
+                Route currentRoute = future.get();
+                if (currentRoute != null) {
+                    if (bestTransferRoute == null ||
+                            getDuration(currentRoute.getDepartureTime(), currentRoute.getArrivalTime()).toMinutes() <
+                                    getDuration(bestTransferRoute.getDepartureTime(), bestTransferRoute.getArrivalTime()).toMinutes()) {
+                        bestTransferRoute = currentRoute;
+                    }
+                }
+            } catch (InterruptedException | ExecutionException e) {
+                System.err.println("Error processing future: " + e.getMessage());
+            }
+        }
+
+        executorService.shutdown();
+
         return bestTransferRoute;
     }
 
@@ -117,25 +184,25 @@ public class dbManager {
         return null;
     }
 
-    public static Route findBestTransferRouteWithoutStartTime(List<Stops> startIds, List<Stops> endIds) {
-        Route bestTransferRoute = null;
-
-        for (Stops startId : startIds) {
-            for (Stops endId : endIds) {
-                Route currentRoute = findFastestTransferRouteWithoutStartTime(startId.getStopId(), endId.getStopId());
-                if (currentRoute != null) {
-                    if (bestTransferRoute == null ||
-                            getDuration(currentRoute.getDepartureTime(), currentRoute.getArrivalTime()).toMinutes() <
-                                    getDuration(bestTransferRoute.getDepartureTime(), bestTransferRoute.getArrivalTime()).toMinutes()) {
-                        bestTransferRoute = currentRoute;
-                    }
-                }
-            }
-        }
-
-        // Return the fastest route
-        return bestTransferRoute;
-    }
+//    public static Route findBestTransferRouteWithoutStartTime(List<Stops> startIds, List<Stops> endIds) {
+//        Route bestTransferRoute = null;
+//
+//        for (Stops startId : startIds) {
+//            for (Stops endId : endIds) {
+//                Route currentRoute = findFastestTransferRouteWithoutStartTime(startId.getStopId(), endId.getStopId());
+//                if (currentRoute != null) {
+//                    if (bestTransferRoute == null ||
+//                            getDuration(currentRoute.getDepartureTime(), currentRoute.getArrivalTime()).toMinutes() <
+//                                    getDuration(bestTransferRoute.getDepartureTime(), bestTransferRoute.getArrivalTime()).toMinutes()) {
+//                        bestTransferRoute = currentRoute;
+//                    }
+//                }
+//            }
+//        }
+//
+//        // Return the fastest route
+//        return bestTransferRoute;
+//    }
 
     public static Route findShortestDirectRoute(List<Stops> startStops, List<Stops> endStops, String startTime) {
         Connection conn = getSqlConnection();
@@ -480,7 +547,7 @@ public class dbManager {
                 "FROM stops " +
                 "HAVING distance <= 0.4 " +
                 "ORDER BY distance " +
-                "LIMIT 7;";
+                "LIMIT 10;";
 
         try {
             PreparedStatement stmt = conn.prepareStatement(query);

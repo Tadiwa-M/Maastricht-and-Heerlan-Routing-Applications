@@ -199,12 +199,15 @@ public class BusRouteFinder {
 
     public static void main(String[] args) {
         testOverallWithTime();
+//        testDirect();
+//        testDirectWithTime();
 //        testOverallWithoutTime();
 //        testTransfer();
+//        testTransferWithTime();
     }
 
     public static void testOverallWithTime() {
-        PostAddress start = AddressFinder.getAddress("6216EG");
+        PostAddress start = AddressFinder.getAddress("6218BK");
         PostAddress end = AddressFinder.getAddress("6229EN");
 
         BusRouteFinder busRouteFinder = new BusRouteFinder(start, end);
@@ -265,7 +268,7 @@ public class BusRouteFinder {
 
     public static void testTransfer() {
         PostAddress start = AddressFinder.getAddress("6218BK");
-        PostAddress end = AddressFinder.getAddress("6216EG");
+        PostAddress end = AddressFinder.getAddress("6229EN");
 
         BusRouteFinder busRouteFinder = new BusRouteFinder(start, end);
         TransferRoute shortestTransferRoute = busRouteFinder.findShortestTransferRoute();
@@ -285,11 +288,11 @@ public class BusRouteFinder {
     }
 
     public static void testTransferWithTime() {
-        PostAddress start = AddressFinder.getAddress("6229GN");
-        PostAddress end = AddressFinder.getAddress("6216EG");
+        PostAddress start = AddressFinder.getAddress("6218BK");
+        PostAddress end = AddressFinder.getAddress("6229EN");
 
         BusRouteFinder busRouteFinder = new BusRouteFinder(start, end);
-        TransferRoute shortestTransferRoute = busRouteFinder.findShortestTransferRouteWithTime("18:25:00");
+        TransferRoute shortestTransferRoute = busRouteFinder.findShortestTransferRouteWithTime("08:00:00");
 
         if (shortestTransferRoute != null) {
             System.out.println("Shortest transfer route found");
@@ -306,7 +309,7 @@ public class BusRouteFinder {
     }
 
     public static void testDirect() {
-        PostAddress start = AddressFinder.getAddress("6216EG");
+        PostAddress start = AddressFinder.getAddress("6218BK");
         PostAddress end = AddressFinder.getAddress("6229EN");
 
         BusRouteFinder busRouteFinder = new BusRouteFinder(start, end);
@@ -317,24 +320,24 @@ public class BusRouteFinder {
             System.out.println("Trip time: " + shortestDirectRoute.calculateTripTime() + " minutes");
 
             for (BusStop busStop : shortestDirectRoute.getBusStops()) {
-                System.out.println(busStop.getStopName());
+                System.out.println(busStop.getStopName() + " " + busStop.getDepartureTime());
             }
         }
     }
 
     public static void testDirectWithTime() {
-        PostAddress start = AddressFinder.getAddress("6216EG");
+        PostAddress start = AddressFinder.getAddress("6218BK");
         PostAddress end = AddressFinder.getAddress("6229EN");
 
         BusRouteFinder busRouteFinder = new BusRouteFinder(start, end);
-        DirectRoute shortestDirectRoute = busRouteFinder.findShortestDirectBusRouteWithTime("18:36:00");
+        DirectRoute shortestDirectRoute = busRouteFinder.findShortestDirectBusRouteWithTime("08:00:00");
 
         if (shortestDirectRoute != null) {
             System.out.println("Shortest route found");
             System.out.println("Trip time: " + shortestDirectRoute.calculateTripTime() + " minutes");
 
             for (BusStop busStop : shortestDirectRoute.getBusStops()) {
-                System.out.println(busStop.getStopName());
+                System.out.println(busStop.getStopName() + " " + busStop.getDepartureTime());
             }
         }
     }
