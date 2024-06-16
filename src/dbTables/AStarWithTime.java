@@ -54,7 +54,7 @@ public class AStarWithTime {
 
                 // Check if 'neighbor.toStopId' is not null and ensure it is initialized in the gScore map
                 if (tentativeGScore < gScore.getOrDefault(neighbor.toStopId, Double.POSITIVE_INFINITY)) {
-                    cameFrom.put(neighbor.toStopId, new PathNode(current.stopId, neighbor.tripId, neighbor.departureTime, neighbor.arrivalTime));
+                    cameFrom.put(neighbor.toStopId, new PathNode(current.stopId, neighbor.tripId, neighbor.departureTime, neighbor.arrivalTime, neighbor.routeId));
                     gScore.put(neighbor.toStopId, tentativeGScore);
                     fScore.put(neighbor.toStopId, tentativeGScore + heuristic(neighbor.toStopId, endStopId, addressMap));
                     arrivalTimes.put(neighbor.toStopId, neighbor.arrivalTime);
@@ -113,7 +113,7 @@ public class AStarWithTime {
         return path;
     }
 
-    private static int timeToSeconds(String time) {
+    public static int timeToSeconds(String time) {
         String[] parts = time.split(":");
         int hours = Integer.parseInt(parts[0]);
         int minutes = Integer.parseInt(parts[1]);
@@ -121,7 +121,7 @@ public class AStarWithTime {
         return hours * 3600 + minutes * 60 + seconds;
     }
 
-    private static class Node {
+    public static class Node {
         String stopId;
         double fScore;
         String arrivalTime;
@@ -138,17 +138,19 @@ public class AStarWithTime {
         public String tripId;
         public String departureTime;
         public String arrivalTime;
+        public String routeId;
 
-        public PathNode(String previousStopId, String tripId, String departureTime, String arrivalTime) {
+        public PathNode(String previousStopId, String tripId, String departureTime, String arrivalTime, String routeId) {
             this.previousStopId = previousStopId;
             this.tripId = tripId;
             this.departureTime = departureTime;
             this.arrivalTime = arrivalTime;
+            this.routeId = routeId;
         }
 
         @Override
         public String toString() {
-            return "From " + previousStopId + " to " + tripId + " (Departs at: " + departureTime + ", Arrives at: " + arrivalTime + ")";
+            return "From " + previousStopId + " to " + tripId + " (Route: " + routeId + ", Departs at: " + departureTime + ", Arrives at: " + arrivalTime + ")";
         }
     }
 }

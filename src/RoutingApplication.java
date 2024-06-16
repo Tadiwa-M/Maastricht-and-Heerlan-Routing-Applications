@@ -61,20 +61,35 @@ public class RoutingApplication {
     private static void printPathDetails(List<AStarWithTime.PathNode> path, String startStopId, String endStopId, String startTime) {
         System.out.println("Shortest path from " + startStopId + " to " + endStopId + " starting at " + startTime + ":");
         String previousTripId = null;
+        String firstDepartureTime = startTime;
+        String finalArrivalTime = null;
 
         for (AStarWithTime.PathNode node : path) {
             Stop stop = GTFSLoader.getStopDetails(node.previousStopId);
             String transferInfo = "";
 
             if (previousTripId != null && !previousTripId.equals(node.tripId)) {
-                transferInfo = " [Transfer]";
+                transferInfo = " [Transfer to Route " + node.routeId + "]";
             }
 
             System.out.println("Stop: " + (stop != null ? stop.getStopName() : node.previousStopId) +
                     ", Departure: " + node.departureTime +
                     ", Arrival: " + node.arrivalTime +
+                    ", Route: " + node.routeId +
                     transferInfo);
+
+            finalArrivalTime = node.arrivalTime;
             previousTripId = node.tripId;
+        }
+
+        if (firstDepartureTime != null && finalArrivalTime != null) {
+            int totalTimeInSeconds = AStarWithTime.timeToSeconds(finalArrivalTime) - AStarWithTime.timeToSeconds(firstDepartureTime);
+
+            int hours = totalTimeInSeconds / 3600;
+            int minutes = (totalTimeInSeconds % 3600) / 60;
+            int seconds = totalTimeInSeconds % 60;
+
+            System.out.println("Total travel time: " + String.format("%02d:%02d:%02d", hours, minutes, seconds));
         }
     }
 }

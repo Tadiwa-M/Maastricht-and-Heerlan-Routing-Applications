@@ -15,10 +15,12 @@ public class GTFSLoader {
             return null;
         }
 
-        String sql = "SELECT st1.stop_id, st1.trip_id, TIME_FORMAT(st1.departure_time, '%H:%i:%s') AS departure_time_str, " +
+        String sql = "SELECT st1.stop_id, st1.trip_id, t.route_id, " +
+                "TIME_FORMAT(st1.departure_time, '%H:%i:%s') AS departure_time_str, " +
                 "TIME_FORMAT(st2.arrival_time, '%H:%i:%s') AS arrival_time_str, st2.stop_id AS next_stop_id " +
                 "FROM stop_times st1 " +
-                "JOIN stop_times st2 ON st1.trip_id = st2.trip_id AND st1.stop_sequence < st2.stop_sequence";
+                "JOIN stop_times st2 ON st1.trip_id = st2.trip_id AND st1.stop_sequence < st2.stop_sequence " +
+                "JOIN trips t ON st1.trip_id = t.trip_id";
 
         try (PreparedStatement pstmt = conn.prepareStatement(sql);
              ResultSet rs = pstmt.executeQuery()) {
@@ -26,11 +28,12 @@ public class GTFSLoader {
                 String fromStopId = rs.getString("stop_id");
                 String toStopId = rs.getString("next_stop_id");
                 String tripId = rs.getString("trip_id");
+                String routeId = rs.getString("route_id"); // Get routeId from result set
                 String departureTime = rs.getString("departure_time_str");
                 String arrivalTime = rs.getString("arrival_time_str");
                 int weight = computeTimeDifferenceInSeconds(departureTime, arrivalTime);
 
-                graph.addEdge(fromStopId, toStopId, weight, tripId, departureTime, arrivalTime);
+                graph.addEdge(fromStopId, toStopId, weight, tripId, departureTime, arrivalTime, routeId);
             }
         } catch (SQLException e) {
             System.err.println("SQL Error: " + e.getMessage());
