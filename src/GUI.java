@@ -482,7 +482,7 @@ public class GUI extends JFrame {
 
 
         gbc.gridy++;
-        algorithmButton = createAlgorithmButton("Shortest Distance");
+        algorithmButton = createAlgorithmButton("Shortest Route");
         controlPanel.add(algorithmButton, gbc);
 
 
