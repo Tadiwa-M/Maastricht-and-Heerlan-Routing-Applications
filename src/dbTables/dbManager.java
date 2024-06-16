@@ -18,7 +18,7 @@ public class dbManager {
 
     }
 
-    private static Connection getSqlConnection() {
+    static Connection getSqlConnection() {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
             String USERNAME = dbCredentials.USERNAME;
