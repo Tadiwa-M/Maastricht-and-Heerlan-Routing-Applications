@@ -9,12 +9,13 @@ import java.util.*;
 public class GTFSLoader {
 
     public static BusGraph loadGraph() {
-        BusGraph graph = new BusGraph();
         Connection conn = getSqlConnection();
 
         if (conn == null) {
             return null;
         }
+
+        BusGraph graph = new BusGraph();
 
         String sql = "SELECT st1.stop_id, st1.trip_id, t.route_id, " +
                 "TIME_FORMAT(st1.departure_time, '%H:%i:%s') AS departure_time_str, " +
@@ -42,6 +43,36 @@ public class GTFSLoader {
 
         return graph;
     }
+
+    public static Map<String, Map<String, Double>> fetchTravelTimes() {
+        Connection conn = getSqlConnection();
+        if (conn == null) {
+            return Collections.emptyMap();
+        }
+
+        Map<String, Map<String, Double>> travelTimeMap = new HashMap<>();
+        String sql = "SELECT from_stop_id, to_stop_id, MIN(travel_time) as min_travel_time FROM ("
+                + "SELECT st1.stop_id as from_stop_id, st2.stop_id as to_stop_id, "
+                + "(TIME_TO_SEC(st2.arrival_time) - TIME_TO_SEC(st1.departure_time)) as travel_time "
+                + "FROM stop_times st1 JOIN stop_times st2 ON st1.trip_id = st2.trip_id AND st1.stop_sequence < st2.stop_sequence) as temp_table "
+                + "GROUP BY from_stop_id, to_stop_id";
+
+        try {
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                String fromStopId = rs.getString("from_stop_id");
+                String toStopId = rs.getString("to_stop_id");
+                double avgTravelTime = rs.getDouble("min_travel_time");
+                travelTimeMap.putIfAbsent(fromStopId, new HashMap<>());
+                travelTimeMap.get(fromStopId).put(toStopId, avgTravelTime);
+            }
+        } catch (SQLException e) {
+            System.err.println("SQL Error: " + e.getMessage());
+        }
+        return travelTimeMap;
+    }
+
 
     private static int computeTimeDifferenceInSeconds(String departureTime, String arrivalTime) {
         return timeToSeconds(arrivalTime) - timeToSeconds(departureTime);
@@ -105,7 +136,7 @@ public class GTFSLoader {
 
     public static List<IntermediateStop> getIntermediateStopsForTrip(String tripId, String startStopId, String endStopId) {
         List<IntermediateStop> stops = new ArrayList<>();
-        String sql = "SELECT s.stop_name, st.departure_time, st.arrival_time " +
+        String sql = "SELECT s.stop_name, st.departure_time, st.arrival_time, s.stop_lat, s.stop_lon " +
                 "FROM stop_times st " +
                 "JOIN stops s ON st.stop_id = s.stop_id " +
                 "WHERE st.trip_id = ? AND st.stop_sequence >= " +
@@ -127,7 +158,9 @@ public class GTFSLoader {
                     String stopName = rs.getString("stop_name");
                     String departureTime = rs.getString("departure_time");
                     String arrivalTime = rs.getString("arrival_time");
-                    stops.add(new IntermediateStop(stopName, departureTime, arrivalTime));
+                    float lat = rs.getFloat("stop_lat");
+                    float lon = rs.getFloat("stop_lon");
+                    stops.add(new IntermediateStop(stopName, departureTime, arrivalTime, lat, lon));
                 }
             }
         } catch (SQLException e) {
