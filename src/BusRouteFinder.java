@@ -23,7 +23,6 @@ public class BusRouteFinder {
             return null;
         }
 
-
         // Find the shortest route
         RouteDetails routeDetails = findShortestRoute(closeToStartStops, closeToEndStops);
         if (routeDetails != null) {
@@ -198,8 +197,8 @@ public class BusRouteFinder {
     }
 
     public static void main(String[] args) {
-        testOverallWithTime();
-//        testDirect();
+//        testOverallWithTime();
+        testDirect();
 //        testDirectWithTime();
 //        testOverallWithoutTime();
 //        testTransfer();
@@ -309,8 +308,8 @@ public class BusRouteFinder {
     }
 
     public static void testDirect() {
-        PostAddress start = AddressFinder.getAddress("6218BK");
-        PostAddress end = AddressFinder.getAddress("6229EN");
+        PostAddress start = AddressFinder.getAddress("6213CR");
+        PostAddress end = AddressFinder.getAddress("6215BC");
 
         BusRouteFinder busRouteFinder = new BusRouteFinder(start, end);
         DirectRoute shortestDirectRoute = busRouteFinder.findShortestDirectBusRoute();

@@ -20,21 +20,39 @@ public class dbManager {
     }
 
     static Connection getSqlConnection() {
-        try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            String USERNAME = dbCredentials.USERNAME;
-            String PORT = dbCredentials.PORT;
-            String HOST = dbCredentials.HOST;
-            String DATABASE_NAME = dbCredentials.databaseName;
-            String PASSWORD = dbCredentials.PASSWORD;
-            String DATABASE_URL = "jdbc:mysql://" + HOST + ":" + PORT + "/" + DATABASE_NAME
-                    + "?autoReconnect=true&useSSL=true&requireSSL=true";
+        String USERNAME = dbCredentials.USERNAME;
+        String PORT = dbCredentials.PORT;
+        String HOST = dbCredentials.HOST;
+        String DATABASE_NAME = dbCredentials.databaseName;
+        String PASSWORD = dbCredentials.PASSWORD;
+        String DATABASE_URL = "jdbc:mysql://" + HOST + ":" + PORT + "/" + DATABASE_NAME
+                + "?autoReconnect=true&useSSL=true&requireSSL=true&connectTimeout=10000&socketTimeout=10000";
 
-            return DriverManager.getConnection(DATABASE_URL, USERNAME, PASSWORD);
-        } catch (SQLException | ClassNotFoundException e) {
-            System.err.println("Error establishing database connection: " + e.getMessage());
-            return null;
+        Connection connection = null;
+        int retryCount = 3;
+        while (retryCount > 0) {
+            try {
+                Class.forName("com.mysql.cj.jdbc.Driver");
+                connection = DriverManager.getConnection(DATABASE_URL, USERNAME, PASSWORD);
+                if (connection != null) {
+                    break;
+                }
+            } catch (ClassNotFoundException e) {
+                System.err.println("JDBC Driver not found: " + e.getMessage());
+            } catch (SQLException e) {
+                System.err.println("Error establishing database connection: " + e.getMessage());
+                retryCount--;
+                try {
+                    Thread.sleep(2000); // Wait for 2 seconds before retrying
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                }
+            }
         }
+        if (connection == null) {
+            System.err.println("Failed to establish database connection after multiple attempts.");
+        }
+        return connection;
     }
 
 //    public static Route findBestTransferRoute(List<Stops> startIds, List<Stops> endIds, String startTime) {
@@ -472,66 +490,51 @@ public class dbManager {
         if (conn == null)
             return null;
 
-        String query = getRouteQuery(startStopIds, endStopIds);
-
-        try {
-            PreparedStatement stmt = conn.prepareStatement(query);
-            ResultSet resultSet = stmt.executeQuery();
-            if (resultSet.next()) {
-                String tripId = resultSet.getString("trip_id");
-                int startStopSequence = resultSet.getInt("start_stop_sequence");
-                int endStopSequence = resultSet.getInt("end_stop_sequence");
-                resultSet.close();
-                stmt.close();
-                conn.close();
-                return new RouteDetails(tripId, startStopSequence, endStopSequence);
-            } else {
-                resultSet.close();
-                stmt.close();
-                conn.close();
-                System.out.println("No trip found");
-                return null;
-            }
-        } catch (SQLException e) {
-            System.err.println("Error retrieving trip id: " + e.getMessage());
-            return null;
-        }
-    }
-
-    private static @NotNull String getRouteQuery(List<Stops> startStopIds, List<Stops> endStopIds) {
         StringBuilder startStopsBuilder = new StringBuilder();
         StringBuilder endStopsBuilder = new StringBuilder();
 
         for (int i = 0; i < startStopIds.size(); i++) {
-            startStopsBuilder.append(startStopIds.get(i).getStopId());
+            startStopsBuilder.append("'").append(startStopIds.get(i).getStopId()).append("'");
             if (i < startStopIds.size() - 1) {
                 startStopsBuilder.append(",");
             }
         }
 
         for (int i = 0; i < endStopIds.size(); i++) {
-            endStopsBuilder.append(endStopIds.get(i).getStopId());
+            endStopsBuilder.append("'").append(endStopIds.get(i).getStopId()).append("'");
             if (i < endStopIds.size() - 1) {
                 endStopsBuilder.append(",");
             }
         }
 
-        return "SELECT " +
-                "    st1.trip_id, " +
-                "    st1.stop_sequence AS start_stop_sequence, " +
-                "    st2.stop_sequence AS end_stop_sequence, " +
-                "    TIMESTAMPDIFF(MINUTE, st1.departure_time, st2.arrival_time) AS travel_time " +
-                "FROM " +
-                "    stop_times st1 " +
-                "JOIN " +
-                "    stop_times st2 ON st1.trip_id = st2.trip_id " +
-                "WHERE " +
-                "    st1.stop_id IN (" + startStopsBuilder + ") AND " +
-                "    st2.stop_id IN (" + endStopsBuilder + ") AND " +
-                "    st1.stop_sequence < st2.stop_sequence " +
-                "ORDER BY " +
-                "    travel_time " +
-                "LIMIT 1;";
+        String query = "SELECT " +
+                "st1.trip_id, st1.stop_sequence AS start_stop_sequence, st2.stop_sequence AS end_stop_sequence, " +
+                "TIMEDIFF(st2.arrival_time, st1.departure_time) AS travel_time " +
+                "FROM stop_times st1 " +
+                "JOIN stop_times st2 ON st1.trip_id = st2.trip_id AND st1.stop_sequence < st2.stop_sequence " +
+                "WHERE st1.stop_id IN (" + startStopsBuilder.toString() + ") " +
+                "AND st2.stop_id IN (" + endStopsBuilder.toString() + ") " +
+                "ORDER BY travel_time ASC;";
+
+        try {
+            PreparedStatement stmt = conn.prepareStatement(query);
+            ResultSet resultSet = stmt.executeQuery();
+            RouteDetails routeDetails = null;
+            if (resultSet.next()) {
+                System.out.println(resultSet.getString("travel_time"));
+                String tripId = resultSet.getString("trip_id");
+                int startStopSequence = resultSet.getInt("start_stop_sequence");
+                int endStopSequence = resultSet.getInt("end_stop_sequence");
+                routeDetails = new RouteDetails(tripId, startStopSequence, endStopSequence);
+            }
+            resultSet.close();
+            stmt.close();
+            conn.close();
+            return routeDetails;
+        } catch (SQLException e) {
+            System.err.println("Error retrieving trip id: " + e.getMessage());
+            return null;
+        }
     }
     
     public static List<Stops> fetchStopsByCoords(double lat, double lon) {

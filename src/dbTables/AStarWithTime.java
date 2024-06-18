@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalTime;
 import java.util.*;
 
 public class AStarWithTime {
@@ -12,7 +13,7 @@ public class AStarWithTime {
     private static final int MAX_TRAVEL_TIME_SECONDS = 7200; // Maximum travel time of 2 hours
     private static final double EARTH_RADIUS_KM = 6378; // Earth radius in kilometers
 
-    public static List<PathNode> findShortestPath(BusGraph graph, String startStopId, String endStopId, String startTime, Map<String, Stop> addressMap) {
+    public static List<PathNode> findShortestPath(BusGraph graph, String startStopId, String endStopId, String startTime, Map<String, Stop> addressMap, Map<String, Map<String, Double>> travelTimeMap) {
         PriorityQueue<Node> openSet = new PriorityQueue<>(Comparator.comparingDouble(n -> n.fScore));
         Map<String, Double> gScore = new HashMap<>();
         Map<String, Double> fScore = new HashMap<>();
@@ -22,7 +23,7 @@ public class AStarWithTime {
 
         // Initialize start node
         gScore.put(startStopId, 0.0);
-        fScore.put(startStopId, heuristic(startStopId, endStopId, addressMap));
+        fScore.put(startStopId, heuristic(startStopId, endStopId, addressMap, travelTimeMap));
         arrivalTimes.put(startStopId, startTime);
         tripIds.put(startStopId, null); // No trip ID at the start
 
@@ -64,7 +65,7 @@ public class AStarWithTime {
                 if (tentativeGScore < gScore.getOrDefault(neighbor.toStopId, Double.POSITIVE_INFINITY)) {
                     cameFrom.put(neighbor.toStopId, new PathNode(current.stopId, neighbor.tripId, neighbor.departureTime, neighbor.arrivalTime, neighbor.routeId));
                     gScore.put(neighbor.toStopId, tentativeGScore);
-                    fScore.put(neighbor.toStopId, tentativeGScore + heuristic(neighbor.toStopId, endStopId, addressMap));
+                    fScore.put(neighbor.toStopId, tentativeGScore + heuristic(neighbor.toStopId, endStopId, addressMap, travelTimeMap));
                     arrivalTimes.put(neighbor.toStopId, neighbor.arrivalTime);
                     tripIds.put(neighbor.toStopId, neighbor.tripId);
                     openSet.add(new Node(neighbor.toStopId, fScore.get(neighbor.toStopId), neighbor.arrivalTime));
@@ -75,23 +76,28 @@ public class AStarWithTime {
         return Collections.emptyList(); // Return an empty path if no path is found
     }
 
-    private static double heuristic(String fromStopId, String toStopId, Map<String, Stop> addressMap) {
+    private static double heuristic(String fromStopId, String toStopId, Map<String, Stop> addressMap, Map<String, Map<String, Double>> travelTimeMap) {
         Stop fromAddress = addressMap.get(fromStopId);
         Stop toAddress = addressMap.get(toStopId);
 
-        if (fromAddress == null) {
-            System.err.println("Missing address data for start stop: " + fromStopId);
+        if (fromAddress == null || toAddress == null) {
+            System.err.println("Missing address data for stop.");
             return Double.POSITIVE_INFINITY;
         }
 
-        if (toAddress == null) {
-            System.err.println("Missing address data for end stop: " + toStopId);
-            return Double.POSITIVE_INFINITY;
+        // If direct travel time data is available, use it
+        if (travelTimeMap.containsKey(fromStopId) && travelTimeMap.get(fromStopId).containsKey(toStopId)) {
+            double distance = basicDistances(fromAddress, toAddress);
+            return travelTimeMap.get(fromStopId).get(toStopId);
+        } else {
+            // Fallback to geographic heuristic if no direct data available
+            double distance = basicDistances(fromAddress, toAddress);
+            return (distance / AVERAGE_SPEED_KM_PER_HOUR) * 3600;
         }
-
-        double distance = basicDistances(fromAddress, toAddress);
-        return (distance / AVERAGE_SPEED_KM_PER_HOUR) * 3600; // Convert distance to travel time in seconds
     }
+
+
+
 
     public static double basicDistances(Stop start, Stop end) {
         // Convert the latitudes and longitudes from decimal degrees to radians
