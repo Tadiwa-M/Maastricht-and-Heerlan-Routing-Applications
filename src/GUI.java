@@ -1,10 +1,7 @@
 
 
 import Transport.*;
-import dbTables.DirectRoute;
-import dbTables.BusStop;
-import dbTables.PostAddress;
-import dbTables.TransferRoute;
+import dbTables.*;
 
 
 import javax.imageio.ImageIO;
@@ -164,7 +161,11 @@ public class GUI extends JFrame {
         busRouteButton.addActionListener(e -> {
             Object[] options = showBusRouteOptionsDialog();
             if (options != null) {
-                processBusRouteOptions((JCheckBox) options[0], (JTextField) options[1]);
+                try {
+                    processBusRouteOptions((JCheckBox) options[0], (JRadioButton) options[1] , (JSpinner) options[2], (JSpinner) options[3], (JSpinner) options[4]);
+                } catch (Exception ex) {
+                    throw new RuntimeException(ex);
+                }
             }
         });
 
@@ -184,39 +185,77 @@ public class GUI extends JFrame {
 
 
 
+
     private Object[] showBusRouteOptionsDialog() {
         JPanel panel = new JPanel(new GridLayout(0, 1));
         JLabel transferLabel = new JLabel("Allow Transfers?");
         JCheckBox transferCheckBox = new JCheckBox();
-        JLabel timeLabel = new JLabel("Preferred Time (HH:mm:ss):");
-        JTextField timeField = new JTextField();
-        JLabel timeNoteLabel = new JLabel("! Keep empty for current time");
+
+        JRadioButton currentTimeButton = new JRadioButton("Use Current Time");
+        JRadioButton manualTimeButton = new JRadioButton("Enter Manual Time");
+        ButtonGroup timeOptionGroup = new ButtonGroup();
+        timeOptionGroup.add(currentTimeButton);
+        timeOptionGroup.add(manualTimeButton);
+        currentTimeButton.setSelected(true);  // Default to current time
+
+        JPanel timePanel = new JPanel(new GridLayout(1, 6));  // Adjusted layout for labels and spinners
+        JLabel hourLabel = new JLabel("HH:");
+        JSpinner hourSpinner = new JSpinner(new SpinnerNumberModel(0, 0, 23, 1));
+        JLabel minuteLabel = new JLabel("mm:");
+        JSpinner minuteSpinner = new JSpinner(new SpinnerNumberModel(0, 0, 59, 1));
+        JLabel secondLabel = new JLabel("ss:");
+        JSpinner secondSpinner = new JSpinner(new SpinnerNumberModel(0, 0, 59, 1));
+
+        timePanel.add(hourLabel);
+        timePanel.add(hourSpinner);
+        timePanel.add(minuteLabel);
+        timePanel.add(minuteSpinner);
+        timePanel.add(secondLabel);
+        timePanel.add(secondSpinner);
+
+        // Initially disable the spinners since "Current Time" is selected by default
+        hourSpinner.setEnabled(false);
+        minuteSpinner.setEnabled(false);
+        secondSpinner.setEnabled(false);
+
+        // Add action listeners to enable/disable spinners based on the selected option
+        currentTimeButton.addActionListener(e -> {
+            hourSpinner.setEnabled(false);
+            minuteSpinner.setEnabled(false);
+            secondSpinner.setEnabled(false);
+        });
+
+        manualTimeButton.addActionListener(e -> {
+            hourSpinner.setEnabled(true);
+            minuteSpinner.setEnabled(true);
+            secondSpinner.setEnabled(true);
+        });
 
         panel.add(transferLabel);
         panel.add(transferCheckBox);
-        panel.add(timeLabel);
-        panel.add(timeField);
-        panel.add(timeNoteLabel);
+        panel.add(currentTimeButton);
+        panel.add(manualTimeButton);
+        panel.add(timePanel);
 
         int result = JOptionPane.showConfirmDialog(null, panel, "Bus Route Options", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
         if (result == JOptionPane.OK_OPTION) {
-            return new Object[]{transferCheckBox, timeField};
+            return new Object[]{transferCheckBox, currentTimeButton, hourSpinner, minuteSpinner, secondSpinner};
         }
         return null;
     }
 
-    private void processBusRouteOptions(JCheckBox transferCheckBox, JTextField timeField) {
+    private void processBusRouteOptions(JCheckBox transferCheckBox, JRadioButton currentTimeButton, JSpinner hourSpinner, JSpinner minuteSpinner, JSpinner secondSpinner) throws Exception {
         boolean allowTransfers = transferCheckBox.isSelected();
-        String preferredTime = timeField.getText();
+        String preferredTime;
 
-        if (preferredTime.isEmpty()) {
+        if (currentTimeButton.isSelected()) {
             preferredTime = new SimpleDateFormat("HH:mm:ss").format(new Date());
-        }
-
-        if (!preferredTime.matches("\\d{2}:\\d{2}:\\d{2}")) {
-            JOptionPane.showMessageDialog(null, "Invalid time format. Please use HH-mm-ss.");
-            return;
+        } else {
+            int hours = (int) hourSpinner.getValue();
+            int minutes = (int) minuteSpinner.getValue();
+            int seconds = (int) secondSpinner.getValue();
+            preferredTime = String.format("%02d:%02d:%02d", hours, minutes, seconds);
         }
 
         boolean accept = buttonClickSharedOperations(postCodeFromField, postCodeToField, vehicleBox, false, accessibilityButton);
@@ -236,35 +275,115 @@ public class GUI extends JFrame {
 
 
 
-    private void handleTransfers(PostAddress first, PostAddress last, String preferredTime) {
-        BusRouteFinder finder = new BusRouteFinder(first, last);
-        TransferRoute route = finder.findShortestTransferRouteWithTime(preferredTime);
-        if (route == null){
+
+    private void handleTransfers(PostAddress first, PostAddress last, String preferredTime) throws Exception {
+        RoutingApplication.RouteResult route = RoutingApplication.findBestRoute(first.getPostalCode(), last.getPostalCode(), preferredTime);
+
+
+        if (route == null) {
             noBusError();
             return;
         }
-        int length = route.getStartBusStops().size();
 
-        for (BusStop stop: route.getStartBusStops()){
-            System.out.println(stop.getStopName());
+        List<AStarWithTime.PathNode> path = route.path;
+        String startStopId = route.route.startStopId;
+        String endStopId = route.route.endStopId;
+
+
+        List<Stop> totalStops = new ArrayList<>();
+        List<Integer> transferIndices = new ArrayList<>();
+
+
+
+        RoutingApplication.printPathDetails(path, first.getPostalCode(), last.getPostalCode(), preferredTime);
+        Stop startStop = createStopFromPostalCode(first);
+        totalStops.add(startStop);
+
+        String previousTripId = null;
+        int index = 0;
+
+        for (AStarWithTime.PathNode node : path) {
+            Stop stop = GTFSLoader.getStopDetails(node.previousStopId);
+            if (stop != null) {
+                if (previousTripId != null && !previousTripId.equals(node.tripId)) {
+                    transferIndices.add(index);
+                }
+                totalStops.add(stop);
+                previousTripId = node.tripId;
+                index++;
+            }
         }
-        System.out.println();
 
-        for (BusStop stop: route.getEndBusStops()){
-            System.out.println(stop.getStopName());
-        }
-
-        route.getStartBusStops().addAll(route.getEndBusStops());
-        List<BusStop> totalBusStops = new ArrayList<>();
-        totalBusStops.add(createBusStopFromPostalCode(first));
-        totalBusStops.addAll(route.getStartBusStops());
-        totalBusStops.add(createBusStopFromPostalCode(last));
+        Stop endStop = createStopFromPostalCode(last);
+        totalStops.add(endStop);
 
         Graphics2D g = (Graphics2D) mapImage.getGraphics();
-        DirectRoute directRoute = new DirectRoute(totalBusStops);
-        drawShortestPathOnMapBusRoute(g,directRoute, length);
-        showBusStopsPopup(directRoute);
+        drawShortestPathOnMapBusRouteTransfer(g, totalStops, transferIndices, path);
     }
+
+    public void drawShortestPathOnMapBusRouteTransfer(Graphics2D g, List<Stop> totalStops, List<Integer> transferIndices, List<AStarWithTime.PathNode> path) {
+        drawBaseImage(g);
+
+        g.setColor(Color.BLACK);
+        g.setStroke(new BasicStroke(3));
+
+        // Draw the path with intermediate stops
+        for (int i = 0; i < path.size(); i++) {
+            AStarWithTime.PathNode node = path.get(i);
+            String startStopId = node.previousStopId;
+            String endStopId = (i < path.size() - 1) ? path.get(i + 1).previousStopId : node.routeId;
+
+            // Get intermediate stops for this segment
+            List<IntermediateStop> segmentStops = GTFSLoader.getIntermediateStopsForTrip(node.tripId, startStopId, endStopId);
+
+            if (segmentStops == null) {
+                System.err.println("No intermediate stops found for tripId: " + node.tripId);
+                continue;
+            }
+
+            // Draw each intermediate stop and line between them
+            for (int j = 0; j < segmentStops.size() - 1; j++) {
+                IntermediateStop start = segmentStops.get(j);
+                IntermediateStop end = segmentStops.get(j + 1);
+                Point startPoint = findPostCodeCoordinate(Double.parseDouble(start.get()), Double.parseDouble(start.getLatitude()));
+                Point endPoint = findPostCodeCoordinate(Double.parseDouble(end.getLongitude()), Double.parseDouble(end.getLatitude()));
+                g.drawLine(startPoint.x, startPoint.y, endPoint.x, endPoint.y);
+            }
+        }
+
+        // Draw the stops and mark transfers
+        for (int i = 0; i < totalStops.size(); i++) {
+            Stop stop = totalStops.get(i);
+            Point point = findPostCodeCoordinate(stop.getStopLon(), stop.getStopLat());
+            if (transferIndices.contains(i)) {
+                // Draw transfer point with a distinct color (e.g., red)
+                g.setColor(Color.RED);
+                g.fillOval(point.x - 5, point.y - 5, 10, 10);
+            } else {
+                // Draw regular stop point
+                g.setColor(Color.BLUE);
+                g.fillOval(point.x - 3, point.y - 3, 6, 6);
+            }
+        }
+
+        // Optionally, add labels to the stops
+        g.setColor(Color.BLACK);
+        for (int i = 0; i < totalStops.size(); i++) {
+            Stop stop = totalStops.get(i);
+            Point point = findPostCodeCoordinate(stop.getStopLon(), stop.getStopLat());
+            g.drawString(stop.getStopName(), point.x + 5, point.y - 5);
+        }
+    }
+
+
+
+
+    // Assuming you have a method to create a Stop from a PostAddress
+    private Stop createStopFromPostalCode(PostAddress address) {
+        // Implement this method to create a Stop object from a PostAddress
+        return new Stop(address.getPostalCode(), address.getPostalCode(), address.getLat(), address.getLon());
+    }
+
 
     private void handleDirectBusRoute(PostAddress first, PostAddress last, String prefferedTime){
         BusRouteFinder finder = new BusRouteFinder(first, last);
@@ -276,7 +395,7 @@ public class GUI extends JFrame {
         directRoute.getBusStops().add(0,createBusStopFromPostalCode(first));
         directRoute.getBusStops().add(createBusStopFromPostalCode(last));
         Graphics2D g = (Graphics2D) mapImage.getGraphics();
-        drawShortestPathOnMapBusRoute(g, directRoute, 0);
+        drawShortestPathOnMapBusRoute(g, directRoute);
         showBusStopsPopup(directRoute);
     }
 
@@ -375,7 +494,7 @@ public class GUI extends JFrame {
         LocalTime end = LocalTime.parse(endTime, formatter);
         return ChronoUnit.MINUTES.between(start, end);
     }
-    private void drawShortestPathOnMapBusRoute(Graphics2D g, DirectRoute route, int index) {
+    private void drawShortestPathOnMapBusRoute(Graphics2D g, DirectRoute route) {
         DrawBaseImage(g);
 
 
@@ -396,9 +515,6 @@ public class GUI extends JFrame {
             if (i == 0) {
 //                String route_color = route.getBusStops().get(0).getRouteColor();
                 g.setColor(Color.RED);
-            }
-            else if (i == index){
-                g.setColor(Color.BLUE);
             }
             else if(i == route.getBusStops().size() - 3){
                 g.setColor(Color.BLACK);

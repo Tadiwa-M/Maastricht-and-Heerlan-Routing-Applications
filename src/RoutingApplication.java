@@ -86,7 +86,7 @@ public class RoutingApplication {
         return BusRouteFinder.findNearestBusStop(address);
     }
 
-    private static void printPathDetails(List<AStarWithTime.PathNode> path, String startStopId, String endStopId, String startTime) {
+    static void printPathDetails(List<AStarWithTime.PathNode> path, String startStopId, String endStopId, String startTime) {
         System.out.println("Shortest path from " + startStopId + " to " + endStopId + " starting at " + startTime + ":");
 
         String previousTripId = null;
