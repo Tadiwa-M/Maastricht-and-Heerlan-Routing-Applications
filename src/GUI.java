@@ -349,6 +349,7 @@ public class GUI extends JFrame {
         
         Color currentColor = Color.BLACK; 
         Random random = new Random();
+        int col = 0;
 
         for (int i = 0; i < totalStops.size() - 1; i++) {
             Stop startStop = totalStops.get(i);
@@ -358,9 +359,13 @@ public class GUI extends JFrame {
 
             
             if (transferIndices.contains(i + 1)) {
-                
-                currentColor = new Color(random.nextInt(256), random.nextInt(256), random.nextInt(256));
+                int red = (col == 2)? 255 : 0;
+                int green = (col == 1)? 255 : 0;
+                int blue = (col == 0)? 255 : 0;
+
+                currentColor = new Color(red, green, blue);
                 g.setColor(currentColor);
+                col = (col + 1) % 3;
             }
 
             g.drawLine(startPoint.x, startPoint.y, endPoint.x, endPoint.y);
@@ -387,7 +392,9 @@ public class GUI extends JFrame {
         for (int i = 0; i < totalStops.size(); i++) {
             Stop stop = totalStops.get(i);
             Point point = findPostCodeCoordinate(stop.getStopLon(), stop.getStopLat());
-            g.drawString(stop.getStopName(), point.x + 5, point.y - 5);
+            String stopName = stop.getStopName();
+            stopName = stopName.replace("Maastricht, ", "");
+            g.drawString(stopName, point.x + 5, point.y - 5);
         }
     }
 

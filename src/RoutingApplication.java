@@ -21,7 +21,7 @@ public class RoutingApplication {
         try {
             String startPostalCode = "6218BK";
             String endPostalCode = "6229GV";
-            String startTime = "16:00:00";
+            String startTime = "16:30:00";
             JourneyRouteResult result = findBestRoute(startPostalCode, endPostalCode, startTime);
             if (result != null) {
                 printPathDetails(result.path, result.route.startStopId, result.route.endStopId, startTime);
