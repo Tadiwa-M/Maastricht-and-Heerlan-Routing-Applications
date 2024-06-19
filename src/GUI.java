@@ -20,6 +20,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Random;
 
 
 public class GUI extends JFrame {
@@ -196,9 +197,9 @@ public class GUI extends JFrame {
         ButtonGroup timeOptionGroup = new ButtonGroup();
         timeOptionGroup.add(currentTimeButton);
         timeOptionGroup.add(manualTimeButton);
-        currentTimeButton.setSelected(true);  // Default to current time
+        currentTimeButton.setSelected(true);  
 
-        JPanel timePanel = new JPanel(new GridLayout(1, 6));  // Adjusted layout for labels and spinners
+        JPanel timePanel = new JPanel(new GridLayout(1, 6));  
         JLabel hourLabel = new JLabel("HH:");
         JSpinner hourSpinner = new JSpinner(new SpinnerNumberModel(0, 0, 23, 1));
         JLabel minuteLabel = new JLabel("mm:");
@@ -213,12 +214,12 @@ public class GUI extends JFrame {
         timePanel.add(secondLabel);
         timePanel.add(secondSpinner);
 
-        // Initially disable the spinners since "Current Time" is selected by default
+        
         hourSpinner.setEnabled(false);
         minuteSpinner.setEnabled(false);
         secondSpinner.setEnabled(false);
 
-        // Add action listeners to enable/disable spinners based on the selected option
+        
         currentTimeButton.addActionListener(e -> {
             hourSpinner.setEnabled(false);
             minuteSpinner.setEnabled(false);
@@ -277,40 +278,55 @@ public class GUI extends JFrame {
 
 
     private void handleTransfers(PostAddress first, PostAddress last, String preferredTime) throws Exception {
-        RoutingApplication.RouteResult route = RoutingApplication.findBestRoute(first.getPostalCode(), last.getPostalCode(), preferredTime);
+        JourneyRouteResult result = RoutingApplication.findBestRoute(first.getPostalCode(), last.getPostalCode(), preferredTime);
 
-
-        if (route == null) {
+        if (result == null) {
             noBusError();
             return;
         }
 
-        List<AStarWithTime.PathNode> path = route.path;
-        String startStopId = route.route.startStopId;
-        String endStopId = route.route.endStopId;
+        List<AStarWithTime.PathNode> path = result.path;
+        String startStopId = result.route.startStopId;
+        String endStopId = result.route.endStopId;
+        String startTime = result.startTime;
 
+        if (path == null) {
+            noBusError();
+            return;
+        }
 
         List<Stop> totalStops = new ArrayList<>();
         List<Integer> transferIndices = new ArrayList<>();
 
-
-
         RoutingApplication.printPathDetails(path, first.getPostalCode(), last.getPostalCode(), preferredTime);
+
         Stop startStop = createStopFromPostalCode(first);
         totalStops.add(startStop);
 
         String previousTripId = null;
-        int index = 0;
+        int index = 1;
 
-        for (AStarWithTime.PathNode node : path) {
+        for (int i = 0; i < path.size(); i++) {
+            AStarWithTime.PathNode node = path.get(i);
             Stop stop = GTFSLoader.getStopDetails(node.previousStopId);
+
             if (stop != null) {
                 if (previousTripId != null && !previousTripId.equals(node.tripId)) {
-                    transferIndices.add(index);
+                    transferIndices.add(totalStops.size() - 1);
                 }
                 totalStops.add(stop);
                 previousTripId = node.tripId;
                 index++;
+            }
+
+            
+            String nextStopId = (i + 1 < path.size()) ? path.get(i + 1).previousStopId : endStopId;
+            if (nextStopId != null) {
+                List<IntermediateStop> segmentStops = GTFSLoader.getIntermediateStopsForTrip(node.tripId, node.previousStopId, nextStopId);
+                for (IntermediateStop segmentStop : segmentStops) {
+                    Stop intermediateStop = new Stop(segmentStop.getStopName(), segmentStop.getStopName(), segmentStop.getLat(), segmentStop.getLon());
+                    totalStops.add(intermediateStop);
+                }
             }
         }
 
@@ -318,55 +334,55 @@ public class GUI extends JFrame {
         totalStops.add(endStop);
 
         Graphics2D g = (Graphics2D) mapImage.getGraphics();
-        drawShortestPathOnMapBusRouteTransfer(g, totalStops, transferIndices, path);
+        drawShortestPathOnMapBusRouteTransfer(g, totalStops, transferIndices);
     }
 
-    public void drawShortestPathOnMapBusRouteTransfer(Graphics2D g, List<Stop> totalStops, List<Integer> transferIndices, List<AStarWithTime.PathNode> path) {
-        drawBaseImage(g);
 
-        g.setColor(Color.BLACK);
+
+    public void drawShortestPathOnMapBusRouteTransfer(Graphics2D g, List<Stop> totalStops, List<Integer> transferIndices) {
+        
+        DrawBaseImage(g);
+
+        
         g.setStroke(new BasicStroke(3));
 
-        // Draw the path with intermediate stops
-        for (int i = 0; i < path.size(); i++) {
-            AStarWithTime.PathNode node = path.get(i);
-            String startStopId = node.previousStopId;
-            String endStopId = (i < path.size() - 1) ? path.get(i + 1).previousStopId : node.routeId;
+        
+        Color currentColor = Color.BLACK; 
+        Random random = new Random();
 
-            // Get intermediate stops for this segment
-            List<IntermediateStop> segmentStops = GTFSLoader.getIntermediateStopsForTrip(node.tripId, startStopId, endStopId);
+        for (int i = 0; i < totalStops.size() - 1; i++) {
+            Stop startStop = totalStops.get(i);
+            Stop endStop = totalStops.get(i + 1);
+            Point startPoint = findPostCodeCoordinate(startStop.getStopLon(), startStop.getStopLat());
+            Point endPoint = findPostCodeCoordinate(endStop.getStopLon(), endStop.getStopLat());
 
-            if (segmentStops == null) {
-                System.err.println("No intermediate stops found for tripId: " + node.tripId);
-                continue;
+            
+            if (transferIndices.contains(i + 1)) {
+                
+                currentColor = new Color(random.nextInt(256), random.nextInt(256), random.nextInt(256));
+                g.setColor(currentColor);
             }
 
-            // Draw each intermediate stop and line between them
-            for (int j = 0; j < segmentStops.size() - 1; j++) {
-                IntermediateStop start = segmentStops.get(j);
-                IntermediateStop end = segmentStops.get(j + 1);
-                Point startPoint = findPostCodeCoordinate(Double.parseDouble(start.get()), Double.parseDouble(start.getLatitude()));
-                Point endPoint = findPostCodeCoordinate(Double.parseDouble(end.getLongitude()), Double.parseDouble(end.getLatitude()));
-                g.drawLine(startPoint.x, startPoint.y, endPoint.x, endPoint.y);
-            }
+            g.drawLine(startPoint.x, startPoint.y, endPoint.x, endPoint.y);
         }
 
-        // Draw the stops and mark transfers
+        
         for (int i = 0; i < totalStops.size(); i++) {
             Stop stop = totalStops.get(i);
             Point point = findPostCodeCoordinate(stop.getStopLon(), stop.getStopLat());
+
             if (transferIndices.contains(i)) {
-                // Draw transfer point with a distinct color (e.g., red)
+                
                 g.setColor(Color.RED);
                 g.fillOval(point.x - 5, point.y - 5, 10, 10);
             } else {
-                // Draw regular stop point
+                
                 g.setColor(Color.BLUE);
                 g.fillOval(point.x - 3, point.y - 3, 6, 6);
             }
         }
 
-        // Optionally, add labels to the stops
+        
         g.setColor(Color.BLACK);
         for (int i = 0; i < totalStops.size(); i++) {
             Stop stop = totalStops.get(i);
@@ -378,9 +394,14 @@ public class GUI extends JFrame {
 
 
 
-    // Assuming you have a method to create a Stop from a PostAddress
+
+
+
+
+
+    
     private Stop createStopFromPostalCode(PostAddress address) {
-        // Implement this method to create a Stop object from a PostAddress
+        
         return new Stop(address.getPostalCode(), address.getPostalCode(), address.getLat(), address.getLon());
     }
 
@@ -407,21 +428,21 @@ public class GUI extends JFrame {
         JFrame parentFrame = new JFrame();
         parentFrame.setResizable(false);
         parentFrame.setVisible(true);
-        parentFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Adjust as needed
+        parentFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); 
 
 
-        // Create a JPanel to hold your content
+        
         JPanel panel = new JPanel(new BorderLayout());
         parentFrame.add(panel);
 
 
-        // Create your custom content (JTextArea in a JScrollPane)
+        
         JTextArea textArea = new JTextArea();
         textArea.setEditable(false);
-        textArea.setFont(new Font("Monospaced", Font.PLAIN, 12)); // Monospaced font for alignment
+        textArea.setFont(new Font("Monospaced", Font.PLAIN, 12)); 
 
 
-        // Build the text content
+        
         StringBuilder scoresBuilder = new StringBuilder("Postal Code Accessibility Scores:\n\n");
         scoresBuilder.append(String.format("%-15s %s\n", "Postal Code", "Accessibility Score (Higher is Better)"));
         scoresBuilder.append("--------------------------------------------------------\n");
@@ -434,18 +455,18 @@ public class GUI extends JFrame {
         textArea.setText(scoresBuilder.toString());
 
 
-        // Add text area to scroll pane
+        
         JScrollPane scrollPane = new JScrollPane(textArea);
         panel.add(scrollPane, BorderLayout.CENTER);
 
 
-        // Set frame properties
+        
         parentFrame.setTitle("Accessibility Scores");
         parentFrame.setSize(400, 600);
-        parentFrame.setLocationRelativeTo(null); // Center on screen
+        parentFrame.setLocationRelativeTo(null); 
 
 
-        // Show the frame
+        
         parentFrame.setVisible(true);
     }
 
@@ -513,7 +534,7 @@ public class GUI extends JFrame {
 
 
             if (i == 0) {
-//                String route_color = route.getBusStops().get(0).getRouteColor();
+
                 g.setColor(Color.RED);
             }
             else if(i == route.getBusStops().size() - 3){
@@ -557,7 +578,7 @@ public class GUI extends JFrame {
 
 
         gbc.gridy++;
-        postCodeFromField = createPostCodeField("6211AL", fromLabel.getLocation());
+        postCodeFromField = createPostCodeField("6218BK", fromLabel.getLocation());
         controlPanel.add(postCodeFromField, gbc);
 
 
@@ -567,7 +588,7 @@ public class GUI extends JFrame {
 
 
         gbc.gridy++;
-        postCodeToField = createPostCodeField("6225AG", toLabel.getLocation());
+        postCodeToField = createPostCodeField("6229GV", toLabel.getLocation());
         controlPanel.add(postCodeToField, gbc);
 
 
@@ -592,7 +613,7 @@ public class GUI extends JFrame {
 
 
         gbc.gridy++;
-        gbc.gridwidth = 1;  // Reset gridwidth to 1 for individual buttons
+        gbc.gridwidth = 1;  
         goButton = createAlgorithmButton("Straight Line");
         controlPanel.add(goButton, gbc);
 
@@ -772,9 +793,9 @@ public class GUI extends JFrame {
 
 
     private void runPathFindingAlgorithm(PostAddress from, PostAddress to) throws Exception {
-//        Graph graph = new GraphCreator().createGraph();
-//        ShortestPathFinder pathFinder = new ShortestPathFinder(graph);
-//        pathFinder.setShortestPathAlgorithm(new Dijkstra(graph));
+
+
+
 
 
        /*
@@ -894,9 +915,9 @@ public class GUI extends JFrame {
         try {
             return AddressFinder.getAddress(postalCode);
         } catch (Exception e) {
-            // Handle the exception gracefully, such as logging an error message
-            e.printStackTrace(); // Print the stack trace for debugging purposes
-            return null; // Return null to indicate that the address retrieval failed
+            
+            e.printStackTrace(); 
+            return null; 
         }
     }
 
