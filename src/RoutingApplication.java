@@ -1,10 +1,6 @@
 import dbTables.*;
 
-import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -33,7 +29,6 @@ public class RoutingApplication {
         }
     }
 
-
     public static JourneyRouteResult findBestRoute(String startPostalCode, String endPostalCode, String startTime) throws Exception {
         BusGraph graph = GTFSLoader.loadGraph();
         if (graph == null) {
@@ -61,10 +56,8 @@ public class RoutingApplication {
         ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         List<Future<JourneyRouteResult>> results = new ArrayList<>();
 
-        for (Stops start : startStops) {
-            for (Stops end : endStops) {
-                results.add(executor.submit(new PathFinderTask(graph, addressMap, routeNames, travelTimeMap, start, end, startTime)));
-            }
+        for (Stops end : endStops) {
+            results.add(executor.submit(new PathFinderTask(graph, addressMap, routeNames, travelTimeMap, startStops, end, startTime)));
         }
 
         JourneyRoute bestRoute = null;
@@ -164,33 +157,43 @@ public class RoutingApplication {
         private final Map<String, Stop> addressMap;
         private final Map<String, String> routeNames;
         private final Map<String, Map<String, Double>> travelTimeMap;
-        private final Stops start;
+        private final List<Stops> startStops;
         private final Stops end;
         private final String startTime;
 
-        public PathFinderTask(BusGraph graph, Map<String, Stop> addressMap, Map<String, String> routeNames, Map<String, Map<String, Double>> travelTimeMap, Stops start, Stops end, String startTime) {
+        public PathFinderTask(BusGraph graph, Map<String, Stop> addressMap, Map<String, String> routeNames, Map<String, Map<String, Double>> travelTimeMap, List<Stops> startStops, Stops end, String startTime) {
             this.graph = graph;
             this.addressMap = addressMap;
             this.routeNames = routeNames;
             this.travelTimeMap = travelTimeMap;
-            this.start = start;
+            this.startStops = startStops;
             this.end = end;
             this.startTime = startTime;
         }
 
         @Override
         public JourneyRouteResult call() throws Exception {
-            if (!addressMap.containsKey(start.getStopId())) {
-                System.err.println("Missing address data for start stop: " + start.getStopId());
-                return null;
-            }
-
             if (!addressMap.containsKey(end.getStopId())) {
                 System.err.println("Missing address data for end stop: " + end.getStopId());
                 return null;
             }
 
-            List<AStarWithTime.PathNode> path = AStarWithTime.findShortestPath(graph, start.getStopId(), end.getStopId(), startTime, addressMap, travelTimeMap);
+            Map<String, String> startTimes = new HashMap<>();
+            List<String> startStopIds = new ArrayList<>();
+            for (Stops start : startStops) {
+                if (!addressMap.containsKey(start.getStopId())) {
+                    System.err.println("Missing address data for start stop: " + start.getStopId());
+                    continue;
+                }
+                startStopIds.add(start.getStopId());
+                startTimes.put(start.getStopId(), startTime);
+            }
+
+            if (startStopIds.isEmpty()) {
+                return null;
+            }
+
+            List<AStarWithTime.PathNode> path = AStarWithTime.findShortestPath(graph, startStopIds, end.getStopId(), startTimes, addressMap, travelTimeMap);
             if (!path.isEmpty()) {
                 for (AStarWithTime.PathNode node : path) {
                     Stop stop = GTFSLoader.getStopDetails(node.previousStopId);
@@ -204,7 +207,7 @@ public class RoutingApplication {
                     }
                 }
                 int travelTime = getTotalTravelTime(path, startTime);
-                return new JourneyRouteResult(new JourneyRoute(start.getStopId(), end.getStopId()), path, travelTime, startTime);
+                return new JourneyRouteResult(new JourneyRoute(startStopIds.get(0), end.getStopId()), path, travelTime, startTime);
             }
             return null;
         }

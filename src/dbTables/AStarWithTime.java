@@ -8,7 +8,7 @@ public class AStarWithTime {
     private static final double MAX_TRAVEL_TIME_SECONDS = 2 * 60 * 60; // Maximum travel time of 2 hours
     private static final double EARTH_RADIUS_KM = 6378; // Earth radius in kilometers
 
-    public static List<PathNode> findShortestPath(BusGraph graph, String startStopId, String endStopId, String startTime, Map<String, Stop> addressMap, Map<String, Map<String, Double>> travelTimeMap) {
+    public static List<PathNode> findShortestPath(BusGraph graph, List<String> startStopIds, String endStopId, Map<String, String> startTimes, Map<String, Stop> addressMap, Map<String, Map<String, Double>> travelTimeMap) {
         PriorityQueue<Node> openSet = new PriorityQueue<>(Comparator.comparingDouble(n -> n.fScore));
         Map<String, Double> gScore = new HashMap<>();
         Map<String, Double> fScore = new HashMap<>();
@@ -16,13 +16,16 @@ public class AStarWithTime {
         Map<String, String> arrivalTimes = new HashMap<>();
         Map<String, String> tripIds = new HashMap<>();
 
-        // Initialize start node
-        gScore.put(startStopId, 0.0);
-        fScore.put(startStopId, heuristic(startStopId, endStopId, addressMap, travelTimeMap));
-        arrivalTimes.put(startStopId, startTime);
-        tripIds.put(startStopId, null); // No trip ID at the start
+        // Initialize start nodes
+        for (String startStopId : startStopIds) {
+            String startTime = startTimes.get(startStopId);
+            gScore.put(startStopId, 0.0);
+            fScore.put(startStopId, heuristic(startStopId, endStopId, addressMap, travelTimeMap));
+            arrivalTimes.put(startStopId, startTime);
+            tripIds.put(startStopId, null); // No trip ID at the start
 
-        openSet.add(new Node(startStopId, fScore.get(startStopId), startTime));
+            openSet.add(new Node(startStopId, fScore.get(startStopId), startTime));
+        }
 
         while (!openSet.isEmpty()) {
             Node current = openSet.poll();
@@ -76,31 +79,26 @@ public class AStarWithTime {
         Stop toAddress = addressMap.get(toStopId);
 
         if (fromAddress == null || toAddress == null) {
-            System.err.println("Missing address data for stop.");
+            System.err.println("Missing address data for stop. From: " + fromStopId + ", To: " + toStopId);
             return Double.POSITIVE_INFINITY;
         }
 
-        // If direct travel time data is available, use it
+        // Use direct travel time data if available
         if (travelTimeMap.containsKey(fromStopId) && travelTimeMap.get(fromStopId).containsKey(toStopId)) {
             return travelTimeMap.get(fromStopId).get(toStopId);
-        } else {
-            // Fallback to geographic heuristic if no direct data available
-            double distance = basicDistances(fromAddress, toAddress);
-            return (distance / AVERAGE_SPEED_KM_PER_HOUR) * 3600;
         }
+
+        // Fallback to geographic heuristic if no direct data available
+        double distance = calculateDistance(fromAddress, toAddress);
+        return estimateTravelTime(distance);
     }
 
-
-
-
-    public static double basicDistances(Stop start, Stop end) {
-        // Convert the latitudes and longitudes from decimal degrees to radians
+    private static double calculateDistance(Stop start, Stop end) {
         double lat1Rad = degToRad(start.getStopLat());
         double lon1Rad = degToRad(start.getStopLon());
         double lat2Rad = degToRad(end.getStopLat());
         double lon2Rad = degToRad(end.getStopLon());
 
-        // Haversine formula
         double dLat = lat2Rad - lat1Rad;
         double dLon = lon2Rad - lon1Rad;
         double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
@@ -109,6 +107,10 @@ public class AStarWithTime {
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
         return EARTH_RADIUS_KM * c;
+    }
+
+    private static double estimateTravelTime(double distance) {
+        return (distance / AVERAGE_SPEED_KM_PER_HOUR) * 3600;
     }
 
     private static List<PathNode> reconstructPath(Map<String, PathNode> cameFrom, String current) {
