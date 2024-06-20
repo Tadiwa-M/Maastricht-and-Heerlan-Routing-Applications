@@ -6,6 +6,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
+import static dbTables.AStarWithTime.timeToSeconds;
+
 public class GTFSLoader {
 
     public static BusGraph loadGraph() {
@@ -76,14 +78,6 @@ public class GTFSLoader {
 
     private static int computeTimeDifferenceInSeconds(String departureTime, String arrivalTime) {
         return timeToSeconds(arrivalTime) - timeToSeconds(departureTime);
-    }
-
-    private static int timeToSeconds(String time) {
-        String[] parts = time.split(":");
-        int hours = Integer.parseInt(parts[0]);
-        int minutes = Integer.parseInt(parts[1]);
-        int seconds = Integer.parseInt(parts[2]);
-        return hours * 3600 + minutes * 60 + seconds;
     }
 
     public static Map<String, Stop> fetchAllAddresses() {
