@@ -545,7 +545,7 @@ public class dbManager {
         List<Stops> stopsList = new ArrayList<>();
 
         String query = "SELECT *, " +
-                "(6371 * acos(cos(radians(?)) * cos(radians(stop_lat)) * cos(radians(stop_lon) - radians(?)) + sin(radians(?)) * sin(radians(stop_lat)))) AS distance "
+                "( acos(cos(radians(?)) * cos(radians(stop_lat)) * cos(radians(stop_lon) - radians(?)) + sin(radians(?)) * sin(radians(stop_lat)))) AS distance "
                 +
                 "FROM stops " +
                 "HAVING distance <= 0.4 " +
@@ -597,7 +597,7 @@ public class dbManager {
         List<Shop> nearbyShops = new ArrayList<>();
 
         String query = "SELECT lat, lon, `properties/name`, `properties/shop`, " +
-                "(6371 * acos(cos(radians(?)) * cos(radians(lat)) * cos(radians(lon) - radians(?)) + sin(radians(?)) * sin(radians(lat)))) AS distance " +
+                "(acos(cos(radians(?)) * cos(radians(lat)) * cos(radians(lon) - radians(?)) + sin(radians(?)) * sin(radians(lat)))) AS distance " +
                 "FROM shop " +
                 "HAVING distance <= ? " +
                 "ORDER BY distance";
@@ -637,7 +637,7 @@ public class dbManager {
         List<Tourism> nearbyAttractions = new ArrayList<Tourism>();
 
         String query = "SELECT lat, lon, `properties/name`, `properties/tourism`, " +
-                "(6371 * acos(cos(radians(?)) * cos(radians(lat)) * cos(radians(lon) - radians(?)) + sin(radians(?)) * sin(radians(lat)))) AS distance "
+                "(acos(cos(radians(?)) * cos(radians(lat)) * cos(radians(lon) - radians(?)) + sin(radians(?)) * sin(radians(lat)))) AS distance "
                 +
                 "FROM tourism " +
                 "HAVING distance <= ? " +
@@ -673,7 +673,7 @@ public class dbManager {
         List<Amenity> nearbyAmenities = new ArrayList<Amenity>();
 
         String query = "SELECT lat, lon, propertiesamenity, " +
-                "(6371 * acos(cos(radians(?)) * cos(radians(lat)) * cos(radians(lon) - radians(?)) + sin(radians(?)) * sin(radians(lat)))) AS distance "
+                "( acos(cos(radians(?)) * cos(radians(lat)) * cos(radians(lon) - radians(?)) + sin(radians(?)) * sin(radians(lat)))) AS distance "
                 +
                 "FROM amenities " +
                 "HAVING distance <= ? " +
@@ -753,5 +753,57 @@ public class dbManager {
             System.err.println("Error retrieving postal codes: " + e.getMessage());
         }
         return addresses;
+    }
+
+    public static double fetchAddressScore(String postalCode) {
+        Connection conn = getSqlConnection();
+        if (conn == null)
+            return -1;
+
+        String query = "SELECT * FROM amenity_score WHERE postal_address = ?";
+
+        try {
+            PreparedStatement stmt = conn.prepareStatement(query);
+            stmt.setString(1, postalCode);
+            ResultSet resultSet = stmt.executeQuery();
+            if (resultSet.next()) {
+                double score = resultSet.getDouble("score");
+                resultSet.close();
+                stmt.close();
+                conn.close();
+                return score;
+            } else {
+                resultSet.close();
+                stmt.close();
+                conn.close();
+                return -1;
+            }
+        } catch (SQLException e) {
+            System.err.println("Error retrieving postal code: " + e.getMessage());
+            return -1;
+        }
+    }
+
+    public static boolean insertAddressScore(String postalCode, double score) {
+        Connection conn = getSqlConnection();
+        if (conn == null)
+            return false;
+
+        String query = "INSERT INTO amenity_score (postal_code, score) VALUES (?, ?)";
+
+        try {
+            PreparedStatement stmt = conn.prepareStatement(query);
+            stmt.setString(1, postalCode);
+            stmt.setDouble(2, score);
+            int rowsInserted = stmt.executeUpdate();
+
+            stmt.close();
+            conn.close();
+
+            return rowsInserted > 0;
+        } catch (SQLException e) {
+            System.err.println("Error inserting postal code and score: " + e.getMessage());
+            return false;
+        }
     }
 }

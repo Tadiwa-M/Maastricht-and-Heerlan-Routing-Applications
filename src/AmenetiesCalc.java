@@ -9,15 +9,20 @@ import static dbTables.dbManager.*;
 import java.util.List;
 
 public class AmenetiesCalc {
-    final static double RADIUS = 4;
+    final static double RADIUS = 4000;
     final static double essentialShopWeight = .3;
     final static double essentialAmenityWeight = .4;
     final static double nonEssentialShopWeight = .1;
     final static double nonEssentialAmenityWeight = .1;
     final static double TourismWeight = .1;
 
+    public static void main(String[] args) {
+        calculateScore( new PostAddress( "6221AA", 50.858065604744, 5.6940574444944));
+    }
+
     private static double shopScores(PostAddress postAddress){
         List<Shop> shops = fetchShopsByCoords(postAddress.getLat(), postAddress.getLon(), RADIUS);
+//        System.out.println(shops.size());
         double score = 0;
         double weigtlessScore = 0;
         for(Shop shop : shops){
@@ -35,6 +40,7 @@ public class AmenetiesCalc {
 
     private static double amenityScores(PostAddress postAddress){
         List<Amenity> amenities = fetchAmenitiesByCoords(postAddress.getLat(), postAddress.getLon(), RADIUS);
+//        System.out.println(amenities.size());
         double score = 0;
         double weigtlessScore = 0;
         for(Amenity amenity : amenities){
@@ -53,6 +59,7 @@ public class AmenetiesCalc {
 
     private static double tourismScores(PostAddress postAddress){
         List<Tourism> landmarks = fetchAttractionsByCoords(postAddress.getLat(), postAddress.getLon(), RADIUS);
+//        System.out.println(landmarks.size());
         double score = 0;
         double weigtlessScore = 0;
         for(Tourism landmark : landmarks){
@@ -70,7 +77,13 @@ public class AmenetiesCalc {
     }
 
     public static double calculateScore(PostAddress postAddress){
-        return tourismScores(postAddress) + amenityScores(postAddress) + shopScores(postAddress);
+        double score = fetchAddressScore(postAddress.getPostalCode());
+        if (score == -1){
+            score = tourismScores(postAddress) + amenityScores(postAddress) + shopScores(postAddress);
+            System.out.println(score);
+            insertAddressScore(postAddress.getPostalCode(), score);
+        }
+        return score;
     }
 
 }
