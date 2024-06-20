@@ -543,7 +543,7 @@ public class dbManager {
         List<Stops> stopsList = new ArrayList<>();
 
         String query = "SELECT *, " +
-                "( acos(cos(radians(?)) * cos(radians(stop_lat)) * cos(radians(stop_lon) - radians(?)) + sin(radians(?)) * sin(radians(stop_lat)))) AS distance "
+                "(6378 * acos(cos(radians(?)) * cos(radians(stop_lat)) * cos(radians(stop_lon) - radians(?)) + sin(radians(?)) * sin(radians(stop_lat)))) AS distance "
                 +
                 "FROM stops " +
                 "HAVING distance <= 0.35 " +
@@ -594,7 +594,7 @@ public class dbManager {
         List<Shop> nearbyShops = new ArrayList<>();
 
         String query = "SELECT lat, lon, `properties/name`, `properties/shop`, " +
-                "(acos(cos(radians(?)) * cos(radians(lat)) * cos(radians(lon) - radians(?)) + sin(radians(?)) * sin(radians(lat)))) AS distance " +
+                "(6378 * acos(cos(radians(?)) * cos(radians(lat)) * cos(radians(lon) - radians(?)) + sin(radians(?)) * sin(radians(lat)))) AS distance " +
                 "FROM shop " +
                 "HAVING distance <= ? " +
                 "ORDER BY distance";
@@ -634,7 +634,7 @@ public class dbManager {
         List<Tourism> nearbyAttractions = new ArrayList<Tourism>();
 
         String query = "SELECT lat, lon, `properties/name`, `properties/tourism`, " +
-                "(acos(cos(radians(?)) * cos(radians(lat)) * cos(radians(lon) - radians(?)) + sin(radians(?)) * sin(radians(lat)))) AS distance "
+                "(6378 * acos(cos(radians(?)) * cos(radians(lat)) * cos(radians(lon) - radians(?)) + sin(radians(?)) * sin(radians(lat)))) AS distance "
                 +
                 "FROM tourism " +
                 "HAVING distance <= ? " +
@@ -670,7 +670,7 @@ public class dbManager {
         List<Amenity> nearbyAmenities = new ArrayList<Amenity>();
 
         String query = "SELECT lat, lon, propertiesamenity, " +
-                "( acos(cos(radians(?)) * cos(radians(lat)) * cos(radians(lon) - radians(?)) + sin(radians(?)) * sin(radians(lat)))) AS distance "
+                "(6378 * acos(cos(radians(?)) * cos(radians(lat)) * cos(radians(lon) - radians(?)) + sin(radians(?)) * sin(radians(lat)))) AS distance "
                 +
                 "FROM amenities " +
                 "HAVING distance <= ? " +
