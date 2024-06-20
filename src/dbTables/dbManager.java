@@ -1,7 +1,5 @@
 package dbTables;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -788,7 +786,7 @@ public class dbManager {
         if (conn == null)
             return false;
 
-        String query = "INSERT INTO amenity_score (postal_code, score) VALUES (?, ?)";
+        String query = "INSERT INTO amenity_score (postal_address, score) VALUES (?, ?)";
 
         try {
             PreparedStatement stmt = conn.prepareStatement(query);
