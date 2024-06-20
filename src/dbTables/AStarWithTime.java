@@ -1,16 +1,11 @@
 package dbTables;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.time.LocalTime;
 import java.util.*;
 
 public class AStarWithTime {
     private static final int TRANSFER_PENALTY = 300; // 5 minutes penalty for transfer
     private static final double AVERAGE_SPEED_KM_PER_HOUR = 20.0; // Example average speed
-    private static final int MAX_TRAVEL_TIME_SECONDS = 7200; // Maximum travel time of 2 hours
+    private static final double MAX_TRAVEL_TIME_SECONDS = 2 * 60 * 60; // Maximum travel time of 2 hours
     private static final double EARTH_RADIUS_KM = 6378; // Earth radius in kilometers
 
     public static List<PathNode> findShortestPath(BusGraph graph, String startStopId, String endStopId, String startTime, Map<String, Stop> addressMap, Map<String, Map<String, Double>> travelTimeMap) {
@@ -87,7 +82,6 @@ public class AStarWithTime {
 
         // If direct travel time data is available, use it
         if (travelTimeMap.containsKey(fromStopId) && travelTimeMap.get(fromStopId).containsKey(toStopId)) {
-            double distance = basicDistances(fromAddress, toAddress);
             return travelTimeMap.get(fromStopId).get(toStopId);
         } else {
             // Fallback to geographic heuristic if no direct data available
