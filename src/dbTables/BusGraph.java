@@ -4,6 +4,7 @@ import java.util.*;
 
 public class BusGraph {
     final Map<String, List<Edge>> adjList = new HashMap<>();
+    final Map<String, String> parentStopMap = new HashMap<>(); // New map to store parent stops
 
     // Method to add an edge to the graph
     public void addEdge(String fromStopId, String toStopId, int weight, String tripId, String departureTime, String arrivalTime, String routeId) {
@@ -15,6 +16,16 @@ public class BusGraph {
         return adjList.getOrDefault(stopId, new ArrayList<>());
     }
 
+    // New method to set parent stops
+    public void setParentStop(String stopId, String parentStopId) {
+        parentStopMap.put(stopId, parentStopId);
+    }
+
+    // New method to get the parent stop
+    public String getParentStop(String stopId) {
+        return parentStopMap.get(stopId);
+    }
+
     // Edge class representing the connection between stops
     public static class Edge {
         String toStopId;
@@ -22,7 +33,7 @@ public class BusGraph {
         String tripId;
         String departureTime;
         String arrivalTime;
-        String routeId; // Added routeId field
+        String routeId;
 
         public Edge(String toStopId, int weight, String tripId, String departureTime, String arrivalTime, String routeId) {
             this.toStopId = toStopId;
@@ -30,7 +41,7 @@ public class BusGraph {
             this.tripId = tripId;
             this.departureTime = departureTime;
             this.arrivalTime = arrivalTime;
-            this.routeId = routeId; // Initialize routeId
+            this.routeId = routeId;
         }
     }
 }

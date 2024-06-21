@@ -6,9 +6,17 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
-import static dbTables.AStarWithTime.timeToSeconds;
-
 public class GTFSLoader {
+
+    private static BusGraph graph;
+
+    static {
+        graph = loadGraph();
+    }
+
+    public static BusGraph getGraph() {
+        return graph;
+    }
 
     public static BusGraph loadGraph() {
         Connection conn = getSqlConnection();
@@ -43,7 +51,48 @@ public class GTFSLoader {
             System.err.println("SQL Error: " + e.getMessage());
         }
 
+        populateParentStops(graph, conn);
+        addParentStopEdges(graph);
+
         return graph;
+    }
+
+    private static void populateParentStops(BusGraph graph, Connection conn) {
+        String sql = "SELECT stop_id, COALESCE(parent_station, stop_id) AS parent_station FROM stops";
+
+        try (PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+            while (rs.next()) {
+                String stopId = rs.getString("stop_id");
+                String parentStation = rs.getString("parent_station");
+                graph.setParentStop(stopId, parentStation);
+            }
+        } catch (SQLException e) {
+            System.err.println("SQL Error: " + e.getMessage());
+        }
+    }
+
+    private static void addParentStopEdges(BusGraph graph) {
+        Map<String, List<String>> parentToStopsMap = new HashMap<>();
+
+        for (Map.Entry<String, String> entry : graph.parentStopMap.entrySet()) {
+            String stopId = entry.getKey();
+            String parentStation = entry.getValue();
+
+            parentToStopsMap.computeIfAbsent(parentStation, k -> new ArrayList<>()).add(stopId);
+        }
+
+        for (List<String> stops : parentToStopsMap.values()) {
+            for (int i = 0; i < stops.size(); i++) {
+                for (int j = i + 1; j < stops.size(); j++) {
+                    String stop1 = stops.get(i);
+                    String stop2 = stops.get(j);
+                    // Add edges in both directions with a small penalty (e.g., 60 seconds)
+                    graph.addEdge(stop1, stop2, 60, null, null, null, null);
+                    graph.addEdge(stop2, stop1, 60, null, null, null, null);
+                }
+            }
+        }
     }
 
     public static Map<String, Map<String, Double>> fetchTravelTimes() {
@@ -59,9 +108,8 @@ public class GTFSLoader {
                 + "FROM stop_times st1 JOIN stop_times st2 ON st1.trip_id = st2.trip_id AND st1.stop_sequence < st2.stop_sequence) as temp_table "
                 + "GROUP BY from_stop_id, to_stop_id";
 
-        try {
-            PreparedStatement pstmt = conn.prepareStatement(sql);
-            ResultSet rs = pstmt.executeQuery();
+        try (PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
             while (rs.next()) {
                 String fromStopId = rs.getString("from_stop_id");
                 String toStopId = rs.getString("to_stop_id");
@@ -75,9 +123,8 @@ public class GTFSLoader {
         return travelTimeMap;
     }
 
-
     private static int computeTimeDifferenceInSeconds(String departureTime, String arrivalTime) {
-        return timeToSeconds(arrivalTime) - timeToSeconds(departureTime);
+        return AStarWithTime.timeToSeconds(arrivalTime) - AStarWithTime.timeToSeconds(departureTime);
     }
 
     public static Map<String, Stop> fetchAllAddresses() {

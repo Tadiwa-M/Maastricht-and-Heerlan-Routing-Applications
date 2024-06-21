@@ -1,5 +1,4 @@
 package dbTables;
-
 import java.util.*;
 
 public class AStarWithTime {
@@ -15,6 +14,7 @@ public class AStarWithTime {
         Map<String, PathNode> cameFrom = new HashMap<>();
         Map<String, String> arrivalTimes = new HashMap<>();
         Map<String, String> tripIds = new HashMap<>();
+        Map<String, String> routeIds = new HashMap<>();  // Track route IDs
 
         // Initialize start nodes
         for (String startStopId : startStopIds) {
@@ -23,6 +23,7 @@ public class AStarWithTime {
             fScore.put(startStopId, heuristic(startStopId, endStopId, addressMap, travelTimeMap));
             arrivalTimes.put(startStopId, startTime);
             tripIds.put(startStopId, null); // No trip ID at the start
+            routeIds.put(startStopId, null); // No route ID at the start
 
             openSet.add(new Node(startStopId, fScore.get(startStopId), startTime));
         }
@@ -43,15 +44,44 @@ public class AStarWithTime {
 
                 String currentArrivalTime = arrivalTimes.get(current.stopId);
 
+                // Handle null departure and arrival times
+                String neighborDepartureTime = neighbor.departureTime != null ? neighbor.departureTime : currentArrivalTime;
+                String neighborArrivalTime = neighbor.arrivalTime != null ? neighbor.arrivalTime : currentArrivalTime;
+
+                // Handle walking between stops within the same parent station
+                if (graph.getParentStop(current.stopId).equals(graph.getParentStop(neighbor.toStopId))) {
+                    neighborArrivalTime = current.arrivalTime;
+                    neighborDepartureTime = current.arrivalTime;
+
+                    // Apply a smaller penalty for walking
+                    double tentativeGScore = gScore.getOrDefault(current.stopId, Double.POSITIVE_INFINITY) + 60; // Assume 60 seconds penalty for walking
+                    if (tentativeGScore < gScore.getOrDefault(neighbor.toStopId, Double.POSITIVE_INFINITY)) {
+                        if (arrivalTimes.containsKey(neighbor.toStopId) && arrivalTimes.get(neighbor.toStopId).compareTo(neighborArrivalTime) < 0) {
+//                            System.out.println("already have a faster arrival time (earlier)"); // Skip if we already have a faster arrival time (earlier)
+                            continue;
+                        }
+                        cameFrom.put(neighbor.toStopId, new PathNode(current.stopId, null, neighborDepartureTime, neighborArrivalTime, null));
+                        gScore.put(neighbor.toStopId, tentativeGScore);
+                        fScore.put(neighbor.toStopId, tentativeGScore + heuristic(neighbor.toStopId, endStopId, addressMap, travelTimeMap));
+                        arrivalTimes.put(neighbor.toStopId, neighborArrivalTime);
+                        tripIds.put(neighbor.toStopId, null);
+                        routeIds.put(neighbor.toStopId, null);
+                        openSet.add(new Node(neighbor.toStopId, fScore.get(neighbor.toStopId), neighborArrivalTime));
+                    }
+                    continue; // Skip the remaining part of the loop to process the next neighbor
+                }
+
                 // Skip if we arrive after the neighbor's departure time
-                if (currentArrivalTime != null && timeToSeconds(currentArrivalTime) > timeToSeconds(neighbor.departureTime)) {
+                if (currentArrivalTime != null && timeToSeconds(currentArrivalTime) > timeToSeconds(neighborDepartureTime)) {
                     continue;
                 }
 
                 double tentativeGScore = gScore.getOrDefault(current.stopId, Double.POSITIVE_INFINITY) + neighbor.weight;
 
-                // Apply transfer penalty if the trip ID changes
-                if (tripIds.get(current.stopId) != null && !tripIds.get(current.stopId).equals(neighbor.tripId)) {
+                // Apply transfer penalty if the trip ID or route ID changes and is not null
+                boolean tripIdChanged = tripIds.get(current.stopId) != null && !tripIds.get(current.stopId).equals(neighbor.tripId) && neighbor.tripId != null;
+                boolean routeIdChanged = routeIds.get(current.stopId) != null && !routeIds.get(current.stopId).equals(neighbor.routeId) && neighbor.routeId != null;
+                if (tripIdChanged || routeIdChanged) {
                     tentativeGScore += TRANSFER_PENALTY;
                 }
 
@@ -61,12 +91,17 @@ public class AStarWithTime {
                 }
 
                 if (tentativeGScore < gScore.getOrDefault(neighbor.toStopId, Double.POSITIVE_INFINITY)) {
-                    cameFrom.put(neighbor.toStopId, new PathNode(current.stopId, neighbor.tripId, neighbor.departureTime, neighbor.arrivalTime, neighbor.routeId));
+                    if (arrivalTimes.containsKey(neighbor.toStopId) && arrivalTimes.get(neighbor.toStopId).compareTo(neighborArrivalTime) < 0) {
+//                        System.out.println("already have a faster arrival time (earlier)"); // Skip if we already have a faster arrival time (earlier)
+                        continue;
+                    }
+                    cameFrom.put(neighbor.toStopId, new PathNode(current.stopId, neighbor.tripId, neighborDepartureTime, neighborArrivalTime, neighbor.routeId));
                     gScore.put(neighbor.toStopId, tentativeGScore);
                     fScore.put(neighbor.toStopId, tentativeGScore + heuristic(neighbor.toStopId, endStopId, addressMap, travelTimeMap));
-                    arrivalTimes.put(neighbor.toStopId, neighbor.arrivalTime);
+                    arrivalTimes.put(neighbor.toStopId, neighborArrivalTime);
                     tripIds.put(neighbor.toStopId, neighbor.tripId);
-                    openSet.add(new Node(neighbor.toStopId, fScore.get(neighbor.toStopId), neighbor.arrivalTime));
+                    routeIds.put(neighbor.toStopId, neighbor.routeId); // Track the route ID
+                    openSet.add(new Node(neighbor.toStopId, fScore.get(neighbor.toStopId), neighborArrivalTime));
                 }
             }
         }

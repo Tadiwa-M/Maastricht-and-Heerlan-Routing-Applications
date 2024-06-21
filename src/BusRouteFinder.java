@@ -197,8 +197,8 @@ public class BusRouteFinder {
     }
 
     public static void main(String[] args) {
-//        testOverallWithTime();
-        testDirect();
+        testOverallWithTime();
+//        testDirect();
 //        testDirectWithTime();
 //        testOverallWithoutTime();
 //        testTransfer();
@@ -206,11 +206,11 @@ public class BusRouteFinder {
     }
 
     public static void testOverallWithTime() {
-        PostAddress start = AddressFinder.getAddress("6218BK");
-        PostAddress end = AddressFinder.getAddress("6229EN");
+        PostAddress start = AddressFinder.getAddress("6225GE");
+        PostAddress end = AddressFinder.getAddress("6228JG");
 
         BusRouteFinder busRouteFinder = new BusRouteFinder(start, end);
-        BusRoute shortestRoute = busRouteFinder.findOverallShortestRouteWithTime("08:00:00");
+        BusRoute shortestRoute = busRouteFinder.findOverallShortestRouteWithTime("18:40:00");
 
         if (shortestRoute != null) {
             System.out.println("Shortest route found");
