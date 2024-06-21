@@ -3,7 +3,10 @@ import dbTables.PostAddress;
 import dbTables.Shop;
 import dbTables.Tourism;
 
+import static dbTables.Amenity.fetchAmenitiesByCords;
 import static dbTables.PostAddress.basicDistances;
+import static dbTables.Shop.fetchShopsByCoords;
+import static dbTables.Tourism.fetchAttractionsByCoords;
 import static dbTables.dbManager.*;
 
 import java.util.List;
@@ -24,28 +27,28 @@ public class AmenetiesCalc {
         List<Shop> shops = fetchShopsByCoords(postAddress.getLat(), postAddress.getLon(), RADIUS);
 //        System.out.println(shops.size());
         double score = 0;
-        double weigtlessScore = 0;
+        double weightlessScore = 0;
         for(Shop shop : shops){
             double gaussScore = gaussianScore(basicDistances(postAddress, new PostAddress("0000AA", shop.getLat(), shop.getLon())));
-            weigtlessScore += gaussScore;
+            weightlessScore += gaussScore;
             if(shop.getType().equals("mall")||shop.getType().equals("supermarket")){
                 score += gaussScore*essentialShopWeight;
             } else{
                 score += gaussScore*nonEssentialShopWeight;
             }
         }
-        score = score / weigtlessScore;
+        score = score / weightlessScore;
         return score;
     }
 
     private static double amenityScores(PostAddress postAddress){
-        List<Amenity> amenities = fetchAmenitiesByCoords(postAddress.getLat(), postAddress.getLon(), RADIUS);
+        List<Amenity> amenities = fetchAmenitiesByCords(postAddress.getLat(), postAddress.getLon(), RADIUS);
 //        System.out.println(amenities.size());
         double score = 0;
-        double weigtlessScore = 0;
+        double weightlessScore = 0;
         for(Amenity amenity : amenities){
             double gaussScore = gaussianScore(basicDistances(postAddress, new PostAddress("0000AA", amenity.getLat(), amenity.getLon())));
-            weigtlessScore += gaussScore;
+            weightlessScore += gaussScore;
             if(amenity.getType().equals("bank")||amenity.getType().equals("college")||amenity.getType().equals("doctors")||amenity.getType().equals("hospital")
                     ||amenity.getType().equals("pharmacy")||amenity.getType().equals("school")||amenity.getType().equals("university")){
                 score += gaussScore*essentialAmenityWeight;
@@ -53,7 +56,7 @@ public class AmenetiesCalc {
                 score += gaussScore*nonEssentialAmenityWeight;
             }
         }
-        score = score / weigtlessScore;
+        score = score / weightlessScore;
         return score;
     }
 
@@ -61,13 +64,13 @@ public class AmenetiesCalc {
         List<Tourism> landmarks = fetchAttractionsByCoords(postAddress.getLat(), postAddress.getLon(), RADIUS);
 //        System.out.println(landmarks.size());
         double score = 0;
-        double weigtlessScore = 0;
+        double weightlessScore = 0;
         for(Tourism landmark : landmarks){
             double gaussScore = gaussianScore(basicDistances(postAddress, new PostAddress("0000AA", landmark.getLat(), landmark.getLon())));
-            weigtlessScore += gaussScore;
+            weightlessScore += gaussScore;
             score += gaussScore*TourismWeight;
         }
-        score = score / weigtlessScore;
+        score = score / weightlessScore;
         return score;
     }
 
