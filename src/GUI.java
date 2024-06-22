@@ -436,10 +436,11 @@ public class GUI extends JFrame {
 
         g.setStroke(new BasicStroke(3));
 
+        // Initial color and index for changing colors
+        int colorIndex = 0;
 
-        Color currentColor = Color.BLACK;
-        Random random = new Random();
-        int col = 0;
+        // Define a set of distinct colors
+        Color[] colors = {Color.RED, Color.BLUE, Color.GREEN, Color.ORANGE, Color.MAGENTA, Color.CYAN, Color.PINK};
 
         for (int i = 0; i < totalStops.size() - 1; i++) {
             Stop startStop = totalStops.get(i);
@@ -447,85 +448,60 @@ public class GUI extends JFrame {
             Point startPoint = findPostCodeCoordinate(startStop.getStopLon(), startStop.getStopLat());
             Point endPoint = findPostCodeCoordinate(endStop.getStopLon(), endStop.getStopLat());
 
-
+            // Change the line color on transfer
             if (transferIndices.contains(i + 1)) {
-                int red = (col == 2)? 255 : 0;
-                int green = (col == 1)? 255 : 0;
-                int blue = (col == 0)? 255 : 0;
-
-                currentColor = new Color(red, green, blue);
-                g.setColor(currentColor);
-                col = (col + 1) % 3;
+                colorIndex = (colorIndex + 1) % colors.length;
             }
 
+            g.setColor(colors[colorIndex]);
             g.drawLine(startPoint.x, startPoint.y, endPoint.x, endPoint.y);
         }
 
-
+        // Draw stop points
         for (int i = 0; i < totalStops.size(); i++) {
             Stop stop = totalStops.get(i);
             Point point = findPostCodeCoordinate(stop.getStopLon(), stop.getStopLat());
 
             if (transferIndices.contains(i)) {
-
                 g.setColor(Color.RED);
                 g.fillOval(point.x - 5, point.y - 5, 10, 10);
             } else {
-
                 g.setColor(Color.BLUE);
                 g.fillOval(point.x - 3, point.y - 3, 6, 6);
             }
         }
 
-
+        // Draw stop names
         g.setColor(Color.BLACK);
         for (int i = 0; i < totalStops.size(); i++) {
             Stop stop = totalStops.get(i);
             Point point = findPostCodeCoordinate(stop.getStopLon(), stop.getStopLat());
-            String stopName = stop.getStopName();
-            stopName = stopName.replace("Maastricht, ", "");
+            String stopName = stop.getStopName().replace("Maastricht, ", "");
             g.drawString(stopName, point.x + 5, point.y - 5);
         }
     }
 
-
-
-
-
-
-
-
-
-
     private Stop createStopFromPostalCode(PostAddress address) {
-
         return new Stop(address.getPostalCode(), address.getPostalCode(), address.getLat(), address.getLon());
     }
 
-
-    private void handleDirectBusRoute(PostAddress first, PostAddress last, String prefferedTime){
+    private void handleDirectBusRoute(PostAddress first, PostAddress last, String prefferedTime) {
         BusRouteFinder finder = new BusRouteFinder(first, last);
         DirectRoute directRoute = finder.findShortestDirectBusRouteWithTime(prefferedTime);
         if (directRoute == null) {
             noBusError();
             return;
         }
-        directRoute.getBusStops().add(0,createBusStopFromPostalCode(first));
+        directRoute.getBusStops().add(0, createBusStopFromPostalCode(first));
         directRoute.getBusStops().add(createBusStopFromPostalCode(last));
         Graphics2D g = (Graphics2D) mapImage.getGraphics();
         drawShortestPathOnMapBusRoute(g, directRoute);
         showBusStopsPopup(directRoute);
     }
 
-    private BusStop createBusStopFromPostalCode(PostAddress postalCode){
-        return new BusStop("0", 0,postalCode.getPostalCode() , null, null, (float) postalCode.getLat(), (float) postalCode.getLon(), null);
+    private BusStop createBusStopFromPostalCode(PostAddress postalCode) {
+        return new BusStop("0", 0, postalCode.getPostalCode(), null, null, (float) postalCode.getLat(), (float) postalCode.getLon(), null);
     }
-
-
-
-
-
-
 
 
 
