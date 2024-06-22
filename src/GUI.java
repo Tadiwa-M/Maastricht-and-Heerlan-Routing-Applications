@@ -20,7 +20,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Random;
 
 
 public class GUI extends JFrame {
@@ -205,9 +204,9 @@ public class GUI extends JFrame {
                 PostAddress postAddress = getAddressFromDataManager(postalCode);
                 if (postAddress != null) {
 
-                    double shopScore = AmenetiesCalc.shopScores(postAddress);
-                    double amenityScore = AmenetiesCalc.amenityScores(postAddress);
-                    double tourismScore = AmenetiesCalc.tourismScores(postAddress);
+                    double shopScore = AmenitiesCalc.shopScores(postAddress);
+                    double amenityScore = AmenitiesCalc.amenityScores(postAddress);
+                    double tourismScore = AmenitiesCalc.tourismScores(postAddress);
                     double totalScore = shopScore + amenityScore + tourismScore;
 
                     // Close current frame
