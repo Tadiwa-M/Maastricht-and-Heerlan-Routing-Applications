@@ -23,7 +23,7 @@ public class AmenetiesCalc {
         calculateScore( new PostAddress( "6221AA", 50.858065604744, 5.6940574444944));
     }
 
-    private static double shopScores(PostAddress postAddress){
+    static double shopScores(PostAddress postAddress){
         List<Shop> shops = fetchShopsByCoords(postAddress.getLat(), postAddress.getLon(), RADIUS);
 //        System.out.println(shops.size());
         double score = 0;
@@ -41,7 +41,7 @@ public class AmenetiesCalc {
         return score;
     }
 
-    private static double amenityScores(PostAddress postAddress){
+    static double amenityScores(PostAddress postAddress){
         List<Amenity> amenities = fetchAmenitiesByCords(postAddress.getLat(), postAddress.getLon(), RADIUS);
 //        System.out.println(amenities.size());
         double score = 0;
@@ -60,7 +60,7 @@ public class AmenetiesCalc {
         return score;
     }
 
-    private static double tourismScores(PostAddress postAddress){
+    static double tourismScores(PostAddress postAddress){
         List<Tourism> landmarks = fetchAttractionsByCoords(postAddress.getLat(), postAddress.getLon(), RADIUS);
 //        System.out.println(landmarks.size());
         double score = 0;
