@@ -375,9 +375,7 @@ public class GUI extends JFrame {
         }
 
         List<AStarWithTime.PathNode> path = result.path;
-        String startStopId = result.route.startStopId;
         String endStopId = result.route.endStopId;
-        String startTime = result.startTime;
 
         if (path == null) {
             noBusError();
@@ -424,7 +422,39 @@ public class GUI extends JFrame {
 
         Graphics2D g = (Graphics2D) mapImage.getGraphics();
         drawShortestPathOnMapBusRouteTransfer(g, totalStops, transferIndices);
+        showBusStopsPopupTransfer(totalStops,transferIndices,result.travelTime);
     }
+
+
+    private void showBusStopsPopupTransfer(List<Stop> totalStops, List<Integer> transferIndices, int travelTime) {
+        if (totalStops == null || totalStops.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "No stops available", "Bus Route", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        StringBuilder stopNames = new StringBuilder("Bus Stops with Transfers:\n");
+
+
+
+        for (int i = 0; i < totalStops.size(); i++) {
+            Stop stop = totalStops.get(i);
+            stopNames.append(stop.getStopName());
+
+            if (transferIndices.contains(i)) {
+                stopNames.append(" (Transfer)");
+            }
+            stopNames.append("\n");
+        }
+
+
+
+
+
+        stopNames.append("\nTotal Travel Time: ").append(travelTime/60).append(" minutes");
+
+        JOptionPane.showMessageDialog(null, stopNames.toString(), "Bus Route", JOptionPane.INFORMATION_MESSAGE);
+    }
+
 
 
 
@@ -438,6 +468,11 @@ public class GUI extends JFrame {
         // Initial color and index for changing colors
         int colorIndex = 0;
 
+
+
+
+        int col = 0;
+        g.setColor(Color.RED);
         // Define a set of distinct colors
         Color[] colors = {Color.RED, Color.BLUE, Color.GREEN, Color.ORANGE, Color.MAGENTA, Color.CYAN, Color.PINK};
 
@@ -446,6 +481,14 @@ public class GUI extends JFrame {
             Stop endStop = totalStops.get(i + 1);
             Point startPoint = findPostCodeCoordinate(startStop.getStopLon(), startStop.getStopLat());
             Point endPoint = findPostCodeCoordinate(endStop.getStopLon(), endStop.getStopLat());
+
+
+
+            if (transferIndices.contains(i )) {
+                g.setColor(new Color((int)(Math.random() * 0x1000000)));
+                col = (col + 1) % 3;
+            }
+
 
             // Change the line color on transfer
             if (transferIndices.contains(i + 1)) {
