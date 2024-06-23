@@ -20,8 +20,6 @@ import java.util.List;
 
 
 public class GUI extends JFrame {
-
-
     public static String FromCode = "FROM";
     public static String ToCode = "TO";
     public static VehicleType currentVehicle = VehicleType.FOOT;
@@ -61,7 +59,7 @@ public class GUI extends JFrame {
     public GUI() {
         setSize(900, 600);
         setResizable(false);
-        setTitle("Distance Calculator using Maastricht Postal Codes");
+        setTitle("Maastricht Route Finder");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
 
