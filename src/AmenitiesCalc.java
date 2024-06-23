@@ -22,49 +22,66 @@ public class AmenitiesCalc {
     public static void main(String[] args) {
         PostAddress postAddress = AddressFinder.getAddress("6221AA");
         assert postAddress != null;
-        calculateAllScores();
+        calculateScore(postAddress);
+
+//        calculateAllScores();
     }
 
-    static double shopScores(PostAddress postAddress, List<Shop> shops){
+    static double shopScores(PostAddress postAddress) {
+        List<Shop> shops = fetchShopsByCoords();
+        return shopScores(postAddress, shops);
+    }
+
+    static double shopScores(PostAddress postAddress, List<Shop> shops) {
         double score = 0;
         double weightlessScore = 0;
-        for(Shop shop : shops){
+        for (Shop shop : shops) {
             double gaussScore = gaussianScore(LineDistanceCalculator.basicDistances(postAddress, new PostAddress(shop.getLat(), shop.getLon())));
             weightlessScore += gaussScore;
-            if(shop.getType().equals("mall")||shop.getType().equals("supermarket")){
-                score += gaussScore*essentialShopWeight;
-            } else{
-                score += gaussScore*nonEssentialShopWeight;
+            if (shop.getType().equals("mall") || shop.getType().equals("supermarket")) {
+                score += gaussScore * essentialShopWeight;
+            } else {
+                score += gaussScore * nonEssentialShopWeight;
             }
         }
         score = score / weightlessScore;
         return score;
     }
 
-    static double amenityScores(PostAddress postAddress, List<Amenity> amenities){
+    static double amenityScores(PostAddress postAddress) {
+        List<Amenity> amenities = fetchAmenitiesByCords();
+        return amenityScores(postAddress, amenities);
+    }
+
+    static double amenityScores(PostAddress postAddress, List<Amenity> amenities) {
         double score = 0;
         double weightlessScore = 0;
-        for(Amenity amenity : amenities){
+        for (Amenity amenity : amenities) {
             double gaussScore = gaussianScore(LineDistanceCalculator.basicDistances(postAddress, new PostAddress(amenity.getLat(), amenity.getLon())));
             weightlessScore += gaussScore;
-            if(amenity.getType().equals("bank")||amenity.getType().equals("college")||amenity.getType().equals("doctors")||amenity.getType().equals("hospital")
-                    ||amenity.getType().equals("pharmacy")||amenity.getType().equals("school")||amenity.getType().equals("university")){
-                score += gaussScore*essentialAmenityWeight;
-            } else{
-                score += gaussScore*nonEssentialAmenityWeight;
+            if (amenity.getType().equals("bank") || amenity.getType().equals("college") || amenity.getType().equals("doctors") || amenity.getType().equals("hospital")
+                    || amenity.getType().equals("pharmacy") || amenity.getType().equals("school") || amenity.getType().equals("university")) {
+                score += gaussScore * essentialAmenityWeight;
+            } else {
+                score += gaussScore * nonEssentialAmenityWeight;
             }
         }
         score = score / weightlessScore;
         return score;
     }
 
-    static double tourismScores(PostAddress postAddress, List<Tourism> landmarks){
+    static double tourismScores(PostAddress postAddress) {
+        List<Tourism> landmarks = fetchAttractionsByCoords();
+        return tourismScores(postAddress, landmarks);
+    }
+
+    static double tourismScores(PostAddress postAddress, List<Tourism> landmarks) {
         double score = 0;
         double weightlessScore = 0;
-        for(Tourism landmark : landmarks){
+        for (Tourism landmark : landmarks) {
             double gaussScore = gaussianScore(LineDistanceCalculator.basicDistances(postAddress, new PostAddress(landmark.getLat(), landmark.getLon())));
             weightlessScore += gaussScore;
-            score += gaussScore*TourismWeight;
+            score += gaussScore * TourismWeight;
         }
         score = score / weightlessScore;
         return score;
@@ -75,9 +92,18 @@ public class AmenitiesCalc {
         return Math.exp(-Math.pow(distance - mu, 2) / (2 * Math.pow(RADIUS / 4, 2)));
     }
 
-    public static void calculateScore(PostAddress postAddress, List<Shop> shops, List<Amenity> amenities, List<Tourism> landmarks){
+    public static void calculateScore(PostAddress postAddress) {
         double score = fetchAddressScore(postAddress.getPostalCode());
-        if (score == -1){
+        if (score == -1) {
+            score = tourismScores(postAddress) + amenityScores(postAddress) + shopScores(postAddress);
+            System.out.println(score);
+            insertAddressScore(postAddress.getPostalCode(), score);
+        }
+    }
+
+    public static void calculateScore(PostAddress postAddress, List<Shop> shops, List<Amenity> amenities, List<Tourism> landmarks) {
+        double score = fetchAddressScore(postAddress.getPostalCode());
+        if (score == -1) {
             score = tourismScores(postAddress, landmarks) + amenityScores(postAddress, amenities) + shopScores(postAddress, shops);
             System.out.println(score);
             insertAddressScore(postAddress.getPostalCode(), score);
@@ -86,14 +112,14 @@ public class AmenitiesCalc {
 
     public static void calculateAllScores() {
         List<PostAddress> allAddresses = fetchAllAddresses();
-        List<Shop> allShops = fetchShopsByCoords();
-        List<Amenity> allAmenities = fetchAmenitiesByCords();
-        List<Tourism> allLandmarks = fetchAttractionsByCoords();
+        List<Shop> shops = fetchShopsByCoords();
+        List<Amenity> amenities = fetchAmenitiesByCords();
+        List<Tourism> landmarks = fetchAttractionsByCoords();
 
         if (allAddresses != null && !allAddresses.isEmpty()) {
             ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
             allAddresses.parallelStream().forEach(address -> {
-                executorService.submit(() -> calculateScore(address, allShops, allAmenities, allLandmarks));
+                executorService.submit(() -> calculateScore(address, shops, amenities, landmarks));
             });
             executorService.shutdown();
             while (!executorService.isTerminated()) {
