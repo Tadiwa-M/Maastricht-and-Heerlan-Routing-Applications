@@ -1,11 +1,9 @@
-import dbTables.Amenity;
-import dbTables.PostAddress;
-import dbTables.Shop;
-import dbTables.Tourism;
+import dbTables.*;
 
 import static dbTables.AmenityManager.*;
 import static dbTables.dbManager.fetchAllAddresses;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class AmenitiesCalculator {
@@ -70,15 +68,15 @@ public class AmenitiesCalculator {
     }
 
     public static double tourismScores(PostAddress postAddress) {
-        List<Tourism> landmarks = fetchAttractionsByCoords();
-        return tourismScores(postAddress, landmarks);
+        List<Tourism> attractions = fetchAttractionsByCoords();
+        return tourismScores(postAddress, attractions);
     }
 
-    private static double tourismScores(PostAddress postAddress, List<Tourism> landmarks) {
+    private static double tourismScores(PostAddress postAddress, List<Tourism> attractions) {
         double score = 0;
         double weightlessScore = 0;
-        for (Tourism landmark : landmarks) {
-            double gaussScore = gaussianScore(LineDistanceCalculator.basicDistances(postAddress, new PostAddress(landmark.getLat(), landmark.getLon())));
+        for (Tourism attraction : attractions) {
+            double gaussScore = gaussianScore(LineDistanceCalculator.basicDistances(postAddress, new PostAddress(attraction.getLat(), attraction.getLon())));
             weightlessScore += gaussScore;
             score += gaussScore * TourismWeight;
         }
@@ -95,24 +93,74 @@ public class AmenitiesCalculator {
         long startTime = System.nanoTime();
 
         List<PostAddress> allAddresses = fetchAllAddresses();
+        if (allAddresses == null || allAddresses.isEmpty()) {
+            System.out.println("No addresses found");
+            return;
+        }
+
         List<Shop> shops = fetchShopsByCoords();
+        if (shops == null || shops.isEmpty()) {
+            System.out.println("No shops found");
+            return;
+        }
+
         List<Amenity> amenities = fetchAmenitiesByCords();
-        List<Tourism> landmarks = fetchAttractionsByCoords();
+        if (amenities == null || amenities.isEmpty()) {
+            System.out.println("No amenities found");
+            return;
+        }
+
+        List<Tourism> attractions = fetchAttractionsByCoords();
+        if (attractions == null || attractions.isEmpty()) {
+            System.out.println("No attractions found");
+            return;
+        }
 
         long endTime = System.nanoTime();
         long duration = endTime - startTime;
 
         System.out.println("Fetch time: " + duration / 1_000_000 + " ms");
 
-        for(PostAddress address : allAddresses) {
+        List<AddressScore> scores = new ArrayList<>();
+
+        for (PostAddress address : allAddresses) {
             double shopScore = shopScores(address, shops);
             double amenityScore = amenityScores(address, amenities);
-            double tourismScore = tourismScores(address, landmarks);
+            double tourismScore = tourismScores(address, attractions);
 
             double totalScore = shopScore + amenityScore + tourismScore;
-            System.out.println("Total score for " + address.getPostalCode() + ": " + totalScore);
-        }
-        System.out.println("All scores calculated.");
 
+            scores.add(new AddressScore(address, totalScore, amenityScore, shopScore, tourismScore));
+        }
+
+        normalizeScores(scores);
+    }
+
+    private static void normalizeScores(List<AddressScore> scores) {
+        // Check if the list is empty
+        if (scores.isEmpty()) {
+            System.out.println("No scores to normalize");
+            return;
+        }
+
+        double maxScore = scores.stream().mapToDouble(AddressScore::getScore).max().orElse(0);
+        double minScore = scores.stream().mapToDouble(AddressScore::getScore).min().orElse(0);
+
+        // Prevent potential issues if maxScore is equal to minScore
+        if (maxScore == minScore) {
+            for (AddressScore score : scores) {
+                score.setScore(0);  // Assign a normalized score of 0 if all scores are the same
+            }
+        } else {
+            for (AddressScore score : scores) {
+                // Normalize the score using an exponential function
+                double normalizedScore = 100 * (Math.exp(score.getScore() - minScore) - 1) / (Math.exp(maxScore - minScore) - 1);
+                score.setScore(normalizedScore);
+            }
+        }
+
+        for (AddressScore score : scores) {
+            System.out.println(score);
+        }
     }
 }
