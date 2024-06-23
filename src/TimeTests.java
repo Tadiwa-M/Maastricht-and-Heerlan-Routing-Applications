@@ -65,11 +65,10 @@ public class TimeTests {
 
                 String startPostalCode = record[0];
                 String endPostalCode = record[1];  // Default end postal code
-                String startTime = defaultStartTime;
 
                 long startTimeMs = System.currentTimeMillis();
                 try {
-                    RoutingApplication.findBestRoute(startPostalCode, endPostalCode, startTime); // Assuming the method signature is findBestRoute(String startPostalCode, String endPostalCode, String startTime)
+                    RoutingApplication.findBestRoute(startPostalCode, endPostalCode, defaultStartTime); // Assuming the method signature is findBestRoute(String startPostalCode, String endPostalCode, String startTime)
                 } catch (Exception e) {
                     System.err.println("Error running RoutingApplication: " + e.getMessage());
                 }
@@ -79,11 +78,7 @@ public class TimeTests {
                 System.out.println("Runtime: " + runtime);
 
                 // Add the runtime to the record
-                if (!hasRuntimeColumn) {
-                    record[record.length - 1] = String.valueOf(runtime);
-                } else {
-                    record[record.length - 1] = String.valueOf(runtime);
-                }
+                record[record.length - 1] = String.valueOf(runtime);
 
                 csvWriter.writeRecord(record);
             }
