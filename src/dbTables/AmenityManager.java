@@ -17,7 +17,7 @@ public class AmenityManager {
 
         List<Amenity> nearbyAmenities = new ArrayList<Amenity>();
 
-        String query = "SELECT lat, lon, amenity, " +
+        String query = "SELECT lat, lon, amenity " +
                 "FROM amenities ";
 
         try {
@@ -87,7 +87,6 @@ public class AmenityManager {
         } catch (SQLException e) {
             System.err.println("Error: " + e.getMessage());
         }
-        System.out.println(nearbyShops.size());
         return nearbyShops;
     }
 

@@ -20,11 +20,15 @@ public class AmenitiesCalc {
     final static double TourismWeight = .1;
 
     public static void main(String[] args) {
-        PostAddress postAddress = AddressFinder.getAddress("6221AA");
-        assert postAddress != null;
-        calculateScore(postAddress);
+        //PostAddress postAddress = AddressFinder.getAddress("6221AA");
+        //assert postAddress != null;
+        //calculateScore(postAddress);
 
-//        calculateAllScores();
+        long startTime = System.nanoTime();
+        calculateAllScores();
+        long endTime = System.nanoTime();
+        long duration = endTime - startTime;
+        System.out.println("Execution time: " + duration / 1_000_000 + " ms");
     }
 
     static double shopScores(PostAddress postAddress) {
@@ -36,6 +40,7 @@ public class AmenitiesCalc {
         double score = 0;
         double weightlessScore = 0;
         for (Shop shop : shops) {
+            if(LineDistanceCalculator.basicDistances(postAddress, new PostAddress(shop.getLat(), shop.getLon()))>RADIUS)continue;
             double gaussScore = gaussianScore(LineDistanceCalculator.basicDistances(postAddress, new PostAddress(shop.getLat(), shop.getLon())));
             weightlessScore += gaussScore;
             if (shop.getType().equals("mall") || shop.getType().equals("supermarket")) {
@@ -57,6 +62,7 @@ public class AmenitiesCalc {
         double score = 0;
         double weightlessScore = 0;
         for (Amenity amenity : amenities) {
+            if(LineDistanceCalculator.basicDistances(postAddress, new PostAddress(amenity.getLat(), amenity.getLon()))>RADIUS)continue;
             double gaussScore = gaussianScore(LineDistanceCalculator.basicDistances(postAddress, new PostAddress(amenity.getLat(), amenity.getLon())));
             weightlessScore += gaussScore;
             if (amenity.getType().equals("bank") || amenity.getType().equals("college") || amenity.getType().equals("doctors") || amenity.getType().equals("hospital")
@@ -79,6 +85,7 @@ public class AmenitiesCalc {
         double score = 0;
         double weightlessScore = 0;
         for (Tourism landmark : landmarks) {
+            if(LineDistanceCalculator.basicDistances(postAddress, new PostAddress(landmark.getLat(), landmark.getLon()))>RADIUS)continue;
             double gaussScore = gaussianScore(LineDistanceCalculator.basicDistances(postAddress, new PostAddress(landmark.getLat(), landmark.getLon())));
             weightlessScore += gaussScore;
             score += gaussScore * TourismWeight;
@@ -96,7 +103,7 @@ public class AmenitiesCalc {
         double score = fetchAddressScore(postAddress.getPostalCode());
         if (score == -1) {
             score = tourismScores(postAddress) + amenityScores(postAddress) + shopScores(postAddress);
-            System.out.println(score);
+//            System.out.println(score);
             insertAddressScore(postAddress.getPostalCode(), score);
         }
     }
@@ -104,28 +111,39 @@ public class AmenitiesCalc {
     public static void calculateScore(PostAddress postAddress, List<Shop> shops, List<Amenity> amenities, List<Tourism> landmarks) {
         double score = fetchAddressScore(postAddress.getPostalCode());
         if (score == -1) {
-            score = tourismScores(postAddress, landmarks) + amenityScores(postAddress, amenities) + shopScores(postAddress, shops);
-            System.out.println(score);
-            insertAddressScore(postAddress.getPostalCode(), score);
+            ExecutorService executor = Executors.newCachedThreadPool();
+
+            CompletableFuture<Double> shopScoreFuture = CompletableFuture.supplyAsync(() -> shopScores(postAddress, shops), executor);
+            CompletableFuture<Double> amenityScoreFuture = CompletableFuture.supplyAsync(() -> amenityScores(postAddress, amenities), executor);
+            CompletableFuture<Double> tourismScoreFuture = CompletableFuture.supplyAsync(() -> tourismScores(postAddress, landmarks), executor);
+
+            CompletableFuture<Double> totalScoreFuture = shopScoreFuture
+                    .thenCombine(amenityScoreFuture, Double::sum)
+                    .thenCombine(tourismScoreFuture, Double::sum);
+
+            totalScoreFuture.thenAccept(totalScore -> {
+//                System.out.println(totalScore);
+//                insertAddressScore(postAddress.getPostalCode(), totalScore);
+            }).join();
+
+            executor.shutdown();
         }
     }
 
     public static void calculateAllScores() {
+        long startTime = System.nanoTime();
         List<PostAddress> allAddresses = fetchAllAddresses();
         List<Shop> shops = fetchShopsByCoords();
         List<Amenity> amenities = fetchAmenitiesByCords();
         List<Tourism> landmarks = fetchAttractionsByCoords();
+        long endTime = System.nanoTime();
+        long duration = endTime - startTime;
+        System.out.println("Fetch time: " + duration / 1_000_000 + " ms");
 
-        if (allAddresses != null && !allAddresses.isEmpty()) {
-            ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-            allAddresses.parallelStream().forEach(address -> {
-                executorService.submit(() -> calculateScore(address, shops, amenities, landmarks));
-            });
-            executorService.shutdown();
-            while (!executorService.isTerminated()) {
-                // Wait for all tasks to finish
-            }
-            System.out.println("All scores calculated.");
-        }
+        for(PostAddress address : allAddresses){
+            calculateScore(address, shops, amenities, landmarks);
+        };
+        System.out.println("All scores calculated.");
+
     }
 }
