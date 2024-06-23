@@ -9,8 +9,8 @@ import java.util.List;
 public class TimeTests {
     public static void main(String[] args) {
         // Path to the CSV file
-        String inputFilePath = "data/Testing - Project 1-2 - App Runtime.csv";
-        String outputFilePath = "data/Testing - Project 1-2 - App Runtime Updated.csv";
+        String inputFilePath = "data/Experiments/Testing - Project 1-2 - App Runtime.csv";
+        String outputFilePath = "data/Experiments/Testing - Project 1-2 - App Runtime Updated.csv";
 
         try {
             // Read the CSV file
@@ -34,6 +34,7 @@ public class TimeTests {
                 if (!hasRuntimeColumn) {
                     String[] newRecord = new String[record.length + 1];
                     System.arraycopy(record, 0, newRecord, 0, record.length);
+                    newRecord[record.length] = ""; // Initialize new column with empty value
                     records.add(newRecord);
                 } else {
                     records.add(record);
@@ -52,19 +53,28 @@ public class TimeTests {
                 csvWriter.writeRecord(headers);
             }
 
+            // Default start time for tests
+            String defaultStartTime = "08:00:00";
+
             // Process each record, run the application, and record the runtime
             for (String[] record : records) {
-                String test = record[0]; // Assuming the test string is in the first column
-                String[] testArgs = test.split(" ");
-                String[] arguments = new String[testArgs.length];
-                for (int i = 0; i < testArgs.length; i++) {
-                    arguments[i] = testArgs[i];
+                if (record.length < 1) {
+                    System.err.println("Invalid test record: " + String.join(", ", record));
+                    continue;
                 }
 
-                long startTime = System.currentTimeMillis();
-                RoutingApplication.findBestRoute(arguments[0], arguments[1], arguments[2]); // Assuming the method signature is findBestRoute(String startPostalCode, String endPostalCode, String startTime
-                long endTime = System.currentTimeMillis();
-                long runtime = endTime - startTime;
+                String startPostalCode = record[0];
+                String endPostalCode = record[1];  // Default end postal code
+                String startTime = defaultStartTime;
+
+                long startTimeMs = System.currentTimeMillis();
+                try {
+                    RoutingApplication.findBestRoute(startPostalCode, endPostalCode, startTime); // Assuming the method signature is findBestRoute(String startPostalCode, String endPostalCode, String startTime)
+                } catch (Exception e) {
+                    System.err.println("Error running RoutingApplication: " + e.getMessage());
+                }
+                long endTimeMs = System.currentTimeMillis();
+                long runtime = endTimeMs - startTimeMs;
 
                 System.out.println("Runtime: " + runtime);
 
