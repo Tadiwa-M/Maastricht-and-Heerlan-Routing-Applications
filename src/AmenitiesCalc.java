@@ -12,7 +12,7 @@ import static dbTables.dbManager.*;
 import java.util.List;
 
 public class AmenitiesCalc {
-    final static double RADIUS = 1;
+    final static double RADIUS = 3;
     final static double essentialShopWeight = .3;
     final static double essentialAmenityWeight = .4;
     final static double nonEssentialShopWeight = .1;
