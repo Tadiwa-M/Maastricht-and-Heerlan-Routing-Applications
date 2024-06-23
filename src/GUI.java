@@ -154,6 +154,9 @@ public class GUI extends JFrame {
 
 
         busRouteButton.addActionListener(e -> {
+            footButton.setSelected(false);
+            bikeButton.setSelected(false);
+            busButton.setSelected(false);
             Object[] options = showBusRouteOptionsDialog();
             if (options != null) {
                 try {
@@ -223,7 +226,7 @@ public class GUI extends JFrame {
         DecimalFormat df = new DecimalFormat("#.###");
 
         JFrame resultFrame = new JFrame("Accessibility Scores");
-        resultFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        resultFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         resultFrame.setSize(600, 120);
         resultFrame.setLayout(new GridBagLayout());
         resultFrame.setResizable(false);
@@ -734,6 +737,7 @@ public class GUI extends JFrame {
             footButton.setSelected(false);
             bikeButton.setSelected(false);
             busButton.setSelected(false);
+            busRouteButton.setSelected(false);
             button.setSelected(true);
             encodeVehicle(text);
             SelectedVehicle = text;
