@@ -1,8 +1,8 @@
 package dbTables;
 
 public class BusStop {
-    private String stopId;
-    private int stopSequence;
+    private final String stopId;
+    private final int stopSequence;
     private final String stopName;
     private final String arrivalTime;
     private final String departureTime;

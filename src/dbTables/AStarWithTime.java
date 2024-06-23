@@ -129,10 +129,10 @@ public class AStarWithTime {
     }
 
     private static double calculateDistance(Stop start, Stop end) {
-        double lat1Rad = degToRad(start.getStopLat());
-        double lon1Rad = degToRad(start.getStopLon());
-        double lat2Rad = degToRad(end.getStopLat());
-        double lon2Rad = degToRad(end.getStopLon());
+        double lat1Rad = degToRad(start.stopLat());
+        double lon1Rad = degToRad(start.stopLon());
+        double lat2Rad = degToRad(end.stopLat());
+        double lon2Rad = degToRad(end.stopLon());
 
         double dLat = lat2Rad - lat1Rad;
         double dLon = lon2Rad - lon1Rad;

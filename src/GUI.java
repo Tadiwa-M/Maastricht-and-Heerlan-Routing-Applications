@@ -438,7 +438,7 @@ public class GUI extends JFrame {
 
         for (int i = 0; i < totalStops.size(); i++) {
             Stop stop = totalStops.get(i);
-            stopNames.append(stop.getStopName());
+            stopNames.append(stop.stopName());
 
             if (transferIndices.contains(i)) {
                 stopNames.append(" (Transfer)");
@@ -479,8 +479,8 @@ public class GUI extends JFrame {
         for (int i = 0; i < totalStops.size() - 1; i++) {
             Stop startStop = totalStops.get(i);
             Stop endStop = totalStops.get(i + 1);
-            Point startPoint = findPostCodeCoordinate(startStop.getStopLon(), startStop.getStopLat());
-            Point endPoint = findPostCodeCoordinate(endStop.getStopLon(), endStop.getStopLat());
+            Point startPoint = findPostCodeCoordinate(startStop.stopLon(), startStop.stopLat());
+            Point endPoint = findPostCodeCoordinate(endStop.stopLon(), endStop.stopLat());
 
 
 
@@ -502,7 +502,7 @@ public class GUI extends JFrame {
         // Draw stop points
         for (int i = 0; i < totalStops.size(); i++) {
             Stop stop = totalStops.get(i);
-            Point point = findPostCodeCoordinate(stop.getStopLon(), stop.getStopLat());
+            Point point = findPostCodeCoordinate(stop.stopLon(), stop.stopLat());
 
             if (transferIndices.contains(i)) {
                 g.setColor(Color.RED);
@@ -517,8 +517,8 @@ public class GUI extends JFrame {
         g.setColor(Color.BLACK);
         for (int i = 0; i < totalStops.size(); i++) {
             Stop stop = totalStops.get(i);
-            Point point = findPostCodeCoordinate(stop.getStopLon(), stop.getStopLat());
-            String stopName = stop.getStopName().replace("Maastricht, ", "");
+            Point point = findPostCodeCoordinate(stop.stopLon(), stop.stopLat());
+            String stopName = stop.stopName().replace("Maastricht, ", "");
             g.drawString(stopName, point.x + 5, point.y - 5);
         }
     }
@@ -879,8 +879,8 @@ public class GUI extends JFrame {
         QueryResponse queryResponse = graphHopperUtil.calculateRoute(from.getPostalCode(), to.getPostalCode(), currentVehicle.toString().toLowerCase());
 
 
-        double value = queryResponse.getDistance() / 1000;
-        ArrayList<PostAddress> shortestPath = queryResponse.getPath();
+        double value = queryResponse.distance() / 1000;
+        ArrayList<PostAddress> shortestPath = queryResponse.path();
 
 
         visualizeShortestPath(shortestPath);

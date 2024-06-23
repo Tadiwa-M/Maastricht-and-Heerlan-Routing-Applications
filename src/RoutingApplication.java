@@ -109,9 +109,9 @@ public class RoutingApplication {
             if (previousTripId == null || !previousTripId.equals(node.tripId)) {
                 if (previousTripId != null) {
                     if (node.tripId == null) {
-                        System.out.println("Walk to another stop within the same parent station: " + (stop != null ? stop.getStopName() : node.previousStopId));
+                        System.out.println("Walk to another stop within the same parent station: " + (stop != null ? stop.stopName() : node.previousStopId));
                     } else {
-                        System.out.println("Transfer to Route " + node.routeId + " at Stop: " + (stop != null ? stop.getStopName() : node.previousStopId));
+                        System.out.println("Transfer to Route " + node.routeId + " at Stop: " + (stop != null ? stop.stopName() : node.previousStopId));
                     }
                 }
                 previousTripId = node.tripId;
@@ -134,7 +134,7 @@ public class RoutingApplication {
 
         // Print final stop name
         Stop stop = GTFSLoader.getStopDetails(endStopId);
-        System.out.println("Stop: " + (stop != null ? stop.getStopName() : endStopId) + ", Arrival: " + finalArrivalTime);
+        System.out.println("Stop: " + (stop != null ? stop.stopName() : endStopId) + ", Arrival: " + finalArrivalTime);
 
         // Calculate total travel time from the startTime to the final arrival time
         if (finalArrivalTime != null) {

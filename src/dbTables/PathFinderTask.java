@@ -24,20 +24,20 @@ public class PathFinderTask implements Callable<JourneyRouteResult> {
 
     @Override
     public JourneyRouteResult call() throws Exception {
-        if (!addressMap.containsKey(end.getStopId())) {
-            System.err.println("Missing address data for end stop: " + end.getStopId());
+        if (!addressMap.containsKey(end.stopId())) {
+            System.err.println("Missing address data for end stop: " + end.stopId());
             return null;
         }
 
         Map<String, String> startTimes = new HashMap<>();
         List<String> startStopIds = new ArrayList<>();
         for (Stop start : startStops) {
-            if (!addressMap.containsKey(start.getStopId())) {
-                System.err.println("Missing address data for start stop: " + start.getStopId());
+            if (!addressMap.containsKey(start.stopId())) {
+                System.err.println("Missing address data for start stop: " + start.stopId());
                 continue;
             }
-            startStopIds.add(start.getStopId());
-            startTimes.put(start.getStopId(), startTime);
+            startStopIds.add(start.stopId());
+            startTimes.put(start.stopId(), startTime);
         }
 
         if (startStopIds.isEmpty()) {
@@ -45,7 +45,7 @@ public class PathFinderTask implements Callable<JourneyRouteResult> {
         }
 
         List<AStarWithTime.PathNode> path = AStarWithTime.findShortestPath(
-                graph, startStopIds, end.getStopId(), startTimes, addressMap, travelTimeMap
+                graph, startStopIds, end.stopId(), startTimes, addressMap, travelTimeMap
         );
 
         if (path != null && !path.isEmpty()) {
@@ -61,7 +61,7 @@ public class PathFinderTask implements Callable<JourneyRouteResult> {
                 }
             }
             int travelTime = getTotalTravelTime(path, startTime);
-            return new JourneyRouteResult(new JourneyRoute(path.get(0).previousStopId, end.getStopId()), path, travelTime, startTime);
+            return new JourneyRouteResult(new JourneyRoute(path.get(0).previousStopId, end.stopId()), path, travelTime, startTime);
         }
 
         return null;

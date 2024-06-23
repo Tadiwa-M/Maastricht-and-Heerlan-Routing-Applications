@@ -5,7 +5,6 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.LocalTime;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -59,7 +58,7 @@ public class dbManager {
 
         for (Stop startId : startIds) {
             for (Stop endId : endIds) {
-                Callable<Route> task = () -> findFastestTransferRouteWithoutStartTime(startId.getStopId(), endId.getStopId());
+                Callable<Route> task = () -> findFastestTransferRouteWithoutStartTime(startId.stopId(), endId.stopId());
                 futures.add(executorService.submit(task));
             }
         }
@@ -218,7 +217,7 @@ public class dbManager {
     public static String getStopsListAsString(List<Stop> stops) {
         StringBuilder stopsList = new StringBuilder();
         for (int i = 0; i < stops.size(); i++) {
-            stopsList.append(stops.get(i).getStopId());
+            stopsList.append(stops.get(i).stopId());
             if (i < stops.size() - 1) {
                 stopsList.append(", ");
             }
