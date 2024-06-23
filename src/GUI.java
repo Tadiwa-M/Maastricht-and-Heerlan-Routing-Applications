@@ -423,7 +423,7 @@ public class GUI extends JFrame {
 
     private void showBusStopsPopupTransfer(List<Stop> totalStops, List<Integer> transferIndices, int travelTime) {
         if (totalStops == null || totalStops.isEmpty()) {
-            JOptionPane.showMessageDialog(null, "No stops available", "Bus Route", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(null, "No stops available", "BUS", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
 
@@ -885,8 +885,8 @@ public class GUI extends JFrame {
         String distanceMessage = "Distance : " + value + "km\n" + "Time : ";
 
         String hoursMessage = hours != 0? hours + " hours " : "";
-        String minutesMessage = minutes + " minutes ";
-        String secondsMessage = seconds + " seconds";
+        String minutesMessage = minutes != 0? minutes + " minutes " : "";
+        String secondsMessage = seconds != 0? seconds + " seconds" : "";
 
         String timeMessage = hoursMessage + minutesMessage + secondsMessage;
 
