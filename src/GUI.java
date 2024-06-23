@@ -409,9 +409,9 @@ public class GUI extends JFrame {
 
             String nextStopId = (i + 1 < path.size()) ? path.get(i + 1).previousStopId : endStopId;
             if (nextStopId != null) {
-                List<IntermediateStop> segmentStops = GTFSLoader.getIntermediateStopsForTrip(node.tripId, node.previousStopId, nextStopId);
-                for (IntermediateStop segmentStop : segmentStops) {
-                    Stop intermediateStop = new Stop(segmentStop.getStopName(), segmentStop.getStopName(), segmentStop.getLat(), segmentStop.getLon());
+                List<BusStop> segmentStops = GTFSLoader.getBusStopsForTrip(node.tripId, node.previousStopId, nextStopId);
+                for (BusStop segmentStop : segmentStops) {
+                    Stop intermediateStop = new Stop(segmentStop.getStopName(), segmentStop.getStopName(), segmentStop.getStopLat(), segmentStop.getStopLon());
                     totalStops.add(intermediateStop);
                 }
             }
@@ -915,7 +915,7 @@ public class GUI extends JFrame {
     private void showStraightLineDistance(){
         DecimalFormat df = new DecimalFormat();
         df.setMaximumFractionDigits(2);
-        float distance = Float.parseFloat(df.format(PostAddress.basicDistances(getAddressFromDataManager(FromCode),getAddressFromDataManager(ToCode))));
+        float distance = Float.parseFloat(df.format(LineDistanceCalculator.basicDistances(getAddressFromDataManager(FromCode),getAddressFromDataManager(ToCode))));
         JOptionPane.showMessageDialog(null, "The Bird's Flight Distance is: " + distance + "km");
     }
 

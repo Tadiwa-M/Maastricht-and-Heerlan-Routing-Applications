@@ -1,15 +1,24 @@
 package dbTables;
 
 public class BusStop {
-    private final String stopId;
-    private final int stopSequence;
+    private String stopId;
+    private int stopSequence;
     private final String stopName;
     private final String arrivalTime;
     private final String departureTime;
     private final float stopLat;
     private final float stopLon;
-    private final String routeName;
+    private String routeName;
 
+    public BusStop(String stopId, int stopSequence, String stopName, String arrivalTime, String departureTime, float stopLat, float stopLon) {
+        this.stopName = stopName;
+        this.departureTime = departureTime;
+        this.arrivalTime = arrivalTime;
+        this.stopLat = stopLat;
+        this.stopLon = stopLon;
+        this.stopId = stopId;
+        this.stopSequence = stopSequence;
+    }
 
     public BusStop(String stopId, int stopSequence, String stopName, String arrivalTime, String departureTime, float stopLat, float stopLon, String routeName) {
         this.stopId = stopId;

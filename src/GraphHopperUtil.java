@@ -63,7 +63,7 @@ public class GraphHopperUtil {
         double minDist = Double.MAX_VALUE;
         String closestPostalCode = "";
         for (PostAddress address: AddressFinder.getAllAddresses()) {
-            double dist = PostAddress.basicDistances(address, new PostAddress("", lat, lon));
+            double dist = LineDistanceCalculator.basicDistances(address, new PostAddress("", lat, lon));
             if (dist < minDist) {
                 minDist = dist;
                 closestPostalCode = address.getPostalCode();

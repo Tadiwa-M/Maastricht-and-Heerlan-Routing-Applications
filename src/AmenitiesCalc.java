@@ -4,7 +4,6 @@ import dbTables.Shop;
 import dbTables.Tourism;
 
 import static dbTables.Amenity.fetchAmenitiesByCords;
-import static dbTables.PostAddress.basicDistances;
 import static dbTables.Shop.fetchShopsByCoords;
 import static dbTables.Tourism.fetchAttractionsByCoords;
 import static dbTables.dbManager.*;
@@ -29,7 +28,7 @@ public class AmenitiesCalc {
         double score = 0;
         double weightlessScore = 0;
         for(Shop shop : shops){
-            double gaussScore = gaussianScore(basicDistances(postAddress, new PostAddress("0000AA", shop.getLat(), shop.getLon())));
+            double gaussScore = gaussianScore(LineDistanceCalculator.basicDistances(postAddress, new PostAddress("0000AA", shop.getLat(), shop.getLon())));
             weightlessScore += gaussScore;
             if(shop.getType().equals("mall")||shop.getType().equals("supermarket")){
                 score += gaussScore*essentialShopWeight;
@@ -47,7 +46,7 @@ public class AmenitiesCalc {
         double score = 0;
         double weightlessScore = 0;
         for(Amenity amenity : amenities){
-            double gaussScore = gaussianScore(basicDistances(postAddress, new PostAddress("0000AA", amenity.getLat(), amenity.getLon())));
+            double gaussScore = gaussianScore(LineDistanceCalculator.basicDistances(postAddress, new PostAddress("0000AA", amenity.getLat(), amenity.getLon())));
             weightlessScore += gaussScore;
             if(amenity.getType().equals("bank")||amenity.getType().equals("college")||amenity.getType().equals("doctors")||amenity.getType().equals("hospital")
                     ||amenity.getType().equals("pharmacy")||amenity.getType().equals("school")||amenity.getType().equals("university")){
@@ -66,7 +65,7 @@ public class AmenitiesCalc {
         double score = 0;
         double weightlessScore = 0;
         for(Tourism landmark : landmarks){
-            double gaussScore = gaussianScore(basicDistances(postAddress, new PostAddress("0000AA", landmark.getLat(), landmark.getLon())));
+            double gaussScore = gaussianScore(LineDistanceCalculator.basicDistances(postAddress, new PostAddress("0000AA", landmark.getLat(), landmark.getLon())));
             weightlessScore += gaussScore;
             score += gaussScore*TourismWeight;
         }

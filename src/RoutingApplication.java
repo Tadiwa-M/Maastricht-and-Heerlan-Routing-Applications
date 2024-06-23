@@ -119,9 +119,9 @@ public class RoutingApplication {
 
             String nextStopId = (i + 1 < path.size()) ? path.get(i + 1).previousStopId : endStopId;
 
-            // Print all intermediate stops for this segment using GTFS times
-            List<IntermediateStop> segmentStops = GTFSLoader.getIntermediateStopsForTrip(node.tripId, node.previousStopId, nextStopId);
-            for (IntermediateStop segmentStop : segmentStops) {
+            // Print all bus stops for this segment using GTFS times
+            List<BusStop> segmentStops = GTFSLoader.getBusStopsForTrip(node.tripId, node.previousStopId, nextStopId);
+            for (BusStop segmentStop : segmentStops) {
                 System.out.println("Stop: " + segmentStop.getStopName() +
                         ", Arrival: " + segmentStop.getArrivalTime() +
                         ", Departure: " + segmentStop.getDepartureTime() +
