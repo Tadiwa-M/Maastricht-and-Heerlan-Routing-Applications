@@ -9,8 +9,8 @@ import java.util.List;
 public class TimeTests {
     public static void main(String[] args) {
         // Path to the CSV file
-        String inputFilePath = "data/Experiments/Testing - Project 1-2 - App Runtime.csv";
-        String outputFilePath = "data/Experiments/Testing - Project 1-2 - App Runtime Updated.csv";
+        String inputFilePath = "data/experiments/Testing - Project 1-2 - App Runtime.csv";
+        String outputFilePath = "data/experiments/Testing - Project 1-2 - App Runtime Updated.csv";
 
         try {
             // Read the CSV file
