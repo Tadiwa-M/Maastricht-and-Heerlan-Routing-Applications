@@ -201,9 +201,9 @@ public class GUI extends JFrame {
                 PostAddress postAddress = getAddressFromDataManager(postalCode);
                 if (postAddress != null) {
 
-                    double shopScore = AmenitiesCalc.shopScores(postAddress);
-                    double amenityScore = AmenitiesCalc.amenityScores(postAddress);
-                    double tourismScore = AmenitiesCalc.tourismScores(postAddress);
+                    double shopScore = AmenitiesCalculator.shopScores(postAddress);
+                    double amenityScore = AmenitiesCalculator.amenityScores(postAddress);
+                    double tourismScore = AmenitiesCalculator.tourismScores(postAddress);
                     double totalScore = shopScore + amenityScore + tourismScore;
 
                     // Close current frame
