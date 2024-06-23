@@ -491,7 +491,7 @@ public class GUI extends JFrame {
 
 
             // Change the line color on transfer
-            if (transferIndices.contains(i + 1)) {
+            if (transferIndices.contains(i )) {
                 colorIndex = (colorIndex + 1) % colors.length;
             }
 
