@@ -8,11 +8,11 @@ public class PathFinderTask implements Callable<JourneyRouteResult> {
     private final Map<String, Stop> addressMap;
     private final Map<String, String> routeNames;
     private final Map<String, Map<String, Double>> travelTimeMap;
-    private final List<Stops> startStops;
-    private final Stops end;
+    private final List<Stop> startStops;
+    private final Stop end;
     private final String startTime;
 
-    public PathFinderTask(BusGraph graph, Map<String, Stop> addressMap, Map<String, String> routeNames, Map<String, Map<String, Double>> travelTimeMap, List<Stops> startStops, Stops end, String startTime) {
+    public PathFinderTask(BusGraph graph, Map<String, Stop> addressMap, Map<String, String> routeNames, Map<String, Map<String, Double>> travelTimeMap, List<Stop> startStops, Stop end, String startTime) {
         this.graph = graph;
         this.addressMap = addressMap;
         this.routeNames = routeNames;
@@ -31,7 +31,7 @@ public class PathFinderTask implements Callable<JourneyRouteResult> {
 
         Map<String, String> startTimes = new HashMap<>();
         List<String> startStopIds = new ArrayList<>();
-        for (Stops start : startStops) {
+        for (Stop start : startStops) {
             if (!addressMap.containsKey(start.getStopId())) {
                 System.err.println("Missing address data for start stop: " + start.getStopId());
                 continue;

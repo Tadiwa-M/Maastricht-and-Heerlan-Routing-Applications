@@ -1,7 +1,6 @@
 import dbTables.*;
 
 import java.util.*;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -51,13 +50,13 @@ public class RoutingApplication {
             throw new Exception("Failed to load travel times");
         }
 
-        List<Stops> startStops = getStopsByPostalCode(startPostalCode);
-        List<Stops> endStops = getStopsByPostalCode(endPostalCode);
+        List<Stop> startStops = getStopsByPostalCode(startPostalCode);
+        List<Stop> endStops = getStopsByPostalCode(endPostalCode);
 
         ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         List<Future<JourneyRouteResult>> results = new ArrayList<>();
 
-        for (Stops end : endStops) {
+        for (Stop end : endStops) {
             results.add(executor.submit(new PathFinderTask(graph, addressMap, routeNames, travelTimeMap, startStops, end, startTime)));
         }
 
@@ -87,7 +86,7 @@ public class RoutingApplication {
         }
     }
 
-    private static List<Stops> getStopsByPostalCode(String postalCode) {
+    private static List<Stop> getStopsByPostalCode(String postalCode) {
         PostAddress address = AddressFinder.getAddress(postalCode);
         if (address == null) {
             System.err.println("No address found for postal code: " + postalCode);
@@ -100,7 +99,6 @@ public class RoutingApplication {
         System.out.println("Shortest path from " + startStopId + " to " + endStopId + " starting at " + startTime + ":");
 
         String previousTripId = null;
-        String firstDepartureTime = startTime;
         String finalArrivalTime = null;
         int totalTravelTimeInSeconds;
 
@@ -140,7 +138,7 @@ public class RoutingApplication {
 
         // Calculate total travel time from the startTime to the final arrival time
         if (finalArrivalTime != null) {
-            totalTravelTimeInSeconds = AStarWithTime.timeToSeconds(finalArrivalTime) - AStarWithTime.timeToSeconds(firstDepartureTime);
+            totalTravelTimeInSeconds = AStarWithTime.timeToSeconds(finalArrivalTime) - AStarWithTime.timeToSeconds(startTime);
 
             int hours = totalTravelTimeInSeconds / 3600;
             int minutes = (totalTravelTimeInSeconds % 3600) / 60;

@@ -53,12 +53,12 @@ public class dbManager {
         return connection;
     }
 
-    public static Route findBestTransferRouteWithoutStartTime(List<Stops> startIds, List<Stops> endIds) {
+    public static Route findBestTransferRouteWithoutStartTime(List<Stop> startIds, List<Stop> endIds) {
         ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         List<Future<Route>> futures = new ArrayList<>();
 
-        for (Stops startId : startIds) {
-            for (Stops endId : endIds) {
+        for (Stop startId : startIds) {
+            for (Stop endId : endIds) {
                 Callable<Route> task = () -> findFastestTransferRouteWithoutStartTime(startId.getStopId(), endId.getStopId());
                 futures.add(executorService.submit(task));
             }
@@ -149,11 +149,11 @@ public class dbManager {
         return null;
     }
 
-//    public static Route findBestTransferRouteWithoutStartTime(List<Stops> startIds, List<Stops> endIds) {
+//    public static Route findBestTransferRouteWithoutStartTime(List<BusStop> startIds, List<BusStop> endIds) {
 //        Route bestTransferRoute = null;
 //
-//        for (Stops startId : startIds) {
-//            for (Stops endId : endIds) {
+//        for (BusStop startId : startIds) {
+//            for (BusStop endId : endIds) {
 //                Route currentRoute = findFastestTransferRouteWithoutStartTime(startId.getStopId(), endId.getStopId());
 //                if (currentRoute != null) {
 //                    if (bestTransferRoute == null ||
@@ -169,7 +169,7 @@ public class dbManager {
 //        return bestTransferRoute;
 //    }
 
-    public static Route findShortestDirectRoute(List<Stops> startStops, List<Stops> endStops, String startTime) {
+    public static Route findShortestDirectRoute(List<Stop> startStops, List<Stop> endStops, String startTime) {
         Connection conn = getSqlConnection();
         if (conn == null) {
             return null;
@@ -215,7 +215,7 @@ public class dbManager {
         return shortestRoute;
     }
 
-    public static String getStopsListAsString(List<Stops> stops) {
+    public static String getStopsListAsString(List<Stop> stops) {
         StringBuilder stopsList = new StringBuilder();
         for (int i = 0; i < stops.size(); i++) {
             stopsList.append(stops.get(i).getStopId());
@@ -364,7 +364,7 @@ public class dbManager {
         }
     }
 
-    public static RouteDetails findShortestRoute(List<Stops> startStopIds, List<Stops> endStopIds) {
+    public static RouteDetails findShortestRoute(List<Stop> startStopIds, List<Stop> endStopIds) {
         Connection conn = getSqlConnection();
         if (conn == null)
             return null;
@@ -402,12 +402,12 @@ public class dbManager {
         }
     }
     
-    public static List<Stops> fetchStopsByCoords(double lat, double lon) {
+    public static List<Stop> fetchStopsByCoords(double lat, double lon) {
         Connection conn = getSqlConnection();
         if (conn == null)
             return null;
 
-        List<Stops> stopsList = new ArrayList<>();
+        List<Stop> stopsList = new ArrayList<>();
 
         String query = "SELECT *, " +
                 "(6378 * acos(cos(radians(?)) * cos(radians(stop_lat)) * cos(radians(stop_lon) - radians(?)) + sin(radians(?)) * sin(radians(stop_lat)))) AS distance "
@@ -423,18 +423,12 @@ public class dbManager {
 
             ResultSet resultSet = stmt.executeQuery();
             while (resultSet.next()) {
-                Stops stop = new Stops();
-                stop.setStopId(resultSet.getString("stop_id"));
-                stop.setStopCode(resultSet.getString("stop_code"));
-                stop.setStopName(resultSet.getString("stop_name"));
-                stop.setStopLat(resultSet.getFloat("stop_lat"));
-                stop.setStopLon(resultSet.getFloat("stop_lon"));
-                stop.setLocationType(resultSet.getInt("location_type"));
-                stop.setParentStation(resultSet.getString("parent_station"));
-                stop.setStopTimezone(resultSet.getString("stop_timezone"));
-                stop.setWheelchairBoarding(resultSet.getInt("wheelchair_boarding"));
-                stop.setPlatformCode(resultSet.getString("platform_code"));
-                stop.setZoneId(resultSet.getString("zone_id"));
+                Stop stop = new Stop(
+                        resultSet.getString("stop_id"),
+                        resultSet.getString("stop_name"),
+                        resultSet.getDouble("stop_lat"),
+                        resultSet.getDouble("stop_lon")
+                );
 
                 float distance = resultSet.getFloat("distance");
                 if(!stopsList.isEmpty() && distance > 0.35)

@@ -15,8 +15,8 @@ public class BusRouteFinder {
 
     public DirectRoute findShortestDirectBusRoute() {
         // Find bus stops near start and end
-        List<Stops> closeToStartStops = findNearestBusStop(start);
-        List<Stops> closeToEndStops = findNearestBusStop(end);
+        List<Stop> closeToStartStops = findNearestBusStop(start);
+        List<Stop> closeToEndStops = findNearestBusStop(end);
 
         if(closeToStartStops.isEmpty() || closeToEndStops.isEmpty()) {
             System.out.println("No bus stops found near start or end");
@@ -40,8 +40,8 @@ public class BusRouteFinder {
 
     public TransferRoute findShortestTransferRoute() {
         // Find bus stops near start and end
-        List<Stops> startStops = findNearestBusStop(start);
-        List<Stops> endStops = findNearestBusStop(end);
+        List<Stop> startStops = findNearestBusStop(start);
+        List<Stop> endStops = findNearestBusStop(end);
 
         if(startStops.isEmpty() || endStops.isEmpty()) {
             System.out.println("No bus stops found near start or end");
@@ -62,15 +62,15 @@ public class BusRouteFinder {
         }
     }
 
-    public static List<Stops> findNearestBusStop(PostAddress address) {
+    public static List<Stop> findNearestBusStop(PostAddress address) {
         // Find nearest bus stop
         return fetchStopsByCoords(address.getLat(), address.getLon());
     }
 
     public DirectRoute findShortestDirectBusRouteWithTime(String startTime) {
         // Find bus stops near start and end
-        List<Stops> closeToStartStops = findNearestBusStop(start);
-        List<Stops> closeToEndStops = findNearestBusStop(end);
+        List<Stop> closeToStartStops = findNearestBusStop(start);
+        List<Stop> closeToEndStops = findNearestBusStop(end);
 
         if(closeToStartStops.isEmpty() || closeToEndStops.isEmpty()) {
             System.out.println("No bus stops found near start or end");
@@ -94,8 +94,8 @@ public class BusRouteFinder {
 
     public BusRoute findOverallShortestRoute() {
         // Find bus stops near start and end
-        List<Stops> startStops = findNearestBusStop(start);
-        List<Stops> endStops = findNearestBusStop(end);
+        List<Stop> startStops = findNearestBusStop(start);
+        List<Stop> endStops = findNearestBusStop(end);
 
         if(startStops.isEmpty() || endStops.isEmpty()) {
             System.out.println("No bus stops found near start or end");
