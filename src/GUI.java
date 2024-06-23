@@ -1,6 +1,3 @@
-
-
-import Transport.*;
 import dbTables.*;
 
 
@@ -572,31 +569,22 @@ public class GUI extends JFrame {
         JOptionPane.showMessageDialog(null, stopNames.toString(), "Bus Route", JOptionPane.INFORMATION_MESSAGE);
     }
 
-
-
-
     private long calculateTimeDifference(String startTime, String endTime) {
         if (startTime == null || endTime == null) {
             return 0;
         }
-
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
         LocalTime start = LocalTime.parse(startTime, formatter);
         LocalTime end = LocalTime.parse(endTime, formatter);
         return ChronoUnit.MINUTES.between(start, end);
     }
+
     private void drawShortestPathOnMapBusRoute(Graphics2D g, DirectRoute route) {
         DrawBaseImage(g);
 
-
-
-
-
         g.setColor(Color.BLACK);
         g.setStroke(new BasicStroke(3));
-
-
 
         for (int i = 0; i < route.getBusStops().size() - 1; i++) {
             Point startPoint = findPostCodeCoordinate(route.getBusStops().get(i).getStopLon(), route.getBusStops().get(i).getStopLat());
@@ -617,8 +605,6 @@ public class GUI extends JFrame {
         JFormattedTextField postCodeField = new JFormattedTextField();
         postCodeField.setPreferredSize(new Dimension(60, 30));
         postCodeField.setText(contents);
-
-
 
         int xOffset = textPanelPosition.x + 100 + 20;
         int yOffset = textPanelPosition.y;
@@ -757,9 +743,22 @@ public class GUI extends JFrame {
         return button;
     }
 
-
-
-
+    private void encodeVehicle(String text) {
+        switch (text) {
+            case "FOOT":
+                currentVehicle = VehicleType.FOOT;
+                break;
+            case "BIKE":
+                currentVehicle = VehicleType.BIKE;
+                break;
+            case "CAR":
+                currentVehicle = VehicleType.CAR;
+                break;
+            default:
+                System.out.println("Invalid Vehicle Type");
+                break;
+        }
+    }
 
 
     public static void main(String[] args) {
@@ -864,54 +863,38 @@ public class GUI extends JFrame {
 
 
     private void runPathFindingAlgorithm(PostAddress from, PostAddress to) throws Exception {
-
-
-
-
-
-       /*
-       ArrayList<dbTables.PostAddress> shortestPath = pathFinder.findPath(from, to);
-       double value = pathFinder.getDistance(from, to);
-       */
-
-
         GraphHopperUtil graphHopperUtil = new GraphHopperUtil();
         QueryResponse queryResponse = graphHopperUtil.calculateRoute(from.getPostalCode(), to.getPostalCode(), currentVehicle.toString().toLowerCase());
 
-
-        double value = queryResponse.distance() / 1000;
         ArrayList<PostAddress> shortestPath = queryResponse.path();
-
-
         visualizeShortestPath(shortestPath);
 
+        double distance = queryResponse.distance() / 1000;
+        long time = queryResponse.time();
 
-        value = Double.parseDouble(new DecimalFormat("##.##").format(value));
-
-
-        Vehicle vehicle;
-        if (currentVehicle == VehicleType.FOOT) {
-            vehicle = new Foot(value);
-        } else if (currentVehicle == VehicleType.BIKE)
-            vehicle = new Bike(value);
-        else if (currentVehicle == VehicleType.CAR){
-            vehicle = new Car(value);
-        }
-        else {
-
-            JOptionPane.showMessageDialog(null, "The vehicle is not supported");
-            return;
-        }
-        showAlgorithmDistanceMessage(value, vehicle);
+        distance = Double.parseDouble(new DecimalFormat("##.##").format(distance));
+        showAlgorithmDistanceMessage(time, distance);
     }
 
 
-    private void showAlgorithmDistanceMessage(double value, Vehicle vehicle){
-        double time = Double.parseDouble(new DecimalFormat("##.##").format(vehicle.calculateTime()));
-        JOptionPane.showMessageDialog(null, "Distance: " + value + "km\nCompleted In: " + (int) time + " minutes");
+    private void showAlgorithmDistanceMessage(long time, double value) {
+        int timeInSeconds = (int) (time / 1000);
 
+        int hours = (timeInSeconds / 3600);
+        int minutes = ((timeInSeconds % 3600) / 60);
+        int seconds = (timeInSeconds % 60);
 
+        String distanceMessage = "Distance : " + value + "km\n" + "Time : ";
+
+        String hoursMessage = hours != 0? hours + " hours " : "";
+        String minutesMessage = minutes + " minutes ";
+        String secondsMessage = seconds + " seconds";
+
+        String timeMessage = hoursMessage + minutesMessage + secondsMessage;
+
+        JOptionPane.showMessageDialog(null, distanceMessage + timeMessage + "\n");
     }
+
     private void showStraightLineDistance(){
         DecimalFormat df = new DecimalFormat();
         df.setMaximumFractionDigits(2);
@@ -940,17 +923,10 @@ public class GUI extends JFrame {
 
 
     private void drawShortestPathOnMap(Graphics2D g, ArrayList<PostAddress> shortestPath) {
-
         DrawBaseImage(g);
-
-
-
-
 
         g.setColor(Color.BLACK);
         g.setStroke(new BasicStroke(3));
-
-
 
         for (int i = 0; i < shortestPath.size() - 1; i++) {
             Point startPoint = findPostCodeCoordinate(shortestPath.get(i).getLon(), shortestPath.get(i).getLat());
@@ -965,17 +941,6 @@ public class GUI extends JFrame {
     }
 
 
-    public static boolean encodeVehicle(String vehicle) {
-        try{
-            currentVehicle = VehicleType.valueOf(vehicle.toUpperCase());
-            return false;
-        }
-        catch (NullPointerException e){
-            return true;
-        }
-
-
-    }
 
 
 
@@ -986,19 +951,14 @@ public class GUI extends JFrame {
         try {
             return AddressFinder.getAddress(postalCode);
         } catch (Exception e) {
-
-            e.printStackTrace();
+            System.err.println("Error getting address from postal code: " + postalCode);
             return null;
         }
     }
 
-
-
-
     public boolean acceptCode(String code) {
         return code.length() == 6;
     }
-
 
     public Point findPostCodeCoordinate(double lon, double lat) {
         int imageWidth = mapImage.getWidth();
@@ -1016,7 +976,6 @@ public class GUI extends JFrame {
     public void drawPoints(PostAddress from, PostAddress to) {
         fromPoint = findPostCodeCoordinate(from.getLon(), from.getLat());
         toPoint = findPostCodeCoordinate(to.getLon(), to.getLat());
-
 
         repaint();
     }

@@ -3,7 +3,7 @@ package dbTables;
 import java.util.Objects;
 
 public class PostAddress {
-    private final String postalCode;
+    private String postalCode;
     private final double lat;
     private final double lon;
 
@@ -21,6 +21,11 @@ public class PostAddress {
 
     public PostAddress(String postalCode, double lat, double lon) {
         this.postalCode = postalCode;
+        this.lat = lat;
+        this.lon = lon;
+    }
+
+    public PostAddress(double lat, double lon) {
         this.lat = lat;
         this.lon = lon;
     }
