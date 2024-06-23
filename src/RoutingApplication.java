@@ -18,7 +18,7 @@ public class RoutingApplication {
             // Test postal codes
             String startPostalCode = "6213BE";
             String endPostalCode = "6225EJ";
-            String startTime = "17:00:00";
+            String startTime = "23:50:00";
             JourneyRouteResult result = findBestRoute(startPostalCode, endPostalCode, startTime);
             if (result != null) {
                 printPathDetails(result.path, result.route.startStopId, result.route.endStopId, startTime);
