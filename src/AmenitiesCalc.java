@@ -22,11 +22,10 @@ public class AmenitiesCalc {
     public static void main(String[] args) {
         PostAddress postAddress = AddressFinder.getAddress("6221AA");
         assert postAddress != null;
-//        calculateAllScores(postAddress);
+        calculateAllScores();
     }
 
-    static double shopScores(PostAddress postAddress){
-        List<Shop> shops = fetchShopsByCoords();
+    static double shopScores(PostAddress postAddress, List<Shop> shops){
         double score = 0;
         double weightlessScore = 0;
         for(Shop shop : shops){
@@ -42,8 +41,7 @@ public class AmenitiesCalc {
         return score;
     }
 
-    static double amenityScores(PostAddress postAddress){
-        List<Amenity> amenities = fetchAmenitiesByCords();
+    static double amenityScores(PostAddress postAddress, List<Amenity> amenities){
         double score = 0;
         double weightlessScore = 0;
         for(Amenity amenity : amenities){
@@ -60,8 +58,7 @@ public class AmenitiesCalc {
         return score;
     }
 
-    static double tourismScores(PostAddress postAddress){
-        List<Tourism> landmarks = fetchAttractionsByCoords();
+    static double tourismScores(PostAddress postAddress, List<Tourism> landmarks){
         double score = 0;
         double weightlessScore = 0;
         for(Tourism landmark : landmarks){
@@ -78,21 +75,25 @@ public class AmenitiesCalc {
         return Math.exp(-Math.pow(distance - mu, 2) / (2 * Math.pow(RADIUS / 4, 2)));
     }
 
-    public static void calculateScore(PostAddress postAddress){
+    public static void calculateScore(PostAddress postAddress, List<Shop> shops, List<Amenity> amenities, List<Tourism> landmarks){
         double score = fetchAddressScore(postAddress.getPostalCode());
         if (score == -1){
-            score = tourismScores(postAddress) + amenityScores(postAddress) + shopScores(postAddress);
+            score = tourismScores(postAddress, landmarks) + amenityScores(postAddress, amenities) + shopScores(postAddress, shops);
             System.out.println(score);
             insertAddressScore(postAddress.getPostalCode(), score);
         }
     }
-    
+
     public static void calculateAllScores() {
         List<PostAddress> allAddresses = fetchAllAddresses();
+        List<Shop> allShops = fetchShopsByCoords();
+        List<Amenity> allAmenities = fetchAmenitiesByCords();
+        List<Tourism> allLandmarks = fetchAttractionsByCoords();
+
         if (allAddresses != null && !allAddresses.isEmpty()) {
             ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
             allAddresses.parallelStream().forEach(address -> {
-                executorService.submit(() -> calculateScore(address));
+                executorService.submit(() -> calculateScore(address, allShops, allAmenities, allLandmarks));
             });
             executorService.shutdown();
             while (!executorService.isTerminated()) {
