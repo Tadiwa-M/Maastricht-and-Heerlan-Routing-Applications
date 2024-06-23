@@ -19,6 +19,10 @@ public class GTFSLoader {
     }
 
     public static BusGraph loadGraph() {
+        if(graph != null) {
+            return graph;
+        }
+
         Connection conn = getSqlConnection();
 
         if (conn == null) {

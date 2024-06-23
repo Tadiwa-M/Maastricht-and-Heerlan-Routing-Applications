@@ -426,7 +426,7 @@ public class GUI extends JFrame {
 
     private void showBusStopsPopupTransfer(List<Stop> totalStops, List<Integer> transferIndices, int travelTime) {
         if (totalStops == null || totalStops.isEmpty()) {
-            JOptionPane.showMessageDialog(null, "No stops available", "BUS", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(null, "No stops available", "Bus Route", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
 
@@ -689,29 +689,14 @@ public class GUI extends JFrame {
         return controlPanel;
     }
 
-
-
-
-
-
-
-
-
-
-
-
     private JToggleButton createBusRouteButton(){
-
-
         String prefix = "data/img/icons/";
         ImageIcon hollow = new ImageIcon(new ImageIcon(prefix + "bus_hollow.png").getImage().getScaledInstance(20, 20, Image.SCALE_DEFAULT));
         ImageIcon filled = new ImageIcon(new ImageIcon(prefix + "bus.png").getImage().getScaledInstance(20, 20, Image.SCALE_DEFAULT));
-        JToggleButton button = new JToggleButton("Bus Route", hollow);
+        JToggleButton button = new JToggleButton("BUS", hollow);
         button.setSelectedIcon(filled);
         button.setPreferredSize(new Dimension(20 + 100, 20));
         return button;
-
-
     }
     private JButton createAlgorithmButton(String name){
         JButton algorithmButton = new JButton(name);

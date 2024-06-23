@@ -23,7 +23,7 @@ public class dbManager {
         String DATABASE_NAME = dbCredentials.databaseName;
         String PASSWORD = dbCredentials.PASSWORD;
         String DATABASE_URL = "jdbc:mysql://" + HOST + ":" + PORT + "/" + DATABASE_NAME
-                + "?autoReconnect=true&useSSL=true&requireSSL=true&connectTimeout=10000&socketTimeout=10000";
+                + "?autoReconnect=true&useSSL=true&requireSSL=true&connectTimeout=50000&socketTimeout=500000";
 
         Connection connection = null;
         int retryCount = 3;
