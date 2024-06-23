@@ -1,3 +1,3 @@
 public enum VehicleType {
-    FOOT, BIKE, CAR
+    FOOT, BIKE, CAR, BUS
 }

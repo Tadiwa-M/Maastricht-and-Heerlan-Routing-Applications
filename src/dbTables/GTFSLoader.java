@@ -175,9 +175,17 @@ public class GTFSLoader {
         return routeNames;
     }
 
-    public static List<IntermediateStop> getIntermediateStopsForTrip(String tripId, String startStopId, String endStopId) {
-        List<IntermediateStop> stops = new ArrayList<>();
-        String sql = "SELECT s.stop_name, st.departure_time, st.arrival_time, s.stop_lat, s.stop_lon " +
+    public static List<BusStop> getBusStopsForTrip(String tripId, String startStopId, String endStopId) {
+        List<BusStop> stops = new ArrayList<>();
+        // String stopId,
+        //    int stopSequence,
+        //    String stopName,
+        //    String arrivalTime,
+        //    String departureTime,
+        //    float stopLat,
+        //    float stopLon,
+        //    String routeName
+        String sql = "SELECT s.stop_name, st.departure_time, st.arrival_time, s.stop_lat, s.stop_lon, s.stop_id, st.stop_sequence  " +
                 "FROM stop_times st " +
                 "JOIN stops s ON st.stop_id = s.stop_id " +
                 "WHERE st.trip_id = ? AND st.stop_sequence >= " +
@@ -201,7 +209,9 @@ public class GTFSLoader {
                     String arrivalTime = rs.getString("arrival_time");
                     float lat = rs.getFloat("stop_lat");
                     float lon = rs.getFloat("stop_lon");
-                    stops.add(new IntermediateStop(stopName, departureTime, arrivalTime, lat, lon));
+                    String stopId = rs.getString("stop_id");
+                    int stopSequence = rs.getInt("stop_sequence");
+                    stops.add(new BusStop(stopId, stopSequence, stopName, arrivalTime, departureTime, lat, lon));
                 }
             }
         } catch (SQLException e) {

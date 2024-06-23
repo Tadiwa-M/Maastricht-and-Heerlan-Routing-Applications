@@ -1,7 +1,6 @@
 import dbTables.*;
 
 import java.util.*;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -18,7 +17,7 @@ public class RoutingApplication {
             // Test postal codes
             String startPostalCode = "6213BE";
             String endPostalCode = "6225EJ";
-            String startTime = "17:00:00";
+            String startTime = "23:50:00";
             JourneyRouteResult result = findBestRoute(startPostalCode, endPostalCode, startTime);
             if (result != null) {
                 printPathDetails(result.path, result.route.startStopId, result.route.endStopId, startTime);
@@ -51,13 +50,13 @@ public class RoutingApplication {
             throw new Exception("Failed to load travel times");
         }
 
-        List<Stops> startStops = getStopsByPostalCode(startPostalCode);
-        List<Stops> endStops = getStopsByPostalCode(endPostalCode);
+        List<Stop> startStops = getStopsByPostalCode(startPostalCode);
+        List<Stop> endStops = getStopsByPostalCode(endPostalCode);
 
         ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         List<Future<JourneyRouteResult>> results = new ArrayList<>();
 
-        for (Stops end : endStops) {
+        for (Stop end : endStops) {
             results.add(executor.submit(new PathFinderTask(graph, addressMap, routeNames, travelTimeMap, startStops, end, startTime)));
         }
 
@@ -87,7 +86,7 @@ public class RoutingApplication {
         }
     }
 
-    private static List<Stops> getStopsByPostalCode(String postalCode) {
+    private static List<Stop> getStopsByPostalCode(String postalCode) {
         PostAddress address = AddressFinder.getAddress(postalCode);
         if (address == null) {
             System.err.println("No address found for postal code: " + postalCode);
@@ -100,7 +99,6 @@ public class RoutingApplication {
         System.out.println("Shortest path from " + startStopId + " to " + endStopId + " starting at " + startTime + ":");
 
         String previousTripId = null;
-        String firstDepartureTime = startTime;
         String finalArrivalTime = null;
         int totalTravelTimeInSeconds;
 
@@ -111,9 +109,9 @@ public class RoutingApplication {
             if (previousTripId == null || !previousTripId.equals(node.tripId)) {
                 if (previousTripId != null) {
                     if (node.tripId == null) {
-                        System.out.println("Walk to another stop within the same parent station: " + (stop != null ? stop.getStopName() : node.previousStopId));
+                        System.out.println("Walk to another stop within the same parent station: " + (stop != null ? stop.stopName() : node.previousStopId));
                     } else {
-                        System.out.println("Transfer to Route " + node.routeId + " at Stop: " + (stop != null ? stop.getStopName() : node.previousStopId));
+                        System.out.println("Transfer to Route " + node.routeId + " at Stop: " + (stop != null ? stop.stopName() : node.previousStopId));
                     }
                 }
                 previousTripId = node.tripId;
@@ -121,9 +119,9 @@ public class RoutingApplication {
 
             String nextStopId = (i + 1 < path.size()) ? path.get(i + 1).previousStopId : endStopId;
 
-            // Print all intermediate stops for this segment using GTFS times
-            List<IntermediateStop> segmentStops = GTFSLoader.getIntermediateStopsForTrip(node.tripId, node.previousStopId, nextStopId);
-            for (IntermediateStop segmentStop : segmentStops) {
+            // Print all bus stops for this segment using GTFS times
+            List<BusStop> segmentStops = GTFSLoader.getBusStopsForTrip(node.tripId, node.previousStopId, nextStopId);
+            for (BusStop segmentStop : segmentStops) {
                 System.out.println("Stop: " + segmentStop.getStopName() +
                         ", Arrival: " + segmentStop.getArrivalTime() +
                         ", Departure: " + segmentStop.getDepartureTime() +
@@ -136,11 +134,11 @@ public class RoutingApplication {
 
         // Print final stop name
         Stop stop = GTFSLoader.getStopDetails(endStopId);
-        System.out.println("Stop: " + (stop != null ? stop.getStopName() : endStopId) + ", Arrival: " + finalArrivalTime);
+        System.out.println("Stop: " + (stop != null ? stop.stopName() : endStopId) + ", Arrival: " + finalArrivalTime);
 
         // Calculate total travel time from the startTime to the final arrival time
         if (finalArrivalTime != null) {
-            totalTravelTimeInSeconds = AStarWithTime.timeToSeconds(finalArrivalTime) - AStarWithTime.timeToSeconds(firstDepartureTime);
+            totalTravelTimeInSeconds = AStarWithTime.timeToSeconds(finalArrivalTime) - AStarWithTime.timeToSeconds(startTime);
 
             int hours = totalTravelTimeInSeconds / 3600;
             int minutes = (totalTravelTimeInSeconds % 3600) / 60;

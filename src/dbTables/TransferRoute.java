@@ -1,6 +1,5 @@
 package dbTables;
 
-import java.time.Duration;
 import java.util.List;
 
 public class TransferRoute extends BusRoute {
