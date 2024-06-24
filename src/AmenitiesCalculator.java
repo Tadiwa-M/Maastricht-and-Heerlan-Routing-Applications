@@ -22,9 +22,9 @@ public class AmenitiesCalculator {
 
     // Define weights for each category
     final static double shopCategoryWeight = 0.3;
-    final static double amenityCategoryWeight = 0.5;
-    final static double tourismCategoryWeight = 0.2;
-    final static double accessibilityCategoryWeight = 1;
+    final static double amenityCategoryWeight = 0.4;
+    final static double tourismCategoryWeight = 0.1;
+    final static double accessibilityCategoryWeight = 0.2;
 
 
     // Decay constants for different categories
@@ -279,7 +279,7 @@ public class AmenitiesCalculator {
             }
         } else {
             for (AddressScore score : scores) {
-                double normalizedAmenityScore = (score.getAmenityScore() - minAmenityScore) / (maxAmenityScore - minAmenityScore);
+                double normalizedAmenityScore = 100 * (score.getAmenityScore() - minAmenityScore) / (maxAmenityScore - minAmenityScore);
                 score.setAmenityScore(normalizedAmenityScore);
             }
         }
@@ -295,7 +295,7 @@ public class AmenitiesCalculator {
             }
         } else {
             for (AddressScore score : scores) {
-                double normalizedShopScore = (score.getShopScore() - minShopScore) / (maxShopScore - minShopScore);
+                double normalizedShopScore = 100 * (score.getShopScore() - minShopScore) / (maxShopScore - minShopScore);
                 score.setShopScore(normalizedShopScore);
             }
         }
@@ -311,7 +311,7 @@ public class AmenitiesCalculator {
             }
         } else {
             for (AddressScore score : scores) {
-                double normalizedTourismScore = (score.getTourismScore() - minTourismScore) / (maxTourismScore - minTourismScore);
+                double normalizedTourismScore = 100 * (score.getTourismScore() - minTourismScore) / (maxTourismScore - minTourismScore);
                 score.setTourismScore(normalizedTourismScore);
             }
         }
@@ -327,7 +327,7 @@ public class AmenitiesCalculator {
             }
         } else {
             for (AddressScore score : scores) {
-                double normalizedAccessibilityScore = (score.getAccessibilityScore() - minAccessibilityScore) / (maxAccessibilityScore - minAccessibilityScore);
+                double normalizedAccessibilityScore = 100 * (score.getAccessibilityScore() - minAccessibilityScore) / (maxAccessibilityScore - minAccessibilityScore);
                 score.setAccessibilityScore(normalizedAccessibilityScore);
             }
         }
