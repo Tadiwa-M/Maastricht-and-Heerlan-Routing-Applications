@@ -49,6 +49,7 @@ public class AmenitiesCalculator {
         List<AddressScore> scores = new ArrayList<>();
         calculateAllScores(scores);
         printBestAndWorst(scores);
+        System.out.println(getAddressScore("6221CR", scores));
     }
 
     private static double shopScores(PostAddress postAddress, List<Shop> shops) {
