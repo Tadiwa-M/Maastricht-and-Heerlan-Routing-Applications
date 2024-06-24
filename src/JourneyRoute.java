@@ -1,5 +1,3 @@
-package dbTables;
-
 public class JourneyRoute {
     public String startStopId;
     public String endStopId;

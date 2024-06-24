@@ -11,11 +11,6 @@ import java.util.concurrent.*;
 import static dbTables.DirectRoute.getDuration;
 
 public class dbManager {
-
-    public static void main(String[] args) {
-
-    }
-
     static Connection getSqlConnection() {
         String USERNAME = dbCredentials.USERNAME;
         String PORT = dbCredentials.PORT;
@@ -147,26 +142,6 @@ public class dbManager {
         }
         return null;
     }
-
-//    public static Route findBestTransferRouteWithoutStartTime(List<BusStop> startIds, List<BusStop> endIds) {
-//        Route bestTransferRoute = null;
-//
-//        for (BusStop startId : startIds) {
-//            for (BusStop endId : endIds) {
-//                Route currentRoute = findFastestTransferRouteWithoutStartTime(startId.getStopId(), endId.getStopId());
-//                if (currentRoute != null) {
-//                    if (bestTransferRoute == null ||
-//                            getDuration(currentRoute.getDepartureTime(), currentRoute.getArrivalTime()).toMinutes() <
-//                                    getDuration(bestTransferRoute.getDepartureTime(), bestTransferRoute.getArrivalTime()).toMinutes()) {
-//                        bestTransferRoute = currentRoute;
-//                    }
-//                }
-//            }
-//        }
-//
-//        // Return the fastest route
-//        return bestTransferRoute;
-//    }
 
     public static Route findShortestDirectRoute(List<Stop> startStops, List<Stop> endStops, String startTime) {
         Connection conn = getSqlConnection();

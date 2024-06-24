@@ -1,9 +1,5 @@
 package dbTables;
 
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
-
 public class Route {
     private String tripId;
     private String routeId;
@@ -84,20 +80,10 @@ public class Route {
         return toRoute;
     }
 
-    public long getTotalTravelTime() {
-        if (fromRoute == null || toRoute == null) {
-            return 0; // No transfer, not applicable
-        }
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
-        LocalTime fromDeparture = LocalTime.parse(fromRoute.getDepartureTime(), formatter);
-        LocalTime toArrival = LocalTime.parse(toRoute.getArrivalTime(), formatter);
-        return fromDeparture.until(toArrival, ChronoUnit.MINUTES);
-    }
-
     @Override
     public String toString() {
         if (fromRoute != null && toRoute != null) {
-            return "Route with transfer: \n  From: " + fromRoute.toString() + "\n  To: " + toRoute.toString();
+            return "Route with transfer: \n  From: " + fromRoute + "\n  To: " + toRoute;
         }
         return "Direct Route{" +
                 "tripId='" + tripId + '\'' +

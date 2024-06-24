@@ -181,14 +181,6 @@ public class GTFSLoader {
 
     public static List<BusStop> getBusStopsForTrip(String tripId, String startStopId, String endStopId) {
         List<BusStop> stops = new ArrayList<>();
-        // String stopId,
-        //    int stopSequence,
-        //    String stopName,
-        //    String arrivalTime,
-        //    String departureTime,
-        //    float stopLat,
-        //    float stopLon,
-        //    String routeName
         String sql = "SELECT s.stop_name, st.departure_time, st.arrival_time, s.stop_lat, s.stop_lon, s.stop_id, st.stop_sequence  " +
                 "FROM stop_times st " +
                 "JOIN stops s ON st.stop_id = s.stop_id " +

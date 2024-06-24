@@ -11,8 +11,8 @@ public class LineDistanceCalculator {
     /***
      * A method for finding the birds flight distance between two points
      *
-     * @param start
-     * @param end
+     * @param start has the latitude and longitude of the starting point
+     * @param end has the latitude and longitude of the ending point
      * @return The kilometers between those points
      */
     public static double basicDistances(PostAddress start, PostAddress end) {

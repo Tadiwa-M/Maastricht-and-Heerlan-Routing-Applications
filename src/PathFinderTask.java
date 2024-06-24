@@ -1,4 +1,4 @@
-package dbTables;
+import dbTables.*;
 
 import java.util.*;
 import java.util.concurrent.Callable;

@@ -32,9 +32,9 @@ public class AmenitiesCalculator {
         double weightlessScore = 0;
 
         for (Shop shop : shops) {
-            double gaussScore = gaussianScore(LineDistanceCalculator.basicDistances(postAddress, new PostAddress(shop.getLat(), shop.getLon())));
+            double gaussScore = gaussianScore(LineDistanceCalculator.basicDistances(postAddress, new PostAddress(shop.lat(), shop.lon())));
             weightlessScore += gaussScore;
-            if (shop.getType().equals("mall") || shop.getType().equals("supermarket")) {
+            if (shop.type().equals("mall") || shop.type().equals("supermarket")) {
                 score += gaussScore * essentialShopWeight;
             } else {
                 score += gaussScore * nonEssentialShopWeight;
@@ -54,10 +54,10 @@ public class AmenitiesCalculator {
         double weightlessScore = 0;
 
         for (Amenity amenity : amenities) {
-            double gaussScore = gaussianScore(LineDistanceCalculator.basicDistances(postAddress, new PostAddress(amenity.getLat(), amenity.getLon())));
+            double gaussScore = gaussianScore(LineDistanceCalculator.basicDistances(postAddress, new PostAddress(amenity.lat(), amenity.lon())));
             weightlessScore += gaussScore;
-            if (amenity.getType().equals("bank") || amenity.getType().equals("college") || amenity.getType().equals("doctors") || amenity.getType().equals("hospital")
-                    || amenity.getType().equals("pharmacy") || amenity.getType().equals("school") || amenity.getType().equals("university")) {
+            if (amenity.type().equals("bank") || amenity.type().equals("college") || amenity.type().equals("doctors") || amenity.type().equals("hospital")
+                    || amenity.type().equals("pharmacy") || amenity.type().equals("school") || amenity.type().equals("university")) {
                 score += gaussScore * essentialAmenityWeight;
             } else {
                 score += gaussScore * nonEssentialAmenityWeight;

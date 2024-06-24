@@ -1,4 +1,4 @@
-package dbTables;
+import dbTables.AStarWithTime;
 
 import java.util.List;
 

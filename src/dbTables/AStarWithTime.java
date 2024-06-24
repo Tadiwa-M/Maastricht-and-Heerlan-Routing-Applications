@@ -3,8 +3,8 @@ import java.util.*;
 
 public class AStarWithTime {
     private static final int TRANSFER_PENALTY = 300; // 5 minutes penalty for transfer
-    private static final double AVERAGE_SPEED_KM_PER_HOUR = 20.0; // Example average speed
-    private static final double MAX_TRAVEL_TIME_SECONDS = 2 * 60 * 60; // Maximum travel time of 2 hours
+    private static final double AVERAGE_SPEED_KM_PER_HOUR = 20.0; //  Lower bound for Bus average speed
+    private static final double MAX_TRAVEL_TIME_SECONDS = 2 * 60 * 60; // Maximum travel time of 2 hours converted to seconds
     private static final double EARTH_RADIUS_KM = 6378; // Earth radius in kilometers
 
     public static List<PathNode> findShortestPath(BusGraph graph, List<String> startStopIds, String endStopId, Map<String, String> startTimes, Map<String, Stop> addressMap, Map<String, Map<String, Double>> travelTimeMap) {
@@ -57,9 +57,9 @@ public class AStarWithTime {
                     double tentativeGScore = gScore.getOrDefault(current.stopId, Double.POSITIVE_INFINITY) + 60; // Assume 60 seconds penalty for walking
                     if (tentativeGScore < gScore.getOrDefault(neighbor.toStopId, Double.POSITIVE_INFINITY)) {
                         if (arrivalTimes.containsKey(neighbor.toStopId) && arrivalTimes.get(neighbor.toStopId).compareTo(neighborArrivalTime) < 0) {
-//                            System.out.println("already have a faster arrival time (earlier)"); // Skip if we already have a faster arrival time (earlier)
-                            continue;
+                            continue;   // Skip if we already have a faster arrival time (earlier)
                         }
+
                         cameFrom.put(neighbor.toStopId, new PathNode(current.stopId, null, neighborDepartureTime, neighborArrivalTime, null));
                         gScore.put(neighbor.toStopId, tentativeGScore);
                         fScore.put(neighbor.toStopId, tentativeGScore + heuristic(neighbor.toStopId, endStopId, addressMap, travelTimeMap));
