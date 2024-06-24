@@ -19,14 +19,12 @@ public class AmenitiesCalculator {
     final static double highTourismWeight = 0.5;
     final static double moderateTourismWeight = 0.3;
     final static double lowTourismWeight = 0.2;
-    // Accessibility Weight Constants
-    final static double proximityWeight = 0.5;
-
 
     // Define weights for each category
     final static double shopCategoryWeight = 0.3;
     final static double amenityCategoryWeight = 0.5;
     final static double tourismCategoryWeight = 0.2;
+    final static double accessibilityCategoryWeight = 1;
 
 
     // Decay constants for different categories
@@ -55,12 +53,10 @@ public class AmenitiesCalculator {
 
     private static double shopScores(PostAddress postAddress, List<Shop> shops) {
         double score = 0;
-        double weightlessScore = 0;
 
         for (Shop shop : shops) {
             double decayConstant = getShopDecayConstant(shop.type());
             double decayScore = exponentialDecayScore(LineDistanceCalculator.basicDistances(postAddress, new PostAddress(shop.lat(), shop.lon())), decayConstant);
-            weightlessScore += decayScore;
             if (isEssentialShop(shop.type())) {
                 score += decayScore * essentialShopWeight;
             } else if (isSpecialtyShop(shop.type())) {
@@ -69,29 +65,15 @@ public class AmenitiesCalculator {
                 score += decayScore * miscShopWeight;
             }
         }
-        score = score / weightlessScore;
         return score;
     }
 
-    public static double calculateProximityScore(PostAddress postAddress, List<Stop> busStops) {
-        double aggregateScore = 0;
-        for (Stop busStop : busStops) {
-            double distance = LineDistanceCalculator.basicDistances(postAddress, new PostAddress(busStop.getStopLat(), busStop.getStopLon()));
-            aggregateScore += 1 / (1 + distance); // Using a decay function for proximity score
-        }
-        return aggregateScore;
-    }
-
-
-
     private static double amenityScores(PostAddress postAddress, List<Amenity> amenities) {
         double score = 0;
-        double weightlessScore = 0;
 
         for (Amenity amenity : amenities) {
             double decayConstant = getAmenityDecayConstant(amenity.type());
             double decayScore = exponentialDecayScore(LineDistanceCalculator.basicDistances(postAddress, new PostAddress(amenity.lat(), amenity.lon())), decayConstant);
-            weightlessScore += decayScore;
             if (isEssentialAmenity(amenity.type())) {
                 score += decayScore * essentialAmenityWeight;
             } else if (isCommunityAmenity(amenity.type())) {
@@ -100,17 +82,14 @@ public class AmenitiesCalculator {
                 score += decayScore * recAmenityWeight;
             }
         }
-        score = score / weightlessScore;
         return score;
     }
 
     private static double tourismScores(PostAddress postAddress, List<Tourism> attractions) {
         double score = 0;
-        double weightlessScore = 0;
         for (Tourism attraction : attractions) {
             double decayConstant = getTourismDecayConstant(attraction.getType());
             double decayScore = exponentialDecayScore(LineDistanceCalculator.basicDistances(postAddress, new PostAddress(attraction.getLat(), attraction.getLon())), decayConstant);
-            weightlessScore += decayScore;
             if (isHighTourism(attraction.getType())) {
                 score += decayScore * highTourismWeight;
             } else if (isModerateTourism(attraction.getType())) {
@@ -119,16 +98,18 @@ public class AmenitiesCalculator {
                 score += decayScore * lowTourismWeight;
             }
         }
-        score = score / weightlessScore;
         return score;
     }
 
     public static double calculateAccessibilityScore(PostAddress postAddress, List<Stop> busStops) {
-        double proximityScore = calculateProximityScore(postAddress, busStops);
-        return proximityScore * proximityWeight;
+        double score = 0;
+
+        for (Stop busStop : busStops) {
+            double distance = LineDistanceCalculator.basicDistances(postAddress, new PostAddress(busStop.getStopLat(), busStop.getStopLon()));
+            score += 1 / (1 + distance); // Using a decay function for proximity score
+        }
+        return score;
     }
-
-
 
     public static double exponentialDecayScore(double distance, double decayConstant) {
         return Math.exp(-decayConstant * distance); // Convert distance to kilometers
@@ -225,9 +206,7 @@ public class AmenitiesCalculator {
             double tourismScore = tourismScores(address, attractions);
             double accessibilityScore = calculateAccessibilityScore(address, busStops);
 
-            double totalScore = (shopScore * shopCategoryWeight) + (amenityScore * amenityCategoryWeight) + (tourismScore * tourismCategoryWeight) + (accessibilityScore * 0.5);
-
-            scores.add(new AddressScore(address, totalScore, amenityScore, shopScore, tourismScore, accessibilityScore));
+            scores.add(new AddressScore(address, amenityScore, shopScore, tourismScore, accessibilityScore));
         }
 
         normalizeScores(scores);
@@ -248,7 +227,7 @@ public class AmenitiesCalculator {
 
     public static AddressScore getAddressScore(String postalCode, List<AddressScore> scores) {
         for (AddressScore score : scores) {
-            if (score.getAddress().getPostalCode().equals(postalCode)) {
+            if (score.getPostalCode().equals(postalCode)) {
                 return score;
             }
         }
@@ -261,6 +240,13 @@ public class AmenitiesCalculator {
             return;
         }
 
+        normalizeAmenityScores(scores);
+        normalizeShopScores(scores);
+        normalizeTourismScores(scores);
+        normalizeAccessibilityScores(scores);
+
+        setTotalScores(scores);
+
         double maxScore = scores.stream().mapToDouble(AddressScore::getScore).max().orElse(0);
         double minScore = scores.stream().mapToDouble(AddressScore::getScore).min().orElse(0);
 
@@ -272,6 +258,77 @@ public class AmenitiesCalculator {
             for (AddressScore score : scores) {
                 double normalizedScore = 100 * (score.getScore() - minScore) / (maxScore - minScore);
                 score.setScore(normalizedScore);
+            }
+        }
+    }
+
+    private static void setTotalScores(List<AddressScore> scores) {
+        for (AddressScore score : scores) {
+            double totalScore = (score.getAmenityScore() * amenityCategoryWeight) + (score.getShopScore() * shopCategoryWeight) + (score.getTourismScore() * tourismCategoryWeight) + (score.getAccessibilityScore() * accessibilityCategoryWeight);
+            score.setScore(totalScore);
+        }
+    }
+
+    private static void normalizeAmenityScores(List<AddressScore> scores) {
+        double maxAmenityScore = scores.stream().mapToDouble(AddressScore::getAmenityScore).max().orElse(0);
+        double minAmenityScore = scores.stream().mapToDouble(AddressScore::getAmenityScore).min().orElse(0);
+
+        if (maxAmenityScore == minAmenityScore) {
+            for (AddressScore score : scores) {
+                score.setAmenityScore(0);
+            }
+        } else {
+            for (AddressScore score : scores) {
+                double normalizedAmenityScore = (score.getAmenityScore() - minAmenityScore) / (maxAmenityScore - minAmenityScore);
+                score.setAmenityScore(normalizedAmenityScore);
+            }
+        }
+    }
+
+    private static void normalizeShopScores(List<AddressScore> scores) {
+        double maxShopScore = scores.stream().mapToDouble(AddressScore::getShopScore).max().orElse(0);
+        double minShopScore = scores.stream().mapToDouble(AddressScore::getShopScore).min().orElse(0);
+
+        if (maxShopScore == minShopScore) {
+            for (AddressScore score : scores) {
+                score.setShopScore(0);
+            }
+        } else {
+            for (AddressScore score : scores) {
+                double normalizedShopScore = (score.getShopScore() - minShopScore) / (maxShopScore - minShopScore);
+                score.setShopScore(normalizedShopScore);
+            }
+        }
+    }
+
+    private static void normalizeTourismScores(List<AddressScore> scores) {
+        double maxTourismScore = scores.stream().mapToDouble(AddressScore::getTourismScore).max().orElse(0);
+        double minTourismScore = scores.stream().mapToDouble(AddressScore::getTourismScore).min().orElse(0);
+
+        if (maxTourismScore == minTourismScore) {
+            for (AddressScore score : scores) {
+                score.setTourismScore(0);
+            }
+        } else {
+            for (AddressScore score : scores) {
+                double normalizedTourismScore = (score.getTourismScore() - minTourismScore) / (maxTourismScore - minTourismScore);
+                score.setTourismScore(normalizedTourismScore);
+            }
+        }
+    }
+
+    private static void normalizeAccessibilityScores(List<AddressScore> scores) {
+        double maxAccessibilityScore = scores.stream().mapToDouble(AddressScore::getAccessibilityScore).max().orElse(0);
+        double minAccessibilityScore = scores.stream().mapToDouble(AddressScore::getAccessibilityScore).min().orElse(0);
+
+        if (maxAccessibilityScore == minAccessibilityScore) {
+            for (AddressScore score : scores) {
+                score.setAccessibilityScore(0);
+            }
+        } else {
+            for (AddressScore score : scores) {
+                double normalizedAccessibilityScore = (score.getAccessibilityScore() - minAccessibilityScore) / (maxAccessibilityScore - minAccessibilityScore);
+                score.setAccessibilityScore(normalizedAccessibilityScore);
             }
         }
     }

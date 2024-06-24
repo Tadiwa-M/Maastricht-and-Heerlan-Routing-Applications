@@ -3,14 +3,13 @@ package dbTables;
 public class AddressScore {
     private final PostAddress address;
     private double score;
-    private final double amenityScore;
-    private final double shopScore;
-    private final double tourismScore;
-    private final double accessibilityScore;
+    private double amenityScore;
+    private double shopScore;
+    private double tourismScore;
+    private double accessibilityScore;
 
-    public AddressScore(PostAddress address, double score, double amenityScore, double shopScore, double tourismScore, double accessibilityScore) {
+    public AddressScore(PostAddress address, double amenityScore, double shopScore, double tourismScore, double accessibilityScore) {
         this.address = address;
-        this.score = score;
         this.amenityScore = amenityScore;
         this.shopScore = shopScore;
         this.tourismScore = tourismScore;
@@ -41,12 +40,28 @@ public class AddressScore {
         return tourismScore;
     }
 
+    public double getAccessibilityScore() {
+        return this.accessibilityScore;
+    }
+
     public void setScore(double score) {
         this.score = score;
     }
 
-    public double getAccessibilityScore() {
-        return this.accessibilityScore;
+    public void setAmenityScore(double amenityScore) {
+        this.amenityScore = amenityScore;
+    }
+
+    public void setShopScore(double shopScore) {
+        this.shopScore = shopScore;
+    }
+
+    public void setTourismScore(double tourismScore) {
+        this.tourismScore = tourismScore;
+    }
+
+    public void setAccessibilityScore(double accessibilityScore) {
+        this.accessibilityScore = accessibilityScore;
     }
 
     @Override

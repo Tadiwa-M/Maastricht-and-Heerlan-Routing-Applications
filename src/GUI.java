@@ -205,8 +205,7 @@ public class GUI extends JFrame {
                     // Calculate the scores
                     List<AddressScore> scores = new ArrayList<>();
                     AmenitiesCalculator.calculateAllScores(scores);
-
-                    AddressScore addressScore = scores.stream().filter(score -> score.getPostalCode().equals(postalCode)).findFirst().orElse(null);
+                    AddressScore addressScore = AmenitiesCalculator.getAddressScore(postAddress.getPostalCode(), scores);
 
                     assert addressScore != null;
 
