@@ -5,52 +5,52 @@ import static dbTables.dbManager.fetchAllAddresses;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class AmenitiesCalculator {
+    // Shop Weight Constants
     final static double essentialShopWeight = 0.5;
     final static double specialtyShopWeight = 0.3;
     final static double miscShopWeight = 0.2;
+    // Amenities Weight Constants
     final static double essentialAmenityWeight = 0.5;
     final static double communityAmenityWeight = 0.3;
     final static double recAmenityWeight = 0.2;
-    final static double highTourismWeight = 0.4;
+    // Tourism Weight Constants
+    final static double highTourismWeight = 0.5;
     final static double moderateTourismWeight = 0.3;
-    final static double lowTourismWeight = 0.3;
+    final static double lowTourismWeight = 0.2;
+    // Accessibility Weight Constants
+    final static double proximityWeight = 0.5;
+
 
     // Define weights for each category
     final static double shopCategoryWeight = 0.3;
     final static double amenityCategoryWeight = 0.5;
     final static double tourismCategoryWeight = 0.2;
 
+
     // Decay constants for different categories
+    // The higher the decay constant, the faster the score decreases with distance
+    // The decay constant is inversely proportional to the distance
+
+    // Shop decay constants
     final static double essentialShopDecay = 0.3;
     final static double specialtyShopDecay = 0.5;
     final static double miscShopDecay = 0.7;
+    // Amenity decay constants
     final static double essentialAmenityDecay = 0.3;
     final static double communityAmenityDecay = 0.5;
     final static double recAmenityDecay = 0.7;
+    // Tourism decay constants
     final static double highTourismDecay = 0.3;
     final static double moderateTourismDecay = 0.5;
     final static double lowTourismDecay = 0.7;
 
-    // Weights for different modes of transport
-    final static double busWeight = 0.4;
-    final static double walkWeight = 0.2;
-    final static double bikeWeight = 0.2;
-    final static double carWeight = 0.2;
 
     public static void main(String[] args) {
-        long startTime = System.nanoTime();
-        calculateAllScores();
-        long endTime = System.nanoTime();
-        long duration = endTime - startTime;
-        System.out.println("Execution time: " + duration / 1_000_000 + " ms");
-    }
-
-    public static double shopScores(PostAddress postAddress) {
-        List<Shop> shops = fetchShopsByCoords();
-        return shopScores(postAddress, shops);
+        List<AddressScore> scores = new ArrayList<>();
+        calculateAllScores(scores);
+        printBestAndWorst(scores);
     }
 
     private static double shopScores(PostAddress postAddress, List<Shop> shops) {
@@ -73,10 +73,16 @@ public class AmenitiesCalculator {
         return score;
     }
 
-    static double amenityScores(PostAddress postAddress) {
-        List<Amenity> amenities = fetchAmenitiesByCords();
-        return amenityScores(postAddress, amenities);
+    public static double calculateProximityScore(PostAddress postAddress, List<Stop> busStops) {
+        double aggregateScore = 0;
+        for (Stop busStop : busStops) {
+            double distance = LineDistanceCalculator.basicDistances(postAddress, new PostAddress(busStop.getStopLat(), busStop.getStopLon()));
+            aggregateScore += 1 / (1 + distance); // Using a decay function for proximity score
+        }
+        return aggregateScore;
     }
+
+
 
     private static double amenityScores(PostAddress postAddress, List<Amenity> amenities) {
         double score = 0;
@@ -98,11 +104,6 @@ public class AmenitiesCalculator {
         return score;
     }
 
-    public static double tourismScores(PostAddress postAddress) {
-        List<Tourism> attractions = fetchAttractionsByCoords();
-        return tourismScores(postAddress, attractions);
-    }
-
     private static double tourismScores(PostAddress postAddress, List<Tourism> attractions) {
         double score = 0;
         double weightlessScore = 0;
@@ -122,13 +123,15 @@ public class AmenitiesCalculator {
         return score;
     }
 
-    public static double calculateAccessibilityScore(double busTime, double walkTime, double bikeTime, double carTime) {
-        return 1 / (1 + busTime * busWeight + walkTime * walkWeight + bikeTime * bikeWeight + carTime * carWeight);
+    public static double calculateAccessibilityScore(PostAddress postAddress, List<Stop> busStops) {
+        double proximityScore = calculateProximityScore(postAddress, busStops);
+        return proximityScore * proximityWeight;
     }
 
 
+
     public static double exponentialDecayScore(double distance, double decayConstant) {
-        return Math.exp(-decayConstant * distance / 1000); // Convert distance to kilometers
+        return Math.exp(-decayConstant * distance); // Convert distance to kilometers
     }
 
     private static double getShopDecayConstant(String type) {
@@ -185,9 +188,7 @@ public class AmenitiesCalculator {
         return type.equals("hotel") || type.equals("hostel") || type.equals("guest_house") || type.equals("caravan_site") || type.equals("viewpoint") || type.equals("apartment");
     }
 
-    public static void calculateAllScores() {
-        long startTime = System.nanoTime();
-
+    public static void calculateAllScores(List<AddressScore> scores) {
         List<PostAddress> allAddresses = fetchAllAddresses();
         if (allAddresses == null || allAddresses.isEmpty()) {
             System.out.println("No addresses found");
@@ -212,20 +213,17 @@ public class AmenitiesCalculator {
             return;
         }
 
-        long endTime = System.nanoTime();
-        long duration = endTime - startTime;
-
-        System.out.println("Fetch time: " + duration / 1_000_000 + " ms");
-
-        List<AddressScore> scores = new ArrayList<>();
+        List<Stop> busStops = fetchBusStopsByCoords();
+        if (busStops == null || busStops.isEmpty()) {
+            System.out.println("No bus stops found");
+            return;
+        }
 
         for (PostAddress address : allAddresses) {
             double shopScore = shopScores(address, shops);
             double amenityScore = amenityScores(address, amenities);
             double tourismScore = tourismScores(address, attractions);
-
-//            double accessibilityScore = calculateAccessibilityScore(travelTimes.getBusTime(), travelTimes.getWalkTime(), travelTimes.getBikeTime(), travelTimes.getCarTime());
-            double accessibilityScore = 0; // Placeholder value
+            double accessibilityScore = calculateAccessibilityScore(address, busStops);
 
             double totalScore = (shopScore * shopCategoryWeight) + (amenityScore * amenityCategoryWeight) + (tourismScore * tourismCategoryWeight) + (accessibilityScore * 0.5);
 
@@ -234,19 +232,14 @@ public class AmenitiesCalculator {
 
         normalizeScores(scores);
         sortScores(scores);
+    }
 
+    public static void printBestAndWorst(List<AddressScore> scores) {
         System.out.println("Most desirable addresses:");
-        AddressScore score = scores.get(0);
-        System.out.println("Address: " + score.getAddress().getPostalCode() + ", " + score.getAddress() + ", " + score.getScore() + ", " + score.getAmenityScore() + ", " + score.getShopScore() + ", " + score.getTourismScore() + ", " + score.getAccessibilityScore());
+        System.out.println(scores.get(0));
 
         System.out.println("Least desirable addresses:");
-        score = scores.get(scores.size() - 1);
-        System.out.println("Address: " + score.getAddress().getPostalCode() + ", " + score.getAddress() + ", " + score.getScore() + ", " + score.getAmenityScore() + ", " + score.getShopScore() + ", " + score.getTourismScore() + ", " + score.getAccessibilityScore());
-
-        AddressScore addressScore = getAddressScore("6211LC", scores);
-        if (addressScore != null) {
-            System.out.println(addressScore);
-        }
+        System.out.println(scores.get(scores.size() - 1));
     }
 
     private static void sortScores(List<AddressScore> scores) {

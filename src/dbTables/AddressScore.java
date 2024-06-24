@@ -21,6 +21,10 @@ public class AddressScore {
         return address;
     }
 
+    public String getPostalCode() {
+        return address.getPostalCode();
+    }
+
     public double getScore() {
         return score;
     }
@@ -48,12 +52,12 @@ public class AddressScore {
     @Override
     public String toString() {
         return "AddressScore{" +
-                "address=" + address.getPostalCode() +
-                ", score=" + score +
-                ", amenityScore=" + amenityScore +
-                ", shopScore=" + shopScore +
-                ", tourismScore=" + tourismScore +
-                ", accessibilityScore=" + accessibilityScore +
+                "address=" + getPostalCode() +
+                ", score=" + getScore() +
+                ", amenityScore=" + getAmenityScore() +
+                ", shopScore=" + getShopScore() +
+                ", tourismScore=" + getTourismScore() +
+                ", accessibilityScore=" + getAccessibilityScore() +
                 '}';
     }
 }

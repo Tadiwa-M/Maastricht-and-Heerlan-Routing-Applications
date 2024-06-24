@@ -91,4 +91,35 @@ public class AmenityManager {
         }
         return nearbyShops;
     }
+
+    public static List<Stop> fetchBusStopsByCoords() {
+        Connection conn = getSqlConnection();
+        if (conn == null)
+            return null;
+
+        List<Stop> stops = new ArrayList<>();
+
+        String query = "SELECT * FROM stops ";
+
+        try {
+            PreparedStatement stmt = conn.prepareStatement(query);
+
+            ResultSet resultSet = stmt.executeQuery();
+            while (resultSet.next()) {
+                Stop stop = new Stop(
+                        resultSet.getString("stop_id"),
+                        resultSet.getString("stop_name"),
+                        resultSet.getDouble("stop_lat"),
+                        resultSet.getDouble("stop_lon")
+                );
+                stops.add(stop);
+            }
+            resultSet.close();
+            stmt.close();
+            conn.close();
+        } catch (SQLException e) {
+            System.err.println("Error: " + e.getMessage());
+        }
+        return stops;
+    }
 }

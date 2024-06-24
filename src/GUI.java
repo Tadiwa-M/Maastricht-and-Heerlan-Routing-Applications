@@ -202,16 +202,19 @@ public class GUI extends JFrame {
                 PostAddress postAddress = getAddressFromDataManager(postalCode);
                 if (postAddress != null) {
 
-                    double shopScore = AmenitiesCalculator.shopScores(postAddress);
-                    double amenityScore = AmenitiesCalculator.amenityScores(postAddress);
-                    double tourismScore = AmenitiesCalculator.tourismScores(postAddress);
-                    double totalScore = shopScore + amenityScore + tourismScore;
+                    // Calculate the scores
+                    List<AddressScore> scores = new ArrayList<>();
+                    AmenitiesCalculator.calculateAllScores(scores);
+
+                    AddressScore addressScore = scores.stream().filter(score -> score.getPostalCode().equals(postalCode)).findFirst().orElse(null);
+
+                    assert addressScore != null;
 
                     // Close current frame
                     frame.dispose();
 
                     // Display the scores in a new frame
-                    displayScores(postalCode, shopScore, amenityScore, tourismScore, totalScore);
+                    displayScores(postalCode, addressScore.getShopScore(), addressScore.getAmenityScore(), addressScore.getTourismScore(), addressScore.getScore());
                 } else {
                     JOptionPane.showMessageDialog(frame, "Invalid Postal Code", "Error", JOptionPane.ERROR_MESSAGE);
                 }
