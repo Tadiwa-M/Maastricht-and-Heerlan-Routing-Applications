@@ -27,7 +27,7 @@ public class GraphHopperUtil {
         graphHopper.importOrLoad();
     }
 
-    public QueryResponse calculateRoute(String sourcePostalCode, String destinationPostalCode, String vehicle) throws Exception {
+    public QueryResponse calculateRoute(String sourcePostalCode, String destinationPostalCode, String vehicle) {
         PostAddress source = AddressFinder.getAddress(sourcePostalCode);
         PostAddress destination = AddressFinder.getAddress(destinationPostalCode);
 
