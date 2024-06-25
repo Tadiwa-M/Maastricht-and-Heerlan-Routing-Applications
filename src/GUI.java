@@ -213,7 +213,7 @@ public class GUI extends JFrame {
     //Opens this dialog when the Accessibility Score button gets pressed, gives option to find the score of a single postal code or all by leaving the input field empty, also choice to open the heat map that is created live
     private  void accessibilityScoreDialog() {
         JFrame frame = new JFrame("Accessibility Score Calculator");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.setSize(300, 150);
         frame.setLayout(new FlowLayout());
 
