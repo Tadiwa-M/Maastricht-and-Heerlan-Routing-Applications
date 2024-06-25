@@ -12,7 +12,7 @@ public class GraphHopperTest {
             //2 minutes 11 seconds 1310.7785604229407 meters
             assert graphHopperUtil.calculateRoute("6229EN", "6229HD", "car").distance() == 1310.7785604229407;
         } catch (Exception e) {
-            e.printStackTrace();
+            assert false;
         }
     }
 }
