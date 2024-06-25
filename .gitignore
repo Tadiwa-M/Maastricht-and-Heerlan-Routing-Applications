@@ -40,3 +40,6 @@ sql/*
 #ignore dbTables.dbCredentials
 /src/dbTables/dbCredentials.java
 .vscode/*
+
+#ignore .idea
+.idea/*
