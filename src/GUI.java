@@ -28,7 +28,7 @@ public class GUI extends JFrame {
     public static final double maxLat = 50.812057;
 
 
-    private BufferedImage mapImageWithPoints;
+
     private BufferedImage clearMapImage;
 
 
@@ -135,7 +135,7 @@ public class GUI extends JFrame {
                 boolean accept = buttonClickSharedOperations(postCodeFromField, postCodeToField, vehicleBox, true,accessibilityButton);
                 if (!accept) return;
                 drawPoints(getAddressFromDataManager(FromCode), getAddressFromDataManager(ToCode));
-                mapImageWithPoints = drawPointsOnMap(mapImage, fromPoint, toPoint);
+                
                 showStraightLineDistance();
             }
         });
@@ -181,68 +181,128 @@ public class GUI extends JFrame {
         frame.setSize(300, 150);
         frame.setLayout(new FlowLayout());
 
-        // Create and add the label
+        
         JLabel postalCodeLabel = new JLabel("Postal Code:");
         frame.add(postalCodeLabel);
 
-        // Create and add the text field
+        
         JTextField postalCodeTextField = new JTextField(20);
         frame.add(postalCodeTextField);
 
-        // Create and add the submit button
+        
         JButton submitButton = new JButton("Submit");
         frame.add(submitButton);
 
-        // Create and add the HeatMap button
+        
         JButton heatMapButton = new JButton("HeatMap");
         frame.add(heatMapButton);
 
-        // List to store the calculated scores
+        
         List<AddressScore> scores = new ArrayList<>();
 
-        // Add action listener to the submit button
+        
         submitButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String postalCode = postalCodeTextField.getText();
                 PostAddress postAddress = getAddressFromDataManager(postalCode);
                 if (postAddress != null) {
-                    // Calculate the scores
+                    
                     AmenitiesCalculator.calculateAllScores(scores);
                     AddressScore addressScore = AmenitiesCalculator.getAddressScore(postAddress.getPostalCode(), scores);
 
                     if (addressScore != null) {
-                        // Close current frame
+                        
                         frame.dispose();
 
-                        // Display the scores in a new frame
+                        
                         displayScores(postalCode, addressScore.getShopScore(), addressScore.getAmenityScore(), addressScore.getTourismScore(), addressScore.getScore());
                     } else {
                         JOptionPane.showMessageDialog(frame, "Score not found for the given postal code", "Error", JOptionPane.ERROR_MESSAGE);
                     }
                 } else {
-                    JOptionPane.showMessageDialog(frame, "Invalid Postal Code", "Error", JOptionPane.ERROR_MESSAGE);
+                    AmenitiesCalculator.calculateAllScores(scores);
+                    displayAllScores(scores);
                 }
             }
         });
 
-        // Add action listener to the HeatMap button
+        
         heatMapButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Ensure the scores are calculated before creating the heat map
+                
                 AmenitiesCalculator.calculateAllScores(scores);
                 Graphics2D g = (Graphics2D) mapImage.getGraphics();
                 createHeatMap(scores, g);
-                repaint(); // Trigger the repaint
+                repaint(); 
 
             }
         });
 
-        // Display the frame
+        
         frame.setVisible(true);
     }
 
+    private void displayAllScores(List<AddressScore> scores) {
+        DecimalFormat df = new DecimalFormat("#.###");
+
+        JFrame resultFrame = new JFrame("All Accessibility Scores");
+        resultFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        resultFrame.setSize(800, 400);
+        resultFrame.setLayout(new GridBagLayout());
+        resultFrame.setResizable(true);
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        resultFrame.add(new JLabel("Postal Code"), gbc);
+
+        gbc.gridx = 1;
+        resultFrame.add(new JLabel("Shop Score"), gbc);
+
+        gbc.gridx = 2;
+        resultFrame.add(new JLabel("Amenity Score"), gbc);
+
+        gbc.gridx = 3;
+        resultFrame.add(new JLabel("Tourism Score"), gbc);
+
+        gbc.gridx = 4;
+        resultFrame.add(new JLabel("Total Score"), gbc);
+
+        
+        for (int i = 0; i < scores.size(); i++) {
+            AddressScore addressScore = scores.get(i);
+
+            gbc.gridy = i + 1;
+            gbc.gridx = 0;
+            resultFrame.add(new JLabel(addressScore.getAddress().getPostalCode()), gbc);
+
+            gbc.gridx = 1;
+            resultFrame.add(new JLabel(df.format(addressScore.getShopScore())), gbc);
+
+            gbc.gridx = 2;
+            resultFrame.add(new JLabel(df.format(addressScore.getAmenityScore())), gbc);
+
+            gbc.gridx = 3;
+            resultFrame.add(new JLabel(df.format(addressScore.getTourismScore())), gbc);
+
+            gbc.gridx = 4;
+            resultFrame.add(new JLabel(df.format(addressScore.getScore())), gbc);
+        }
+
+        
+        JScrollPane scrollPane = new JScrollPane(resultFrame.getContentPane());
+        JFrame scrollableFrame = new JFrame("All Accessibility Scores");
+        scrollableFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        scrollableFrame.setSize(800, 400);
+        scrollableFrame.add(scrollPane);
+        scrollableFrame.setVisible(true);
+    }
 
     public void createHeatMap(List<AddressScore> scores, Graphics2D g) {
         DrawBaseImage(g);
@@ -255,16 +315,16 @@ public class GUI extends JFrame {
             double lat = addressScore.getAddress().getLat();
             double score = addressScore.getScore();
 
-            // Convert score to color
+            
             Color color = getColorForScore(score);
 
-            // Get the coordinates on the map
+            
             Point point = findPostCodeCoordinate(lon, lat);
 
             if (point != null) {
-                // Set color and draw the point
+                
                 g.setColor(color);
-                g.fillOval(point.x - 5, point.y - 5, 10, 10); // Adjust size as needed
+                g.fillOval(point.x - 5, point.y - 5, 10, 10); 
             } else {
                 System.err.println("Invalid coordinates for lon: " + lon + ", lat: " + lat);
             }
@@ -273,8 +333,8 @@ public class GUI extends JFrame {
 
 
     private static Color getColorForScore(double score) {
-        // Assuming score is between 0 and 100, map it to a color
-        // Blue (low score) to Red (high score)
+        
+        
         int red = (int) (255 * (score / 100));
         int blue = 255 - red;
         return new Color(red, 0, blue);
@@ -294,7 +354,7 @@ public class GUI extends JFrame {
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // Add labels
+        
         gbc.gridx = 0;
         gbc.gridy = 0;
         resultFrame.add(new JLabel("Postal Code:"), gbc);
@@ -311,7 +371,7 @@ public class GUI extends JFrame {
         gbc.gridx = 4;
         resultFrame.add(new JLabel("Total Score:"), gbc);
 
-        // Add values
+        
         gbc.gridy = 1;
         gbc.gridx = 0;
         resultFrame.add(new JLabel(postalCode), gbc);
@@ -328,7 +388,7 @@ public class GUI extends JFrame {
         gbc.gridx = 4;
         resultFrame.add(new JLabel(df.format(totalScore)), gbc);
 
-        // Display the result frame
+        
         resultFrame.setVisible(true);
     }
 
@@ -513,9 +573,9 @@ public class GUI extends JFrame {
         DrawBaseImage(g);
         g.setStroke(new BasicStroke(3));
         int circleSize = 6;
-        int textPadding = 4; // Padding between the text and the point
-        int offsetX = 20; // Offset to move text to the right
-        Font font = new Font("Arial", Font.PLAIN, 12); // Font for the stop names
+        int textPadding = 4; 
+        int offsetX = 20; 
+        Font font = new Font("Arial", Font.PLAIN, 12); 
         g.setFont(font);
         FontMetrics metrics = g.getFontMetrics(font);
 
@@ -528,7 +588,7 @@ public class GUI extends JFrame {
             Point startPoint = findPostCodeCoordinate(startStop.stopLon(), startStop.stopLat());
             Point endPoint = findPostCodeCoordinate(endStop.stopLon(), endStop.stopLat());
 
-            // Change the line color on transfer
+            
             if (transferIndices.contains(i)) {
                 colorIndex = (colorIndex + 1) % colors.length;
             }
@@ -537,7 +597,7 @@ public class GUI extends JFrame {
             g.drawLine(startPoint.x, startPoint.y, endPoint.x, endPoint.y);
         }
 
-        // Draw stop points
+        
         for (int i = 0; i < totalStops.size(); i++) {
             Stop stop = totalStops.get(i);
             Point point = findPostCodeCoordinate(stop.stopLon(), stop.stopLat());
@@ -551,37 +611,37 @@ public class GUI extends JFrame {
             }
         }
 
-        // Draw stop names with background and conditional coloring
+        
         for (int i = 0; i < totalStops.size(); i++) {
             Stop stop = totalStops.get(i);
             Point point = findPostCodeCoordinate(stop.stopLon(), stop.stopLat());
             String stopName = stop.stopName().replace("Maastricht, ", "");
 
-            // Calculate text width and height
+            
             int textWidth = metrics.stringWidth(stopName);
             int textHeight = metrics.getHeight();
 
-            // Calculate the position of the text
+            
             int textX = point.x - textWidth / 2 + offsetX;
             int textY = point.y - circleSize / 2 - textPadding;
 
             if (i % 2 == 0 || i == totalStops.size() - 1) {
-                // Draw the background rectangle for the text
+                
                 g.setColor(Color.WHITE);
                 g.fillRect(textX - textPadding, textY - textHeight + textPadding / 2, textWidth + 2 * textPadding, textHeight);
 
-                // Draw the border rectangle for the text
+                
                 g.setColor(Color.BLACK);
                 g.drawRect(textX - textPadding, textY - textHeight + textPadding / 2, textWidth + 2 * textPadding, textHeight);
 
-                // Set text color conditionally
+                
                 if (i == 0 || i == totalStops.size() - 1 || transferIndices.contains(i)) {
                     g.setColor(Color.RED);
                 } else {
                     g.setColor(Color.BLACK);
                 }
 
-                // Draw the stop name text
+                
                 g.drawString(stopName, textX, textY);
             }
         }
@@ -654,8 +714,8 @@ public class GUI extends JFrame {
 
         g.setStroke(new BasicStroke(3));
         int circleSize = 6;
-        int textPadding = 4; // Padding between the text and the point
-        Font font = new Font("Arial", Font.PLAIN, 12); // Font for the stop names
+        int textPadding = 4; 
+        Font font = new Font("Arial", Font.PLAIN, 12); 
         g.setFont(font);
         FontMetrics metrics = g.getFontMetrics(font);
 
@@ -669,7 +729,7 @@ public class GUI extends JFrame {
             g.setColor(Color.BLACK);
             g.fillOval(startPoint.x - circleSize / 2, startPoint.y - circleSize / 2, circleSize, circleSize);
 
-            // Draw text for every other stop
+            
             if (i % 2 == 0) {
                 String stopName = route.getBusStops().get(i).getStopName().replaceFirst("^Maastricht, ", "");
                 int textWidth = metrics.stringWidth(stopName);
@@ -677,15 +737,15 @@ public class GUI extends JFrame {
                 int textX = startPoint.x - textWidth / 2 + 40;
                 int textY = startPoint.y - circleSize / 2 - textPadding;
 
-                // Draw background rectangle for text
+                
                 g.setColor(Color.WHITE);
                 g.fillRect(textX - textPadding, textY - textHeight + textPadding / 2, textWidth + 2 * textPadding, textHeight);
 
-                // Draw border rectangle for text
+                
                 g.setColor(Color.BLACK);
                 g.drawRect(textX - textPadding, textY - textHeight + textPadding / 2, textWidth + 2 * textPadding, textHeight);
-                g.setColor(Color.BLACK); // Set text color to black
-                // Draw stop name text
+                g.setColor(Color.BLACK); 
+                
                 if (i == 0){
                     g.setColor(Color.RED);
                 }
@@ -694,7 +754,7 @@ public class GUI extends JFrame {
             }
         }
 
-        // Draw the point and name for the last bus stop, removing the "Maastricht, " prefix
+        
         Point lastPoint = findPostCodeCoordinate(route.getBusStops().get(route.getBusStops().size() - 1).getStopLon(), route.getBusStops().get(route.getBusStops().size() - 1).getStopLat());
         g.fillOval(lastPoint.x - circleSize/2, lastPoint.y - circleSize/2, circleSize, circleSize);
         String lastStopName = route.getBusStops().get(route.getBusStops().size() - 1).getStopName().replaceFirst("^Maastricht, ", "");
@@ -703,15 +763,15 @@ public class GUI extends JFrame {
         int lastTextX = lastPoint.x - lastTextWidth / 2 + 40;
         int lastTextY = lastPoint.y - circleSize / 2 - textPadding;
 
-        // Draw background rectangle for last stop name
+        
         g.setColor(Color.WHITE);
         g.fillRect(lastTextX - textPadding, lastTextY - lastTextHeight + textPadding / 2, lastTextWidth + 2 * textPadding, lastTextHeight);
 
-        // Draw border rectangle for last stop name
+        
         g.setColor(Color.BLACK);
         g.drawRect(lastTextX - textPadding, lastTextY - lastTextHeight + textPadding / 2, lastTextWidth + 2 * textPadding, lastTextHeight);
 
-        // Draw stop name text for last stop
+        
         g.setColor(Color.RED);
         g.drawString(lastStopName, lastTextX, lastTextY);
     }
