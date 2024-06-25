@@ -110,12 +110,6 @@ public class GUI extends JFrame {
         setupActionListeners();
     }
 
-
-
-
-
-
-
     //creates the map Image
     private JPanel createMapPanel() {
         JPanel mapPanel = new JPanel() {
@@ -147,11 +141,10 @@ public class GUI extends JFrame {
         g.fillOval(toPoint.x - 5, toPoint.y - 5, 10, 10);
     }
 
-    private double getDistance(){
+    private double getDistance() {
         DecimalFormat df = new DecimalFormat();
         df.setMaximumFractionDigits(2);
-        double distance = LineDistanceCalculator.basicDistances(getAddressFromDataManager(FromCode),getAddressFromDataManager(ToCode));
-        return distance;
+        return LineDistanceCalculator.basicDistances(getAddressFromDataManager(FromCode),getAddressFromDataManager(ToCode));
     }
 
     //sets up action Listeners for the buttons in the main frame
@@ -973,11 +966,6 @@ public class GUI extends JFrame {
 
 
 
-
-
-
-
-
     //Controls the Input, which is the same operation for all buttons since we care about validity
     private boolean buttonClickSharedOperations(JFormattedTextField postCodeFromField, JFormattedTextField postCodeToField,boolean careForVehicle){
         DrawBaseImage(getMapGraphics());
@@ -993,8 +981,6 @@ public class GUI extends JFrame {
         if (careForVehicle && SelectedVehicle == null){
             vehicleFlag = false;
             JOptionPane.showMessageDialog(null, "Foreign vehicle or none selected. \nPlease select another and try again");
-
-
         }
         accept = accept && vehicleFlag;
         if (accept){
@@ -1034,7 +1020,8 @@ public class GUI extends JFrame {
 
     private void runPathFindingAlgorithm(PostAddress from, PostAddress to){
         GraphHopperUtil graphHopperUtil = new GraphHopperUtil();
-        QueryResponse queryResponse = graphHopperUtil.calculateRoute(from.getPostalCode(), to.getPostalCode(), currentVehicle.toString().toLowerCase());
+        QueryResponse queryResponse = graphHopperUtil.calculateRoute(from.getPostalCode(), to.getPostalCode(), SelectedVehicle.toLowerCase());
+        System.out.println(SelectedVehicle.toLowerCase());
 
         ArrayList<PostAddress> shortestPath = queryResponse.path();
         drawShortestPathOnMap(shortestPath);
