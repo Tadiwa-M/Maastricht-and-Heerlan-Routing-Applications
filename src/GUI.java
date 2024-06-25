@@ -14,8 +14,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Date;
+import java.util.*;
 import java.util.List;
 
 
@@ -176,7 +175,7 @@ public class GUI extends JFrame {
 
 
     }
-    private static void accessibilityScoreDialog() {
+    private  void accessibilityScoreDialog() {
         JFrame frame = new JFrame("Accessibility Score Calculator");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(300, 150);
@@ -190,39 +189,97 @@ public class GUI extends JFrame {
         JTextField postalCodeTextField = new JTextField(20);
         frame.add(postalCodeTextField);
 
-        // Create and add the button
+        // Create and add the submit button
         JButton submitButton = new JButton("Submit");
         frame.add(submitButton);
 
-        // Add action listener to the button
+        // Create and add the HeatMap button
+        JButton heatMapButton = new JButton("HeatMap");
+        frame.add(heatMapButton);
+
+        // List to store the calculated scores
+        List<AddressScore> scores = new ArrayList<>();
+
+        // Add action listener to the submit button
         submitButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String postalCode = postalCodeTextField.getText();
                 PostAddress postAddress = getAddressFromDataManager(postalCode);
                 if (postAddress != null) {
-
                     // Calculate the scores
-                    List<AddressScore> scores = new ArrayList<>();
                     AmenitiesCalculator.calculateAllScores(scores);
                     AddressScore addressScore = AmenitiesCalculator.getAddressScore(postAddress.getPostalCode(), scores);
 
-                    assert addressScore != null;
+                    if (addressScore != null) {
+                        // Close current frame
+                        frame.dispose();
 
-                    // Close current frame
-                    frame.dispose();
-
-                    // Display the scores in a new frame
-                    displayScores(postalCode, addressScore.getShopScore(), addressScore.getAmenityScore(), addressScore.getTourismScore(), addressScore.getScore());
+                        // Display the scores in a new frame
+                        displayScores(postalCode, addressScore.getShopScore(), addressScore.getAmenityScore(), addressScore.getTourismScore(), addressScore.getScore());
+                    } else {
+                        JOptionPane.showMessageDialog(frame, "Score not found for the given postal code", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
                 } else {
                     JOptionPane.showMessageDialog(frame, "Invalid Postal Code", "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
 
+        // Add action listener to the HeatMap button
+        heatMapButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Ensure the scores are calculated before creating the heat map
+                AmenitiesCalculator.calculateAllScores(scores);
+                Graphics2D g = (Graphics2D) mapImage.getGraphics();
+                createHeatMap(scores, g);
+                repaint(); // Trigger the repaint
+
+            }
+        });
+
         // Display the frame
         frame.setVisible(true);
     }
+
+
+    public void createHeatMap(List<AddressScore> scores, Graphics2D g) {
+        DrawBaseImage(g);
+
+        int counter = 0;
+        for (AddressScore addressScore : scores) {
+            System.out.println(counter + 1);
+            counter++;
+            double lon = addressScore.getAddress().getLon();
+            double lat = addressScore.getAddress().getLat();
+            double score = addressScore.getScore();
+
+            // Convert score to color
+            Color color = getColorForScore(score);
+
+            // Get the coordinates on the map
+            Point point = findPostCodeCoordinate(lon, lat);
+
+            if (point != null) {
+                // Set color and draw the point
+                g.setColor(color);
+                g.fillOval(point.x - 5, point.y - 5, 10, 10); // Adjust size as needed
+            } else {
+                System.err.println("Invalid coordinates for lon: " + lon + ", lat: " + lat);
+            }
+        }
+    }
+
+
+    private static Color getColorForScore(double score) {
+        // Assuming score is between 0 and 100, map it to a color
+        // Blue (low score) to Red (high score)
+        int red = (int) (255 * (score / 100));
+        int blue = 255 - red;
+        return new Color(red, 0, blue);
+    }
+
 
     private static void displayScores(String postalCode, double shopScore, double amenityScore, double tourismScore, double totalScore) {
         DecimalFormat df = new DecimalFormat("#.###");
@@ -384,12 +441,9 @@ public class GUI extends JFrame {
 
         List<Stop> totalStops = new ArrayList<>();
         List<Integer> transferIndices = new ArrayList<>();
-
         RoutingApplication.printPathDetails(path, first.getPostalCode(), last.getPostalCode(), preferredTime);
-
         Stop startStop = createStopFromPostalCode(first);
         totalStops.add(startStop);
-
         String previousTripId = null;
         int index = 1;
 
@@ -405,8 +459,6 @@ public class GUI extends JFrame {
                 previousTripId = node.tripId;
                 index++;
             }
-
-
             String nextStopId = (i + 1 < path.size()) ? path.get(i + 1).previousStopId : endStopId;
             if (nextStopId != null) {
                 List<BusStop> segmentStops = GTFSLoader.getBusStopsForTrip(node.tripId, node.previousStopId, nextStopId);
@@ -419,7 +471,6 @@ public class GUI extends JFrame {
 
         Stop endStop = createStopFromPostalCode(last);
         totalStops.add(endStop);
-
         Graphics2D g = (Graphics2D) mapImage.getGraphics();
         drawShortestPathOnMapBusRouteTransfer(g, totalStops, transferIndices);
         showBusStopsPopupTransfer(totalStops,transferIndices,result.travelTime);
@@ -433,24 +484,24 @@ public class GUI extends JFrame {
         }
 
         StringBuilder stopNames = new StringBuilder("Bus Stops with Transfers:\n");
-
-
+        Set<String> uniqueNames = new HashSet<>();
 
         for (int i = 0; i < totalStops.size(); i++) {
             Stop stop = totalStops.get(i);
-            stopNames.append(stop.stopName());
+            String stopName = stop.stopName();
 
-            if (transferIndices.contains(i)) {
-                stopNames.append(" (Transfer)");
+            if (!uniqueNames.contains(stopName)) {
+                uniqueNames.add(stopName);
+                stopNames.append(stopName);
+
+                if (transferIndices.contains(i)) {
+                    stopNames.append(" (Transfer)");
+                }
+                stopNames.append("\n");
             }
-            stopNames.append("\n");
         }
 
-
-
-
-
-        stopNames.append("\nTotal Travel Time: ").append(travelTime/60).append(" minutes");
+        stopNames.append("\nTotal Travel Time: ").append(travelTime / 60).append(" minutes");
 
         JOptionPane.showMessageDialog(null, stopNames.toString(), "Bus Route", JOptionPane.INFORMATION_MESSAGE);
     }
@@ -459,22 +510,17 @@ public class GUI extends JFrame {
 
 
     public void drawShortestPathOnMapBusRouteTransfer(Graphics2D g, List<Stop> totalStops, List<Integer> transferIndices) {
-
         DrawBaseImage(g);
-
-
         g.setStroke(new BasicStroke(3));
+        int circleSize = 6;
+        int textPadding = 4; // Padding between the text and the point
+        int offsetX = 20; // Offset to move text to the right
+        Font font = new Font("Arial", Font.PLAIN, 12); // Font for the stop names
+        g.setFont(font);
+        FontMetrics metrics = g.getFontMetrics(font);
 
-        // Initial color and index for changing colors
-        int colorIndex = 0;
-
-
-
-
-        int col = 0;
-        g.setColor(Color.RED);
-        // Define a set of distinct colors
         Color[] colors = {Color.RED, Color.BLUE, Color.GREEN, Color.ORANGE, Color.MAGENTA, Color.CYAN, Color.PINK};
+        int colorIndex = 0;
 
         for (int i = 0; i < totalStops.size() - 1; i++) {
             Stop startStop = totalStops.get(i);
@@ -482,16 +528,8 @@ public class GUI extends JFrame {
             Point startPoint = findPostCodeCoordinate(startStop.stopLon(), startStop.stopLat());
             Point endPoint = findPostCodeCoordinate(endStop.stopLon(), endStop.stopLat());
 
-
-
-            if (transferIndices.contains(i )) {
-                g.setColor(new Color((int)(Math.random() * 0x1000000)));
-                col = (col + 1) % 3;
-            }
-
-
             // Change the line color on transfer
-            if (transferIndices.contains(i )) {
+            if (transferIndices.contains(i)) {
                 colorIndex = (colorIndex + 1) % colors.length;
             }
 
@@ -513,23 +551,51 @@ public class GUI extends JFrame {
             }
         }
 
-        // Draw stop names
-        g.setColor(Color.BLACK);
+        // Draw stop names with background and conditional coloring
         for (int i = 0; i < totalStops.size(); i++) {
             Stop stop = totalStops.get(i);
             Point point = findPostCodeCoordinate(stop.stopLon(), stop.stopLat());
             String stopName = stop.stopName().replace("Maastricht, ", "");
-            g.drawString(stopName, point.x + 5, point.y - 5);
+
+            // Calculate text width and height
+            int textWidth = metrics.stringWidth(stopName);
+            int textHeight = metrics.getHeight();
+
+            // Calculate the position of the text
+            int textX = point.x - textWidth / 2 + offsetX;
+            int textY = point.y - circleSize / 2 - textPadding;
+
+            if (i % 2 == 0 || i == totalStops.size() - 1) {
+                // Draw the background rectangle for the text
+                g.setColor(Color.WHITE);
+                g.fillRect(textX - textPadding, textY - textHeight + textPadding / 2, textWidth + 2 * textPadding, textHeight);
+
+                // Draw the border rectangle for the text
+                g.setColor(Color.BLACK);
+                g.drawRect(textX - textPadding, textY - textHeight + textPadding / 2, textWidth + 2 * textPadding, textHeight);
+
+                // Set text color conditionally
+                if (i == 0 || i == totalStops.size() - 1 || transferIndices.contains(i)) {
+                    g.setColor(Color.RED);
+                } else {
+                    g.setColor(Color.BLACK);
+                }
+
+                // Draw the stop name text
+                g.drawString(stopName, textX, textY);
+            }
         }
     }
+
+
 
     private Stop createStopFromPostalCode(PostAddress address) {
         return new Stop(address.getPostalCode(), address.getPostalCode(), address.getLat(), address.getLon());
     }
 
-    private void handleDirectBusRoute(PostAddress first, PostAddress last, String prefferedTime) {
+    private void handleDirectBusRoute(PostAddress first, PostAddress last, String preferredTime) {
         BusRouteFinder finder = new BusRouteFinder(first, last);
-        DirectRoute directRoute = finder.findShortestDirectBusRouteWithTime(prefferedTime);
+        DirectRoute directRoute = finder.findShortestDirectBusRouteWithTime(preferredTime);
         if (directRoute == null) {
             noBusError();
             return;
@@ -586,24 +652,72 @@ public class GUI extends JFrame {
     private void drawShortestPathOnMapBusRoute(Graphics2D g, DirectRoute route) {
         DrawBaseImage(g);
 
-        g.setColor(Color.BLACK);
         g.setStroke(new BasicStroke(3));
+        int circleSize = 6;
+        int textPadding = 4; // Padding between the text and the point
+        Font font = new Font("Arial", Font.PLAIN, 12); // Font for the stop names
+        g.setFont(font);
+        FontMetrics metrics = g.getFontMetrics(font);
 
         for (int i = 0; i < route.getBusStops().size() - 1; i++) {
+            g.setColor(Color.RED);
+
             Point startPoint = findPostCodeCoordinate(route.getBusStops().get(i).getStopLon(), route.getBusStops().get(i).getStopLat());
             Point endPoint = findPostCodeCoordinate(route.getBusStops().get(i + 1).getStopLon(), route.getBusStops().get(i + 1).getStopLat());
             g.drawLine(startPoint.x, startPoint.y, endPoint.x, endPoint.y);
 
+            g.setColor(Color.BLACK);
+            g.fillOval(startPoint.x - circleSize / 2, startPoint.y - circleSize / 2, circleSize, circleSize);
 
-            if (i == 0) {
+            // Draw text for every other stop
+            if (i % 2 == 0) {
+                String stopName = route.getBusStops().get(i).getStopName().replaceFirst("^Maastricht, ", "");
+                int textWidth = metrics.stringWidth(stopName);
+                int textHeight = metrics.getHeight();
+                int textX = startPoint.x - textWidth / 2 + 40;
+                int textY = startPoint.y - circleSize / 2 - textPadding;
 
-                g.setColor(Color.RED);
-            }
-            else if(i == route.getBusStops().size() - 3){
+                // Draw background rectangle for text
+                g.setColor(Color.WHITE);
+                g.fillRect(textX - textPadding, textY - textHeight + textPadding / 2, textWidth + 2 * textPadding, textHeight);
+
+                // Draw border rectangle for text
                 g.setColor(Color.BLACK);
+                g.drawRect(textX - textPadding, textY - textHeight + textPadding / 2, textWidth + 2 * textPadding, textHeight);
+                g.setColor(Color.BLACK); // Set text color to black
+                // Draw stop name text
+                if (i == 0){
+                    g.setColor(Color.RED);
+                }
+
+                g.drawString(stopName, textX, textY);
             }
         }
+
+        // Draw the point and name for the last bus stop, removing the "Maastricht, " prefix
+        Point lastPoint = findPostCodeCoordinate(route.getBusStops().get(route.getBusStops().size() - 1).getStopLon(), route.getBusStops().get(route.getBusStops().size() - 1).getStopLat());
+        g.fillOval(lastPoint.x - circleSize/2, lastPoint.y - circleSize/2, circleSize, circleSize);
+        String lastStopName = route.getBusStops().get(route.getBusStops().size() - 1).getStopName().replaceFirst("^Maastricht, ", "");
+        int lastTextWidth = metrics.stringWidth(lastStopName);
+        int lastTextHeight = metrics.getHeight();
+        int lastTextX = lastPoint.x - lastTextWidth / 2 + 40;
+        int lastTextY = lastPoint.y - circleSize / 2 - textPadding;
+
+        // Draw background rectangle for last stop name
+        g.setColor(Color.WHITE);
+        g.fillRect(lastTextX - textPadding, lastTextY - lastTextHeight + textPadding / 2, lastTextWidth + 2 * textPadding, lastTextHeight);
+
+        // Draw border rectangle for last stop name
+        g.setColor(Color.BLACK);
+        g.drawRect(lastTextX - textPadding, lastTextY - lastTextHeight + textPadding / 2, lastTextWidth + 2 * textPadding, lastTextHeight);
+
+        // Draw stop name text for last stop
+        g.setColor(Color.RED);
+        g.drawString(lastStopName, lastTextX, lastTextY);
     }
+
+
+
     private JFormattedTextField createPostCodeField(String contents, Point textPanelPosition) {
         JFormattedTextField postCodeField = new JFormattedTextField();
         postCodeField.setPreferredSize(new Dimension(60, 30));
@@ -925,7 +1039,7 @@ public class GUI extends JFrame {
     }
 
 
-    private void DrawBaseImage(Graphics2D g) {
+    private  void DrawBaseImage(Graphics2D g) {
         g.drawImage(clearMapImage, 0, 0, null);
     }
 
@@ -949,7 +1063,7 @@ public class GUI extends JFrame {
         return code.length() == 6;
     }
 
-    public Point findPostCodeCoordinate(double lon, double lat) {
+    public  Point findPostCodeCoordinate(double lon, double lat) {
         int imageWidth = mapImage.getWidth();
         int imageHeight = mapImage.getHeight();
         double lonPercent = (lon - minLon) / (maxLon - minLon);
