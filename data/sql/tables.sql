@@ -24,15 +24,6 @@ create table postal_codes
     longitude   double  null
 );
 
-create table amenity_score
-(
-    postal_address varchar(255) not null
-        primary key,
-    score          double       null,
-    constraint amenity_score_ibfk_1
-        foreign key (postal_address) references postal_codes (postal_code)
-);
-
 create table routes
 (
     route_id         varchar(255) not null
