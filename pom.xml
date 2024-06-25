@@ -68,6 +68,12 @@
             <artifactId>graphhopper-core</artifactId>
             <version>9.0-pre1</version>
         </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>RELEASE</version>
+            <scope>compile</scope>
+        </dependency>
         <!-- Add more dependencies as needed -->
     </dependencies>
 

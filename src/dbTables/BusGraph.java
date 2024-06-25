@@ -28,12 +28,12 @@ public class BusGraph {
 
     // Edge class representing the connection between stops
     public static class Edge {
-        String toStopId;
-        int weight; // Travel time in seconds
-        String tripId;
-        String departureTime;
-        String arrivalTime;
-        String routeId;
+        public String toStopId;
+        public int weight; // Travel time in seconds
+        public String tripId;
+        public String departureTime;
+        public String arrivalTime;
+        public String routeId;
 
         public Edge(String toStopId, int weight, String tripId, String departureTime, String arrivalTime, String routeId) {
             this.toStopId = toStopId;
