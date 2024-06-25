@@ -1,6 +1,8 @@
-package dbTables;
+import dbTables.AddressScore;
+import dbTables.PostAddress;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class AddressScoreTest {
 
@@ -8,13 +10,15 @@ class AddressScoreTest {
     void testGettersAndSetters() {
         // Arrange
         PostAddress address = new PostAddress("12345", 40.7128, -74.0060);
-        double score = 10.0;
+        double score = 11.0;
         double amenityScore = 5.0;
         double shopScore = 3.0;
         double tourismScore = 2.0;
+        double accessibilityScore = 1.0;
 
         // Act
-        AddressScore addressScore = new AddressScore(address, score, amenityScore, shopScore, tourismScore);
+        AddressScore addressScore = new AddressScore(address, amenityScore, shopScore, tourismScore, accessibilityScore);
+        addressScore.setScore(score);
 
         // Assert
         assertEquals(address, addressScore.getAddress());
@@ -40,17 +44,19 @@ class AddressScoreTest {
     void testToString() {
         // Arrange
         PostAddress address = new PostAddress("12345", 40.7128, -74.0060);
-        double score = 10.0;
+        double score = 11.0;
         double amenityScore = 5.0;
         double shopScore = 3.0;
         double tourismScore = 2.0;
-        AddressScore addressScore = new AddressScore(address, score, amenityScore, shopScore, tourismScore);
+        double accessibilityScore = 1.0;
+        AddressScore addressScore = new AddressScore(address, amenityScore, shopScore, tourismScore, accessibilityScore);
+        addressScore.setScore(score);
 
         // Act
         String result = addressScore.toString();
 
         // Assert
-        String expected = "AddressScore{address=12345, score=10.0, amenityScore=5.0, shopScore=3.0, tourismScore=2.0}";
+        String expected = "AddressScore{address=12345, score=11.0, amenityScore=5.0, shopScore=3.0, tourismScore=2.0, accessibilityScore=1.0}";
         assertEquals(expected, result);
     }
 }

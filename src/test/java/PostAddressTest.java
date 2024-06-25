@@ -1,5 +1,6 @@
-package dbTables;
+import dbTables.PostAddress;
 import org.junit.jupiter.api.Test;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class PostAddressTest {
