@@ -27,8 +27,11 @@ public class AmenityManager {
 
             ResultSet resultSet = stmt.executeQuery();
             while (resultSet.next()) {
-                Amenity Amenity = new Amenity(resultSet.getDouble("lat"),
-                        resultSet.getDouble("lon"), resultSet.getString("amenity"));
+                Amenity Amenity = new Amenity(
+                        resultSet.getDouble("lat"),
+                        resultSet.getDouble("lon"),
+                        resultSet.getString("amenity")
+                );
                 nearbyAmenities.add(Amenity);
             }
             resultSet.close();
@@ -47,13 +50,13 @@ public class AmenityManager {
 
         List<Tourism> nearbyAttractions = new ArrayList<Tourism>();
 
-        String query = "SELECT lat, lon, name, attraction_type FROM tourism ";
+        String query = "SELECT lat, lon, attraction_type FROM tourism ";
 
         try {
             PreparedStatement stmt = conn.prepareStatement(query);
             ResultSet resultSet = stmt.executeQuery();
             while (resultSet.next()) {
-                Tourism attraction = new Tourism(resultSet.getString("name"), resultSet.getDouble("lat"),
+                Tourism attraction = new Tourism(resultSet.getDouble("lat"),
                         resultSet.getDouble("lon"), resultSet.getString("attraction_type"));
                 nearbyAttractions.add(attraction);
             }
@@ -73,14 +76,14 @@ public class AmenityManager {
 
         List<Shop> nearbyShops = new ArrayList<>();
 
-        String query = "SELECT lat, lon, name, shop FROM shop ";
+        String query = "SELECT lat, lon, shop FROM shop ";
 
         try {
             PreparedStatement stmt = conn.prepareStatement(query);
 
             ResultSet resultSet = stmt.executeQuery();
             while (resultSet.next()) {
-                Shop shop = new Shop(resultSet.getString("name"), resultSet.getDouble("lat"), resultSet.getDouble("lon"), resultSet.getString("shop"));
+                Shop shop = new Shop(resultSet.getDouble("lat"), resultSet.getDouble("lon"), resultSet.getString("shop"));
                 nearbyShops.add(shop);
             }
             resultSet.close();

@@ -1,15 +1,7 @@
 package dbTables;
 
-public record Amenity(double lat, double lon, String type) {
-    public double getLat() {
-        return lat;
-    }
-
-    public double getLon() {
-        return lon;
-    }
-
-    public String getType() {
-        return type;
+public class Amenity extends Location {
+    public Amenity(double lat, double lon, String type) {
+        super(lat, lon, type);
     }
 }

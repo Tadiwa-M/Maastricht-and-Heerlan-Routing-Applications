@@ -1,5 +1,7 @@
 package dbTables;
 
-public record Shop(String name, double lat, double lon, String type) {
-
+public class Shop extends Location {
+    public Shop(double lat, double lon, String type) {
+        super(lat, lon, type);
+    }
 }

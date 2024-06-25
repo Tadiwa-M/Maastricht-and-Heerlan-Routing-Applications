@@ -1,57 +1,7 @@
 package dbTables;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-
-import static dbTables.dbManager.getSqlConnection;
-
-public class Tourism {
-    private String name;
-    private double lat;
-    private double lon;
-    private String type;
-
-    public Tourism(String name, double lat, double lon, String type) {
-        this.name = name;
-        this.lat = lat;
-        this.lon = lon;
-        this.type = type;
+public class Tourism extends Location {
+    public Tourism(double lat, double lon, String type) {
+        super(lat, lon, type);
     }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public double getLat() {
-        return lat;
-    }
-
-    public void setLat(double lat) {
-        this.lat = lat;
-    }
-
-    public double getLon() {
-        return lon;
-    }
-
-    public void setLon(double lon) {
-        this.lon = lon;
-    }
-
 }
