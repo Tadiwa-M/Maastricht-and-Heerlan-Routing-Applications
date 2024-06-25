@@ -16,6 +16,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 
 public class GUI extends JFrame {
@@ -926,14 +927,19 @@ public class GUI extends JFrame {
 
     public static void main(String[] args) {
         try {
-            SwingUtilities.invokeLater(() -> {
-                GUI frame = new GUI();
-                frame.setVisible(true);
+            CompletableFuture<Void> guiFuture = CompletableFuture.runAsync(() -> {
+                SwingUtilities.invokeLater(() -> {
+                    GUI frame = new GUI();
+                    frame.setVisible(true);
+                });
             });
-        }
-        catch (Exception e) {
-            JOptionPane.showMessageDialog(null, "An error occurred while initializing the GUI");
-            main(args);
+
+            CompletableFuture<Void> gtfsLoaderFuture = CompletableFuture.runAsync(GTFSLoader::loadGraph);
+
+            CompletableFuture<Void> combinedFuture = CompletableFuture.allOf(guiFuture, gtfsLoaderFuture);
+            combinedFuture.join();  // Wait for both tasks to complete
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "An error occurred while initializing the GUI or loading the graph");
         }
     }
 
