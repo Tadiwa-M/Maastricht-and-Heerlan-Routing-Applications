@@ -8,7 +8,7 @@ import java.util.*;
 
 public class GTFSLoader {
 
-    private static BusGraph graph;
+    private static final BusGraph graph;
 
     static {
         graph = loadGraph();

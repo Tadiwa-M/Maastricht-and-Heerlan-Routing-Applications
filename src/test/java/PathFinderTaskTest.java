@@ -122,7 +122,7 @@ public class PathFinderTaskTest {
     }
 
     private static class GTFSLoader {
-        private static Map<String, Stop> mockStopDetails = new HashMap<>();
+        private static final Map<String, Stop> mockStopDetails = new HashMap<>();
 
         public static void setMockStopDetails(String stopId, Stop stop) {
             mockStopDetails.put(stopId, stop);

@@ -33,7 +33,7 @@ public class AStarWithTimeTest {
 
         Map<String, Map<String, Double>> travelTimeMap = new HashMap<>();
 
-        List<PathNode> path = AStarWithTime.findShortestPath(graph, Arrays.asList("A"), "C", startTimes, addressMap, travelTimeMap);
+        List<PathNode> path = AStarWithTime.findShortestPath(graph, List.of("A"), "C", startTimes, addressMap, travelTimeMap);
 
         assertEquals(2, path.size());
         assertEquals("A", path.get(0).previousStopId);
@@ -60,7 +60,7 @@ public class AStarWithTimeTest {
 
         Map<String, Map<String, Double>> travelTimeMap = new HashMap<>();
 
-        List<PathNode> path = AStarWithTime.findShortestPath(graph, Arrays.asList("A"), "C", startTimes, addressMap, travelTimeMap);
+        List<PathNode> path = AStarWithTime.findShortestPath(graph, List.of("A"), "C", startTimes, addressMap, travelTimeMap);
 
         assertEquals(2, path.size());
         assertEquals("A", path.get(0).previousStopId);
@@ -86,7 +86,7 @@ public class AStarWithTimeTest {
 
         Map<String, Map<String, Double>> travelTimeMap = new HashMap<>();
 
-        List<PathNode> path = AStarWithTime.findShortestPath(graph, Arrays.asList("A"), "C", startTimes, addressMap, travelTimeMap);
+        List<PathNode> path = AStarWithTime.findShortestPath(graph, List.of("A"), "C", startTimes, addressMap, travelTimeMap);
 
         assertEquals(0, path.size());
     }
@@ -111,7 +111,7 @@ public class AStarWithTimeTest {
 
         Map<String, Map<String, Double>> travelTimeMap = new HashMap<>();
 
-        List<PathNode> path = AStarWithTime.findShortestPath(graph, Arrays.asList("A"), "C", startTimes, addressMap, travelTimeMap);
+        List<PathNode> path = AStarWithTime.findShortestPath(graph, List.of("A"), "C", startTimes, addressMap, travelTimeMap);
 
         assertEquals(2, path.size());
         assertEquals("A", path.get(0).previousStopId);
@@ -141,7 +141,7 @@ public class AStarWithTimeTest {
 
         Map<String, Map<String, Double>> travelTimeMap = new HashMap<>();
 
-        List<PathNode> path = AStarWithTime.findShortestPath(graph, Arrays.asList("A"), "C", startTimes, addressMap, travelTimeMap);
+        List<PathNode> path = AStarWithTime.findShortestPath(graph, List.of("A"), "C", startTimes, addressMap, travelTimeMap);
 
         assertEquals(2, path.size());
         assertEquals("A", path.get(0).previousStopId);

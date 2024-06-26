@@ -1,9 +1,9 @@
 package dbTables;
 
 public abstract class Location {
-    private double lat;
-    private double lon;
-    private String type;
+    private final double lat;
+    private final double lon;
+    private final String type;
 
     public Location(double lat, double lon, String type) {
         this.lat = lat;

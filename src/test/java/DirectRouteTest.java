@@ -45,7 +45,7 @@ public class DirectRouteTest {
 
     @Test
     public void testConstructorWithEmptyBusStops() {
-        List<BusStop> emptyBusStops = Arrays.asList();
+        List<BusStop> emptyBusStops = List.of();
 
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
             new DirectRoute(emptyBusStops);
@@ -67,7 +67,7 @@ public class DirectRouteTest {
     @Test
     public void testSetAndGetBusStops() {
         DirectRoute directRoute = new DirectRoute(busStops);
-        List<BusStop> newBusStops = Arrays.asList(
+        List<BusStop> newBusStops = List.of(
                 new BusStop("stop3", 3, "Stop 3", "08:20:00", "08:25:00", 50.852456f, 5.692123f)
         );
 

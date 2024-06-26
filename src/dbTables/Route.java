@@ -1,16 +1,16 @@
 package dbTables;
 
 public class Route {
-    private String tripId;
-    private String routeId;
-    private String routeShortName;
-    private String routeLongName;
-    private String departureTime;
-    private String arrivalTime;
+    private final String tripId;
+    private final String routeId;
+    private final String routeShortName;
+    private final String routeLongName;
+    private final String departureTime;
+    private final String arrivalTime;
     private Route fromRoute; // First segment of the journey
     private Route toRoute;   // Second segment of the journey
-    private String startStopId; // ID of the start stop
-    private String endStopId;   // ID of the end stop
+    private final String startStopId; // ID of the start stop
+    private final String endStopId;   // ID of the end stop
 
     // Constructor for direct routes
     public Route(String tripId, String routeId, String routeShortName, String routeLongName, String departureTime, String arrivalTime, String startStopId, String endStopId) {
