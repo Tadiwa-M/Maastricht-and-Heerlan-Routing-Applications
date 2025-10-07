@@ -72,6 +72,7 @@ Here are some examples of how to use the application:
 - Maven
 - Python (for preprocessing GTFS file)
 - Pandas (Python library)
+- My work was mainly the Heerlan branch, titled Swae
 
 ## License
 This project is licensed under the MIT License.
