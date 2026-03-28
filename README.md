@@ -3,7 +3,7 @@
 # Maastricht Transportation Application
 
 ## Overview
-The Maastricht Transportation Application is a project developed by [Your Team Name]. It aims to provide users with information on transportation options between two locations within Maastricht, Netherlands. The application allows users to input two postal codes and choose their preferred mode of transportation: Walk, Bike, Car, or Bus. It then calculates and displays the route, estimated time, and distance for the selected transportation mode.
+The Maastricht Transportation Application is a project developed by my project group. It aims to provide users with information on transportation options between two locations within Maastricht, Netherlands. The application allows users to input two postal codes and choose their preferred mode of transportation: Walk, Bike, Car, or Bus. It then calculates and displays the route, estimated time, and distance for the selected transportation mode.
 
 ## Features
 - **Mode Selection**: Users can choose between Walk, Bike, Car, or Bus as their mode of transportation.
